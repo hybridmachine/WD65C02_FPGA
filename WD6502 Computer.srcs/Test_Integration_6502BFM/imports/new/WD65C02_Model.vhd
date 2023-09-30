@@ -24,6 +24,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use STD.textio.all;
 use ieee.std_logic_textio.all;
+use work.W65C02_DEFINITIONS.all;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -31,21 +32,21 @@ use ieee.std_logic_textio.all;
 --use UNISIM.VComponents.all;
 
 entity WD65C02_Model is
-    Port ( ADDRESS : out STD_LOGIC_VECTOR (15 downto 0);    -- Address bus
-           BE : in STD_LOGIC;                               -- Bus Enable
-           DATA : inout STD_LOGIC_VECTOR (7 downto 0);      -- Data bus
-           IRQB : out STD_LOGIC;                            -- Interrupt Request
-           MLB : inout STD_LOGIC;                           -- Memory Lock
-           NMIB : out STD_LOGIC;                            -- Non-Maskable Interrupt
-           PHI1O : out STD_LOGIC;                           -- Phase 1 out clock
-           PHI2 : in STD_LOGIC;                             -- Phase 2 in clock (main clock)
-           PHI2O : out STD_LOGIC;                           -- Phase 2 out clock
-           RDY : in STD_LOGIC;                              -- Ready
-           RESB : in STD_LOGIC;                             -- Reset
-           RWB : out STD_LOGIC;                             -- Read/Write
-           SOB : out STD_LOGIC;                             -- Set Overflow
-           SYNC : out STD_LOGIC;                            -- Synchronize
-           VPB : out STD_LOGIC);                            -- Vector Pull
+    Port ( ADDRESS : out ADDRESS_T;    -- Address bus
+           BE : in BE_T;                               -- Bus Enable
+           DATA : inout DATA_T;      -- Data bus
+           IRQB : out IRQB_T;                            -- Interrupt Request
+           MLB : inout MLB_T;                           -- Memory Lock
+           NMIB : out NMIB_T;                            -- Non-Maskable Interrupt
+           PHI1O : out PHI1O_T;                           -- Phase 1 out clock
+           PHI2 : in PHI2_T;                             -- Phase 2 in clock (main clock)
+           PHI2O : out PHI2O_T;                           -- Phase 2 out clock
+           RDY : in RDY_T;                              -- Ready
+           RESB : in RESB_T;                             -- Reset
+           RWB : out RWB_T;                             -- Read/Write
+           SOB : out SOB_T;                             -- Set Overflow
+           SYNC : out SYNC_T;                            -- Synchronize
+           VPB : out VPB_T);                            -- Vector Pull
 end WD65C02_Model;
 
 architecture Behavioral of WD65C02_Model is

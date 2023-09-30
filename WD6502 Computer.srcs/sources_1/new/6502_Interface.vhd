@@ -21,6 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use work.W65C02_DEFINITIONS.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -36,21 +37,21 @@ entity WD6502_Interface is
            RESET        : in STD_LOGIC; -- User input reset button
            SINGLESTEP   : in STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
            -- 6502 Connected Pins
-           ADDRESS      : in STD_LOGIC_VECTOR (15 downto 0);    -- Address bus
-           BE           : out STD_LOGIC;                        -- Bus Enable
-           DATA         : inout STD_LOGIC_VECTOR (7 downto 0);  -- Data bus
-           IRQB         : in STD_LOGIC;                         -- Interrupt Request
-           MLB          : inout STD_LOGIC;                      -- Memory Lock
-           NMIB         : in STD_LOGIC;                         -- Non-Maskable Interrupt
-           PHI1O        : in STD_LOGIC;                         -- Phase 1 out clock
-           PHI2         : out STD_LOGIC;                        -- Phase 2 in clock (main clock)
-           PHI2O        : in STD_LOGIC;                         -- Phase 2 out clock
-           RDY          : out STD_LOGIC;                        -- Ready
-           RESB         : out STD_LOGIC;                        -- Reset
-           RWB          : in STD_LOGIC;                         -- Read/Write
-           SOB          : in STD_LOGIC;                         -- Set Overflow
-           SYNC         : in STD_LOGIC;                         -- Synchronize
-           VPB          : in STD_LOGIC);                        -- Vector Pull
+           ADDRESS      : in ADDRESS_T;    -- Address bus
+           BE           : out BE_T;                        -- Bus Enable
+           DATA         : inout DATA_T;  -- Data bus
+           IRQB         : in IRQB_T;                         -- Interrupt Request
+           MLB          : inout MLB_T;                      -- Memory Lock
+           NMIB         : in NMIB_T;                         -- Non-Maskable Interrupt
+           PHI1O        : in PHI1O_T;                         -- Phase 1 out clock
+           PHI2         : out PHI2_T;                        -- Phase 2 in clock (main clock)
+           PHI2O        : in PHI2O_T;                         -- Phase 2 out clock
+           RDY          : out RDY_T;                        -- Ready
+           RESB         : out RESB_T;                        -- Reset
+           RWB          : in RWB_T;                         -- Read/Write
+           SOB          : in SOB_T;                         -- Set Overflow
+           SYNC         : in SYNC_T;                         -- Synchronize
+           VPB          : in VPB_T);                        -- Vector Pull
 end WD6502_Interface;
 
 architecture Behavioral of WD6502_Interface is
@@ -85,8 +86,32 @@ type PROCESSOR_STATE_T is ( RESET_START,
 signal PROCESSOR_STATE : PROCESSOR_STATE_T;
 
 signal WD6502_CLOCK : std_logic;
-begin
 
+signal BUS_READ_DATA :  STD_LOGIC_VECTOR (7 downto 0);
+signal BUS_WRITE_DATA:  STD_LOGIC_VECTOR (7 downto 0);
+signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
+signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
+signal WRITE_FLAG :  STD_LOGIC;
+
+begin -- Begin architecture definition
+
+MemoryManagement : MemoryManager port map (
+    BUS_READ_DATA => BUS_READ_DATA,
+    BUS_WRITE_DATA => BUS_WRITE_DATA,
+    BUS_ADDRESS => BUS_ADDRESS,
+    MEMORY_CLOCK => MEMORY_CLOCK,
+    WRITE_FLAG => WRITE_FLAG
+);
+
+-- Concurrent signal propogation
+WRITE_FLAG <= RWB;
+MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
+                       -- For now just pulse FPGA clock straight to memory clock
+
+DATA <= BUS_READ_DATA when RWB = PROCESSOR_READING_FROM_MEMORY;
+BUS_WRITE_DATA <= DATA when RWB = PROCESSOR_WRITING_TO_MEMORY;
+BUS_ADDRESS <= ADDRESS;
+                       
 -- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
 -- Otherwise RDY is always high.
 RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
@@ -96,8 +121,7 @@ PHI2 <= WD6502_CLOCK;
 wd6502_clockmachine : process (CLOCK, RESET)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
-begin
-    
+begin 
     if (RESET = '0' and RESET_IN_PROGRESS = '0') then -- Reset active low
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
         WD6502_CLOCK <= '0';
@@ -124,8 +148,8 @@ begin
     if (WD6502_CLOCK'event and WD6502_CLOCK='1') then
         if (RESET = '0' and reset_in_progress = '0') then
             PROCESSOR_STATE <= RESET_START;
-            reset_clock_count := 2;
-            RESB <= '0';
+            reset_clock_count := RESET_MIN_CLOCKS;
+            RESB <= CPU_RESET;
             reset_in_progress := '1';
         else
             case PROCESSOR_STATE is
@@ -136,18 +160,29 @@ begin
                         reset_clock_count := reset_clock_count - 1;
                     end if;
                 when RESET_COMPLETE =>
-                    RESB <= '1';
+                    RESB <= CPU_RUNNING;
                     PROCESSOR_STATE <= READY;
                     reset_in_progress := '0';
                 when READY =>
-                    -- When SYNC goes high, CPU is reading an opcode
-                
+                    -- RDY pin is managed by concurrent process 
+                    -- and is '1' unless single step is enabled
+                    if (SYNC = SYNC_READING_OPCODE) then
+                        PROCESSOR_STATE <= OPCODE_FETCH;
+                    else
+                        PROCESSOR_STATE <= READY;
+                    end if;
+                    
                 when READ_DATA =>
                 when WRITE_DATA =>
                 when OPCODE_FETCH =>
                 
-                when STANDBY =>
+                    IF (SYNC = SYNC_READING_OPCODE) then
+                        PROCESSOR_STATE <= OPCODE_FETCH;
+                    ELSE
+                        PROCESSOR_STATE <= READY;
+                    END IF;
                 when others =>
+                    PROCESSOR_STATE <= RESET_START;
             end case;
         end if;
     end if;
