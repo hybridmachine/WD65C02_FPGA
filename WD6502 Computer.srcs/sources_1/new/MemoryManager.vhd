@@ -21,6 +21,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.W65C02_DEFINITIONS.ALL;
 
 -- This modules manages the memory map of the computer. In this revision we have a very simple
 -- map. 
@@ -47,17 +48,6 @@ architecture Behavioral of MemoryManager is
 constant DATA_WIDTH: natural := 8;
 constant ADDRESS_WIDTH: natural := 16;
 
-constant ROM_END: std_logic_vector := x"FFFF";
-constant ROM_BASE: std_logic_vector := x"FC00";
-constant RAM_END: std_logic_vector := x"FBFF";
-constant RAM_BASE: std_logic_vector := x"0400";
-constant MEM_MAPPED_IO_END: std_logic_vector := x"03FF";
-constant MEM_MAPPED_IO_BASE: std_logic_vector := x"0200";
-constant STACK_END: std_logic_vector := x"01FF";
-constant STACK_BASE: std_logic_vector := x"0100";
-constant SYS_RESERVED_END: std_logic_vector := x"00FF";
-constant SYS_RESERVED_BASE: std_logic_vector := x"0001";
-constant MEM_MANAGER_STATUS: std_logic_vector := x"0000";
 
 -- RAM signals
 signal ram_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);

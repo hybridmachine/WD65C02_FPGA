@@ -57,4 +57,19 @@ package W65C02_DEFINITIONS is
     constant CPU_STANDBY : std_logic := '0'; -- RDY held low to standby
     constant SYNC_READING_OPCODE : std_logic := '1'; -- SYNC high when opcode fetch in progress
     constant RESET_MIN_CLOCKS : natural := 2; -- Hold reset low for min clocks (2 based on the spec)
+    
+    -- Memory Map
+    
+    constant ROM_END            : std_logic_vector := x"FFFF";
+    constant ROM_BASE           : std_logic_vector := x"FC00";
+    constant RAM_END            : std_logic_vector := x"FBFF";
+    constant RAM_BASE           : std_logic_vector := x"0400";
+    constant MEM_MAPPED_IO_END  : std_logic_vector := x"03FF";
+    constant MEM_MAPPED_IO_BASE : std_logic_vector := x"0200";
+    constant STACK_END          : std_logic_vector := x"01FF";
+    constant STACK_BASE         : std_logic_vector := x"0100";
+    constant SYS_RESERVED_END   : std_logic_vector := x"00FF";
+    constant SYS_RESERVED_BASE  : std_logic_vector := x"0001";
+    constant MEM_MANAGER_STATUS : std_logic_vector := x"0000";
+
 end package;

@@ -21,6 +21,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.W65C02_DEFINITIONS.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -306,7 +307,7 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             --FFFC, FFFD, FFFE, FFFF -- Jump to beginning of ROM
-            x"FA", x"CE", x"00", x"00"         
+            ROM_BASE(7 downto 0), ROM_BASE(15 downto 8), x"00", x"00"         
         );
 begin
 
