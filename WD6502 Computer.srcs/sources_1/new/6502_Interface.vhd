@@ -104,7 +104,7 @@ MemoryManagement : MemoryManager port map (
 );
 
 -- Concurrent signal propogation
-WRITE_FLAG <= RWB;
+WRITE_FLAG <= not RWB;
 MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
                        -- For now just pulse FPGA clock straight to memory clock
 

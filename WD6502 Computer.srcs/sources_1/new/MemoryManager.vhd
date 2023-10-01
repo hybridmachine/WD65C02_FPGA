@@ -48,8 +48,8 @@ constant DATA_WIDTH: natural := 8;
 constant ADDRESS_WIDTH: natural := 16;
 
 constant ROM_END: std_logic_vector := x"FFFF";
-constant ROM_BASE: std_logic_vector := x"EFFF";
-constant RAM_END: std_logic_vector := x"EFFE";
+constant ROM_BASE: std_logic_vector := x"FC00";
+constant RAM_END: std_logic_vector := x"FBFF";
 constant RAM_BASE: std_logic_vector := x"0400";
 constant MEM_MAPPED_IO_END: std_logic_vector := x"03FF";
 constant MEM_MAPPED_IO_BASE: std_logic_vector := x"0200";

@@ -150,11 +150,11 @@ begin
     wait until T_PHI2 = '1';
     T_RESET <= '1';
     wait until T_ADDRESS = x"FFFC";
-    assert (T_DATA_MODEL = x"FE") report "Boot data byte 1 not FE" severity failure;
-    wait until T_PHI2 = '1';
-    wait until T_PHI2 = '1';
-    assert (T_ADDRESS = x"FFFD") report "Boot vector address 2 not FFFD" severity failure;
-    assert (T_DATA_MODEL = x"ED") report "Boot data byte 2 not ED" severity failure;
+    wait for 290ns; 
+    assert (T_DATA_INTERFACE = T_DATA_MODEL) report "ROM data does not match expectd in model file" severity failure;
+    wait until T_ADDRESS = x"FFFD";
+    wait for 290ns; 
+    assert (T_DATA_INTERFACE = T_DATA_MODEL) report "ROM data does not match expectd in model file" severity failure;
     
     assert (false) report "Test completed successfully" severity failure;
 end process;

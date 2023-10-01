@@ -306,7 +306,7 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             --FFFC, FFFD, FFFE, FFFF -- Jump to beginning of ROM
-            x"FC", x"00", x"00", x"00"         
+            x"FA", x"CE", x"00", x"00"         
         );
 begin
 
