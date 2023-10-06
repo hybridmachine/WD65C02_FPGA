@@ -66,17 +66,17 @@ type PROCESSOR_STATE_T is ( RESET_START,   -- RESB has gone low
                             STANDBY);
  
 type PROCESSOR_PINS_T is record
-    BE      : std_logic;
-    IRQB    : std_logic;
-    MLB     : std_logic;
-    NMIB    : std_logic;
-    RDY     : std_logic;
-    RWB     : std_logic;
-    SOB     : std_logic;
-    SYNC    : std_logic;
-    VPB     : std_logic;
-    ADDRESS : std_logic_vector(15 downto 0);
-    DATA    : std_logic_vector(7 downto 0);
+    BE      : BE_T;
+    IRQB    : IRQB_T;
+    MLB     : MLB_T;
+    NMIB    : NMIB_T;
+    RDY     : RDY_T;
+    RWB     : RWB_T;
+    SOB     : SOB_T;
+    SYNC    : SYNC_T;
+    VPB     : VPB_T;
+    ADDRESS : ADDRESS_T;
+    DATA    : DATA_T;
 end record PROCESSOR_PINS_T;
 
 signal processor_pins : PROCESSOR_PINS_T;

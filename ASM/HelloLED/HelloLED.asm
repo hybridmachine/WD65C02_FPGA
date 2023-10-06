@@ -35,13 +35,13 @@
 ;
 ;***************************************************************************
 
-	LED_IO_ADDR:	equ	$0200
+	LED_IO_ADDR:	equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 	
 		CHIP	65C02
 		LONGI	OFF
 		LONGA	OFF
 
-		org	$FC00		;Must match ROM_START in PKG_65C02.vhd
+		org	$FC00		; Must match ROM_START in PKG_65C02.vhd
 
 	START:
 		sei
@@ -53,13 +53,20 @@
 ; First, Turn off all of the LEDs
 		lda	#$00
 		sta	LED_IO_ADDR	; Turn off the LEDs
+		; To make debugging carry flag easier, start with a high lower byte value
+		lda #$DD
+		sta $00 ; Store DD in zero page 00
 
-; Now we initialize the X register to use to count from 0 - 255 (FF)
-		ldx #$00
 BLINKER:
-		txa 			; Pipe the value in x out to A which will display on the 8 LED display
-		sta LED_IO_ADDR	; Display value on LEDs. 
-		inx				; Increment the value of X by 1
+		; Increment a 16 bit counter, output the high byte out to the LEDs
+		clc			; Clear the carry bit	
+		lda $00
+		adc #$01
+		sta $00
+		lda #$00	; Load 0 to A then add with carry , this pulls in the carry flag for the next byte
+		adc $01
+		sta $01
+		sta LED_IO_ADDR	; Display high byte value on LEDs. 
 		jmp BLINKER		; Loop forever
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.

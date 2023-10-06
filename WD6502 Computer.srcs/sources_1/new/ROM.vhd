@@ -43,8 +43,20 @@ architecture inferred_rom_arch of ROM is
 
     constant ROM_DATA : ROM_BYTES := 
         (
+            -- ROM CONTENT BEGIN
             -- Address: 0x0000
-            x"FE", x"ED", x"FA", x"CE",
+            x"78", x"D8", x"A2", x"FF",
+            x"9A", x"A9", x"00", x"8D",
+            x"00", x"02", x"A9", x"DD",
+            x"85", x"00", x"18", x"A5",
+            x"00", x"69", x"01", x"85",
+            x"00", x"A9", x"00", x"65",
+            x"01", x"85", x"01", x"8D",
+            x"00", x"02", x"4C", x"0E",
+            x"FC", x"08", x"48", x"A9",
+            x"FF", x"68", x"28", x"40",
+            x"68", x"40", x"01", x"00",
+            x"00", x"00", x"0A", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -76,7 +88,6 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            -- Address: 0x0080
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -109,7 +120,6 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            -- Address: 0x0100
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -142,7 +152,6 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            -- Address: 0x0180
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -175,7 +184,6 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            -- Address: 0x0200
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -208,7 +216,6 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            -- Address: 0x0280
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -241,7 +248,6 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            -- Address: 0x0300
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -274,7 +280,6 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            -- Address: 0x0380
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
@@ -295,30 +300,14 @@ architecture inferred_rom_arch of ROM is
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
             x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            x"00", x"00", x"00", x"00",
-            --FFFC, FFFD, FFFE, FFFF -- Jump to beginning of ROM
-            ROM_BASE(7 downto 0), ROM_BASE(15 downto 8), x"00", x"00"         
+            x"00", x"00", x"00", x"00"
+            -- ROM CONTENT END         
         );
 begin
 
-    -- Since port A and B read and write to the same signal (memory) they
-    -- must live inside the same process
     process(clka)
     variable read_address : natural := 0;
     begin
-        -- Note no protection, if caller writes via A and B , no 
-        -- locking of address occurs, synchronizing ports is the caller's
-        -- responsibility
         if (clka'event and clka = '1') then
             read_address := to_integer(unsigned(addra));
             douta <= ROM_DATA(read_address);

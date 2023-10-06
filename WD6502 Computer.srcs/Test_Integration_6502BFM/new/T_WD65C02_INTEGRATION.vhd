@@ -80,22 +80,22 @@ signal T_CLOCK        :STD_LOGIC := '0'; -- Assume 100mhz clock
 signal T_RESET        :STD_LOGIC; -- User input reset button
 signal T_SINGLESTEP   :STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
 
-signal T_ADDRESS      :STD_LOGIC_VECTOR (15 downto 0);    -- Address bus
-signal T_BE           :STD_LOGIC;                        -- Bus Enable
-signal T_DATA_MODEL         :STD_LOGIC_VECTOR (7 downto 0) := (others => 'Z');  -- Data bus
-signal T_DATA_INTERFACE         :STD_LOGIC_VECTOR (7 downto 0) := (others => 'Z');  -- Data bus
-signal T_IRQB         :STD_LOGIC;                         -- Interrupt Request
-signal T_MLB          :STD_LOGIC;                      -- Memory Lock
-signal T_NMIB         :STD_LOGIC;                         -- Non-Maskable Interrupt
-signal T_PHI1O        :STD_LOGIC;                         -- Phase 1clock
-signal T_PHI2         :STD_LOGIC;                        -- Phase 2clock (main clock)
-signal T_PHI2O        :STD_LOGIC;                         -- Phase 2clock
-signal T_RDY          :STD_LOGIC;                        -- Ready
-signal T_RESB         :STD_LOGIC;                        -- Reset
-signal T_RWB          :STD_LOGIC;                         -- Read/Write
-signal T_SOB          :STD_LOGIC;                         -- Set Overflow
-signal T_SYNC         :STD_LOGIC;                         -- Synchronize
-signal T_VPB          :STD_LOGIC;                         -- Vector Pull
+signal T_ADDRESS                :ADDRESS_T;    -- Address bus
+signal T_BE                     :BE_T;                        -- Bus Enable
+signal T_DATA_MODEL             :DATA_T := (others => 'Z');  -- Data bus
+signal T_DATA_INTERFACE         :DATA_T := (others => 'Z');  -- Data bus
+signal T_IRQB                   :IRQB_T;                         -- Interrupt Request
+signal T_MLB                    :MLB_T;                      -- Memory Lock
+signal T_NMIB                   :NMIB_T;                         -- Non-Maskable Interrupt
+signal T_PHI1O                  :PHI1O_T;                         -- Phase 1clock
+signal T_PHI2                   :PHI2_T;                        -- Phase 2clock (main clock)
+signal T_PHI2O                  :PHI2O_T;                         -- Phase 2clock
+signal T_RDY                    :RDY_T;                        -- Ready
+signal T_RESB                   :RESB_T;                        -- Reset
+signal T_RWB                    :RWB_T;                         -- Read/Write
+signal T_SOB                    :SOB_T;                         -- Set Overflow
+signal T_SYNC                   :SYNC_T;                         -- Synchronize
+signal T_VPB                    :VPB_T;                         -- Vector Pull
 
 constant CLOCK_PERIOD : time := 100ns; -- 100mhz FPGA clock
 

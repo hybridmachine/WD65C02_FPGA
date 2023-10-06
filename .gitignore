@@ -3,3 +3,9 @@ WD6502 Computer.hw/
 WD6502 Computer.ip_user_files/
 WD6502 Computer.runs/
 WD6502 Computer.sim/
+*.obj
+*.map
+*.sym
+*.lst
+*.bin
+*.hex

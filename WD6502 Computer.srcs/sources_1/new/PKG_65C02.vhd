@@ -60,16 +60,26 @@ package W65C02_DEFINITIONS is
     
     -- Memory Map
     
-    constant ROM_END            : std_logic_vector := x"FFFF";
-    constant ROM_BASE           : std_logic_vector := x"FC00";
-    constant RAM_END            : std_logic_vector := x"FBFF";
-    constant RAM_BASE           : std_logic_vector := x"0400";
-    constant MEM_MAPPED_IO_END  : std_logic_vector := x"03FF";
-    constant MEM_MAPPED_IO_BASE : std_logic_vector := x"0200";
-    constant STACK_END          : std_logic_vector := x"01FF";
-    constant STACK_BASE         : std_logic_vector := x"0100";
-    constant SYS_RESERVED_END   : std_logic_vector := x"00FF";
-    constant SYS_RESERVED_BASE  : std_logic_vector := x"0001";
-    constant MEM_MANAGER_STATUS : std_logic_vector := x"0000";
+    -- ROM ends at FFF9, FFFA - FFFF are managed directly by the memory manager
+    constant ROM_END                    : std_logic_vector := x"FFF9";
+    constant ROM_BASE                   : std_logic_vector := x"FC00";
+    
+    constant BOOT_VEC                   : std_logic_vector := ROM_BASE; -- Jump to the start of ROM
+    constant BOOT_VEC_ADDRESS_LOW       : std_logic_vector := x"FFFC";
+    constant BOOT_VEC_ADDRESS_HIGH      : std_logic_vector := x"FFFD";
+
+    constant RAM_END                    : std_logic_vector := x"FBFF";
+    constant RAM_BASE                   : std_logic_vector := x"0400";
+    
+    constant MEM_MAPPED_IO_END          : std_logic_vector := x"03FF";
+    constant MEM_MAPPED_IO_BASE         : std_logic_vector := x"0200";
+    
+    constant STACK_END                  : std_logic_vector := x"01FF";
+    constant STACK_BASE                 : std_logic_vector := x"0100";
+    
+    constant SYS_RESERVED_END           : std_logic_vector := x"00FF";
+    constant SYS_RESERVED_BASE          : std_logic_vector := x"0001";
+    
+    constant MEM_MANAGER_STATUS         : std_logic_vector := x"0000";
 
 end package;

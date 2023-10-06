@@ -139,8 +139,12 @@ begin
     if (MEMORY_CLOCK'event and MEMORY_CLOCK = '1') then
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
+        if (unsigned(BOOT_VEC_ADDRESS_LOW) = MEMORY_ADDRESS) then
+            BUS_READ_DATA <= BOOT_VEC(7 downto 0);
+        elsif (unsigned(BOOT_VEC_ADDRESS_HIGH) = MEMORY_ADDRESS) then
+            BUS_READ_DATA <= BOOT_VEC(15 downto 8);
         -- Read from ROM
-        if (unsigned(ROM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(ROM_END)) then
+        elsif (unsigned(ROM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(ROM_END)) then
             if (WRITE_FLAG = '0') then
                 SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(ROM_BASE);
                 rom_addra <= std_logic_vector(SHIFTED_ADDRESS);
