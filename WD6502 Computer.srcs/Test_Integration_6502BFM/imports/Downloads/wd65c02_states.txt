@@ -1,4 +1,11 @@
+-- Format is Clock Delay, Processor Control Lines Values, Address, Expected/Written Value
+-- Processor control lines are BE,IRQB,MLB,NMIB,RDY,RWB,SOB,SYNC,VPB
 07,100011010,FFFC,00  -- Wait 7 clock cycles then address goes to FFFC and reads 00
 00,100011010,FFFD,FC  -- Immediate address goes to FFFD and reads FC
-00,100010010,FFFD,FC  -- Immediate address goes to FFFD and reads FC
+00,100011010,FC00,78  -- Test reading the first four bytes of ROM
+00,100011010,FC01,D8
+00,100011010,FC02,A2
+00,100011010,FC03,FF
+00,100010000,0000,00 -- Test writing low and high bit
+00,100010000,0001,01
 END

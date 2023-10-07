@@ -147,7 +147,7 @@ begin
                         readline(file_wd65c02_states, line_state);
                         read(line_state, clock_delay_count_str);
                         
-                        if (clock_delay_count_str /= "EN") then
+                        if (clock_delay_count_str /= "EN" and clock_delay_count_str /= "--") then
                             read(line_state, TABSPACE);
                 
                             read(line_state, processor_pins_var.BE);
