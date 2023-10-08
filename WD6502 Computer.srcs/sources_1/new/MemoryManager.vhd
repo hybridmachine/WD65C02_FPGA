@@ -188,7 +188,7 @@ begin
         elsif(unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(MEM_MAPPED_IO_END)) then
             if (unsigned(PERIPHERAL_IO_LED_ADDR) = MEMORY_ADDRESS) then
                 -- Send data value to Peripheral_IO_LED
-                if (WRITE_FLAG = '0') then
+                if (WRITE_FLAG = '1') then
                     pio_led_data <= BUS_WRITE_DATA;
                 end if;
             end if;

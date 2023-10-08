@@ -22,6 +22,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use WORK.W65C02_DEFINITIONS.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -35,11 +36,13 @@ end T_MEMORY_MANAGER;
 architecture Behavioral of T_MEMORY_MANAGER is
 
 COMPONENT MemoryManager is
-    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0);
-           BUS_WRITE_DATA: in STD_LOGIC_VECTOR (7 downto 0);
+    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0); -- We could do this with inout but harder to test bench so splitting
+           BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0);
            BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
            MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
-           WRITE_FLAG : in STD_LOGIC -- When 1, data to address, read address and store on data line otherwise
+           WRITE_FLAG : in STD_LOGIC; -- When 1, data to address, read address and store on data line otherwise
+           PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           RESET : in STD_LOGIC
            );
 end COMPONENT;
 
@@ -48,23 +51,10 @@ signal T_BUS_WRITE_DATA : STD_LOGIC_VECTOR (7 downto 0);
 signal T_BUS_ADDRESS : STD_LOGIC_VECTOR (15 downto 0);
 signal T_MEMORY_CLOCK : STD_LOGIC;
 signal T_WRITE_FLAG : STD_LOGIC;
+signal T_PIO_LED_OUT : STD_LOGIC_VECTOR (7 downto 0);
+signal T_RESET : STD_LOGIC;
 
 constant CLOCK_PERIOD : time := 100ns; -- 10mhz
-
--- For now copy/paste from MemoryManager.vhd, might 
--- move to a package later, for now this is good enough for testing
-constant ROM_END: std_logic_vector := x"FFFF";
-constant ROM_BASE: std_logic_vector := x"EFFF";
-constant RAM_END: std_logic_vector := x"EFFE";
-constant RAM_BASE: std_logic_vector := x"0400";
-constant MEM_MAPPED_IO_END: std_logic_vector := x"03FF";
-constant MEM_MAPPED_IO_BASE: std_logic_vector := x"0200";
-constant STACK_END: std_logic_vector := x"01FF";
-constant STACK_BASE: std_logic_vector := x"0100";
-constant SYS_RESERVED_END: std_logic_vector := x"00FF";
-constant SYS_RESERVED_BASE: std_logic_vector := x"0001";
-constant MEM_MANAGER_STATUS: std_logic_vector := x"0000";
-
 
 begin
 
@@ -73,7 +63,9 @@ DUT : MemoryManager PORT MAP (
         WRITE_FLAG => T_WRITE_FLAG,
         BUS_READ_DATA => T_BUS_READ_DATA,
         BUS_WRITE_DATA => T_BUS_WRITE_DATA,
-        BUS_ADDRESS => T_BUS_ADDRESS
+        BUS_ADDRESS => T_BUS_ADDRESS,
+        PIO_LED_OUT => T_PIO_LED_OUT,
+        RESET => T_RESET
     );
 
 -- Run the memory clock
@@ -87,9 +79,15 @@ end process;
 
 -- The test process
 process
-variable WRITE_TO_RAM: std_logic_vector(7 downto 0);
+variable WRITTEN_BYTE_1: std_logic_vector(7 downto 0);
+variable WRITTEN_BYTE_2: std_logic_vector(7 downto 0);
 begin
 
+    T_RESET <= CPU_RESET;
+    wait for 300ns;
+    T_RESET <= CPU_RUNNING;
+    wait for 300ns;
+    
     -- Here we read two bytes from ROM and write those two bytes to RAM
     T_WRITE_FLAG <= '0'; -- READ mode    
     T_BUS_ADDRESS <= ROM_BASE;
@@ -97,11 +95,10 @@ begin
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    WRITE_TO_RAM := T_BUS_READ_DATA;
-    assert (WRITE_TO_RAM = x"FE") report "ROM address 0 not FE" severity failure;
+    WRITTEN_BYTE_1 := T_BUS_READ_DATA;
     T_WRITE_FLAG <= '1';
     T_BUS_ADDRESS <= RAM_BASE;
-    T_BUS_WRITE_DATA <= WRITE_TO_RAM;
+    T_BUS_WRITE_DATA <= WRITTEN_BYTE_1;
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
@@ -113,11 +110,10 @@ begin
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    WRITE_TO_RAM := T_BUS_READ_DATA;
-    assert (WRITE_TO_RAM = x"ED") report "ROM address 1 not ED" severity failure;
+    WRITTEN_BYTE_2 := T_BUS_READ_DATA;
     T_WRITE_FLAG <= '1';
     T_BUS_ADDRESS <= std_logic_vector(unsigned(RAM_BASE) + 1);
-    T_BUS_WRITE_DATA <= WRITE_TO_RAM;
+    T_BUS_WRITE_DATA <= WRITTEN_BYTE_2;
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
@@ -131,14 +127,29 @@ begin
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    assert (T_BUS_READ_DATA = x"FE") report "RAM address 0 not FE" severity failure;
+    assert (T_BUS_READ_DATA = WRITTEN_BYTE_1) report "RAM address 0 value does not match written" severity failure;
     T_BUS_ADDRESS <= std_logic_vector(unsigned(RAM_BASE) + 1);
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    assert (T_BUS_READ_DATA = x"ED") report "RAM address 0 not ED" severity failure;
+    assert (T_BUS_READ_DATA = WRITTEN_BYTE_2) report "RAM address 1 value does not match written" severity failure;
        
+    T_WRITE_FLAG <= '1';
+    T_BUS_ADDRESS <= std_logic_vector(unsigned(PERIPHERAL_IO_LED_ADDR));
+    T_BUS_WRITE_DATA <= x"FE";
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    assert (T_PIO_LED_OUT = x"FE") report "LED control lines do not match requested" severity error;
+    T_BUS_WRITE_DATA <= x"ED";
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    assert (T_PIO_LED_OUT = x"ED") report "LED control lines do not match requested" severity error;
+
     assert (false) report "Test complete, test successful" severity failure;
     
     
