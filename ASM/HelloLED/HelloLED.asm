@@ -46,7 +46,7 @@
 	START:
 		sei
 
-		cld
+		cld				; Clear decimal mode
 		ldx	#$ff		; Initialize the stack pointer
 		txs
 

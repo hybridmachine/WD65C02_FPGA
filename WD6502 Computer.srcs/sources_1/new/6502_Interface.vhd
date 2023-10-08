@@ -37,21 +37,23 @@ entity WD6502_Interface is
            RESET        : in STD_LOGIC; -- User input reset button
            SINGLESTEP   : in STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
            -- 6502 Connected Pins
-           ADDRESS      : in ADDRESS_T;    -- Address bus
-           BE           : out BE_T;                        -- Bus Enable
-           DATA         : inout DATA_T;  -- Data bus
-           IRQB         : in IRQB_T;                         -- Interrupt Request
+           ADDRESS      : in ADDRESS_T;                     -- Address bus
+           BE           : out BE_T;                         -- Bus Enable
+           DATA         : inout DATA_T;                     -- Data bus
+           IRQB         : in IRQB_T;                        -- Interrupt Request
            MLB          : inout MLB_T;                      -- Memory Lock
-           NMIB         : in NMIB_T;                         -- Non-Maskable Interrupt
-           PHI1O        : in PHI1O_T;                         -- Phase 1 out clock
-           PHI2         : out PHI2_T;                        -- Phase 2 in clock (main clock)
-           PHI2O        : in PHI2O_T;                         -- Phase 2 out clock
+           NMIB         : in NMIB_T;                        -- Non-Maskable Interrupt
+           PHI1O        : in PHI1O_T;                       -- Phase 1 out clock
+           PHI2         : out PHI2_T;                       -- Phase 2 in clock (main clock)
+           PHI2O        : in PHI2O_T;                       -- Phase 2 out clock
            RDY          : out RDY_T;                        -- Ready
-           RESB         : out RESB_T;                        -- Reset
+           RESB         : out RESB_T;                       -- Reset
            RWB          : in RWB_T;                         -- Read/Write
            SOB          : in SOB_T;                         -- Set Overflow
-           SYNC         : in SYNC_T;                         -- Synchronize
-           VPB          : in VPB_T);                        -- Vector Pull
+           SYNC         : in SYNC_T;                        -- Synchronize
+           VPB          : in VPB_T;                         -- Vector Pull
+           -- IO pins
+           PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0));                        
 end WD6502_Interface;
 
 architecture Behavioral of WD6502_Interface is
@@ -61,7 +63,9 @@ COMPONENT MemoryManager is
            BUS_WRITE_DATA: in STD_LOGIC_VECTOR (7 downto 0);
            BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
            MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
-           WRITE_FLAG : in STD_LOGIC -- When 1, data to address, read address and store on data line otherwise
+           WRITE_FLAG : in STD_LOGIC; -- When 1, data to address, read address and store on data line otherwise
+           PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           RESET : in STD_LOGIC
            );
 end COMPONENT;
 
@@ -100,7 +104,9 @@ MemoryManagement : MemoryManager port map (
     BUS_WRITE_DATA => BUS_WRITE_DATA,
     BUS_ADDRESS => BUS_ADDRESS,
     MEMORY_CLOCK => MEMORY_CLOCK,
-    WRITE_FLAG => WRITE_FLAG
+    WRITE_FLAG => WRITE_FLAG,
+    PIO_LED_OUT => PIO_LED_OUT,
+    RESET => RESET
 );
 
 -- Concurrent signal propogation

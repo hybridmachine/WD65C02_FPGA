@@ -39,7 +39,9 @@ entity MemoryManager is
            BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0);
            BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
            MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
-           WRITE_FLAG : in STD_LOGIC -- When 1, data to address, read address and store on data line otherwise
+           WRITE_FLAG : in STD_LOGIC; -- When 1, data to address, read address and store on data line otherwise
+           PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           RESET : in STD_LOGIC
            );
 end MemoryManager;
 
@@ -67,6 +69,8 @@ signal rom_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
 signal rom_douta: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 signal rom_clka: std_logic;
 	
+signal pio_led_data: std_logic_vector(7 downto 0);
+
 COMPONENT RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
@@ -96,6 +100,13 @@ COMPONENT ROM is
 	douta: OUT std_logic_VECTOR(7 downto 0)
   );
 end COMPONENT;
+
+COMPONENT Peripheral_IO_LED is
+    Port ( DATA : in STD_LOGIC_VECTOR (7 downto 0);
+           LED_CTL : out STD_LOGIC_VECTOR (7 downto 0);
+           CLOCK : in STD_LOGIC;
+           RESET : in STD_LOGIC);
+end COMPONENT;
 begin
 
 MAIN_RAM: RAM port map (
@@ -117,6 +128,13 @@ MAIN_ROM: ROM port map (
     addra => rom_addra,
     douta => rom_douta,
     clka => rom_clka
+);
+
+PIO_LED: peripheral_io_led port map (
+    data => pio_led_data,
+    clock => MEMORY_CLOCK,
+    led_ctl => PIO_LED_OUT,
+    reset => RESET
 );
 
 -- Concurrent processes to distribute clock signals to RAM and ROM
@@ -166,6 +184,13 @@ begin
                 -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
                 ram_addrb <= std_logic_vector(SHIFTED_ADDRESS);
                 BUS_READ_DATA <= ram_doutb;
+            end if;
+        elsif(unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(MEM_MAPPED_IO_END)) then
+            if (unsigned(PERIPHERAL_IO_LED_ADDR) = MEMORY_ADDRESS) then
+                -- Send data value to Peripheral_IO_LED
+                if (WRITE_FLAG = '0') then
+                    pio_led_data <= BUS_WRITE_DATA;
+                end if;
             end if;
         else
             -- Set error bit, somehow address out of range of all address blocks
