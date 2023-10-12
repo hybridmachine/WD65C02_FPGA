@@ -35,8 +35,11 @@
 ;
 ;***************************************************************************
 
-	LED_IO_ADDR:	equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
-	PRIMES_LESS_THAN:	equ #$FE ; Primes up to 254
+	LED_IO_ADDR:	    equ	    $0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+	PRIMES_LESS_THAN:	equ     $FE ; Primes up to 254
+    ARRAY_BASE_ADDRESS: equ     $0300
+    MULTARG1:           equ     $80
+    MULTARG2:           equ     $82
 		CHIP	65C02
 		LONGI	OFF
 		LONGA	OFF
@@ -57,15 +60,48 @@
     ; MAIN
     ; This program will find all primes less than 254 using the Sieve of Eratosthenes algorithm
     ; Initialize $02 to $FE to all be #$01 
-        ldx PRIMES_LESS_THAN 
+        ldx #PRIMES_LESS_THAN 
         lda #$01
-        sta $00,x
+        sta ARRAY_BASE_ADDRESS,x
     INIT_MEM:
         dex
-        sta $00,x
+        sta ARRAY_BASE_ADDRESS,x
         cpx #$02    ; No need to init 0 and 1
         bne INIT_MEM
 
+        ; for (i = 2; i <= N; i++)
+        ldx #$01 ; Start at #$01 since we call inx first off
+    FOR_I_TO_N:
+        inx
+        TXA
+        CMP #PRIMES_LESS_THAN+1 ; i > N
+        BEQ END
+        ; if (a[i])
+        lda #$01
+        cmp ARRAY_BASE_ADDRESS,x
+        bne FOR_I_TO_N
+        ; for (j = i; j*i <= N; j++) a[i*j] = 0;
+        TXA
+        TAY ; j = i
+    FOR_J_MULT_I_LT_N:
+        stx MULTARG1
+        sty MULTARG2
+        TYA ; Preserve X and Y on stack
+        PHA
+        TXA
+        PHA
+        JSR MULT
+        ; Result is in X and Y
+        TXA
+        CMP #$00
+        BNE FOR_I_TO_N ; If hi is not 0, branch, max is 254 so automatically end for high byte not 0
+        TYA
+        STA $01
+        LDA #PRIMES_LESS_THAN
+        SEC ; Set carry for subtraction
+        SBC $01
+        BCS FOR_I_TO_N
+    END:
         ; Test preserving X and Y reg values
         LDX #$FE
         LDY #$ED
@@ -95,6 +131,8 @@
         JMP START
 
 ; Multiply, adapted from the 65xx programmers reference
+; result: returned in X - Y (hi - lo)
+; All registers are overwritten , caller must save before call
         MULT:
         MCAND1:  GEQU    $80
         MCAND2:  GEQU    $82
