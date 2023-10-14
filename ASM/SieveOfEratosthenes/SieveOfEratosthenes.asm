@@ -38,8 +38,11 @@
 	LED_IO_ADDR:	    equ	    $0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 	PRIMES_LESS_THAN:	equ     $FE ; Primes up to 254
     ARRAY_BASE_ADDRESS: equ     $0300
+    VALUE_BASE_ADDRESS: equ     $0400
     MULTARG1:           equ     $80
     MULTARG2:           equ     $82
+    MULTRESL:           equ     $01
+    MULTRESH:           equ     $02
 		CHIP	65C02
 		LONGI	OFF
 		LONGA	OFF
@@ -65,7 +68,10 @@
         sta ARRAY_BASE_ADDRESS,x
     INIT_MEM:
         dex
+        lda #$01
         sta ARRAY_BASE_ADDRESS,x
+        TXA
+        sta VALUE_BASE_ADDRESS,x
         cpx #$02    ; No need to init 0 and 1
         bne INIT_MEM
 
@@ -74,7 +80,7 @@
     FOR_I_TO_N:
         inx
         TXA
-        CMP #PRIMES_LESS_THAN+1 ; i > N
+        CMP #PRIMES_LESS_THAN+1 ; i <= N (when X equal N end)
         BEQ END
         ; if (a[i])
         lda #$01
@@ -84,6 +90,11 @@
         TXA
         TAY ; j = i
     FOR_J_MULT_I_LT_N:
+        lda #$0
+        sta MULTARG1    ; Clear out arguments memory then load with register vals
+        sta MULTARG1+1
+        sta MULTARG2
+        sta MULTARG2+1
         stx MULTARG1
         sty MULTARG2
         TYA ; Preserve X and Y on stack
@@ -92,15 +103,29 @@
         PHA
         JSR MULT
         ; Result is in X and Y
-        TXA
+        STX MULTRESH
+        STY MULTRESL
+        ; Restore X and Y
+        PLA
+        TAX
+        PLA
+        TAY
+        LDA MULTRESH
         CMP #$00
         BNE FOR_I_TO_N ; If hi is not 0, branch, max is 254 so automatically end for high byte not 0
         TYA
-        STA $01
-        LDA #PRIMES_LESS_THAN
-        SEC ; Set carry for subtraction
-        SBC $01
-        BCS FOR_I_TO_N
+        CMP #PRIMES_LESS_THAN+1
+        BEQ FOR_I_TO_N ; if j = N+1 (no longer <= N) then branch back to top loop
+        TYA ; Preserve Y
+        PHA
+        LDY MULTRESL ; Load the multiplication result
+        LDA #$00
+        STA ARRAY_BASE_ADDRESS,Y
+        STA VALUE_BASE_ADDRESS,Y
+        PLA
+        TAY ; Restore Y
+        INY ; j++
+        JMP FOR_J_MULT_I_LT_N
     END:
         ; Test preserving X and Y reg values
         LDX #$FE
