@@ -37,21 +37,21 @@ entity WD6502_Interface is
            RESET        : in STD_LOGIC; -- User input reset button
            SINGLESTEP   : in STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
            -- 6502 Connected Pins
-           ADDRESS      : in ADDRESS_T;                     -- Address bus
-           BE           : out BE_T;                         -- Bus Enable
-           DATA         : inout DATA_T;                     -- Data bus
-           IRQB         : in IRQB_T;                        -- Interrupt Request
-           MLB          : inout MLB_T;                      -- Memory Lock
-           NMIB         : in NMIB_T;                        -- Non-Maskable Interrupt
-           PHI1O        : in PHI1O_T;                       -- Phase 1 out clock
-           PHI2         : out PHI2_T;                       -- Phase 2 in clock (main clock)
-           PHI2O        : in PHI2O_T;                       -- Phase 2 out clock
-           RDY          : out RDY_T;                        -- Ready
-           RESB         : out RESB_T;                       -- Reset
-           RWB          : in RWB_T;                         -- Read/Write
-           SOB          : in SOB_T;                         -- Set Overflow
-           SYNC         : in SYNC_T;                        -- Synchronize
-           VPB          : in VPB_T;                         -- Vector Pull
+           ADDRESS      : in std_logic_vector(15 downto 0);                     -- Address bus
+           BE           : out std_logic;                         -- Bus Enable
+           DATA         : inout std_logic_vector(7 downto 0);                     -- Data bus
+           IRQB         : in std_logic;                        -- Interrupt Request
+           MLB          : inout std_logic;                      -- Memory Lock
+           NMIB         : in std_logic;                        -- Non-Maskable Interrupt
+           PHI1O        : in std_logic;                       -- Phase 1 out clock
+           PHI2         : out std_logic;                       -- Phase 2 in clock (main clock)
+           PHI2O        : in std_logic;                       -- Phase 2 out clock
+           RDY          : out std_logic;                        -- Ready
+           RESB         : out std_logic;                       -- Reset
+           RWB          : in std_logic;                         -- Read/Write
+           SOB          : in std_logic;                         -- Set Overflow
+           SYNC         : in std_logic;                        -- Synchronize
+           VPB          : in std_logic;                         -- Vector Pull
            -- IO pins
            PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0));                        
 end WD6502_Interface;
