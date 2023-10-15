@@ -43,6 +43,8 @@
     MULTARG2:           equ     $82
     MULTRESL:           equ     $01
     MULTRESH:           equ     $02
+    SAVEX:              equ     $03
+    SAVEY:              equ     $04
 		CHIP	65C02
 		LONGI	OFF
 		LONGA	OFF
@@ -95,35 +97,28 @@
         sta MULTARG1+1
         sta MULTARG2
         sta MULTARG2+1
-        stx MULTARG1
+        stx MULTARG1    ; Store the multiplicands in X and Y
         sty MULTARG2
-        TYA ; Preserve X and Y on stack
-        PHA
-        TXA
-        PHA
+        ; Save off X and Y since MULT will overwrite them
+        JSR SAVEXY
         JSR MULT
-        ; Result is in X and Y
+        ; Save result in X and Y
         STX MULTRESH
         STY MULTRESL
         ; Restore X and Y
-        PLA
-        TAX
-        PLA
-        TAY
+        JSR RESTXY
         LDA MULTRESH
         CMP #$00
         BNE FOR_I_TO_N ; If hi is not 0, branch, max is 254 so automatically end for high byte not 0
         TYA
         CMP #PRIMES_LESS_THAN+1
         BEQ FOR_I_TO_N ; if j = N+1 (no longer <= N) then branch back to top loop
-        TYA ; Preserve Y
-        PHA
+        JSR SAVEXY ; Don't need X but it wont hurt anything
         LDY MULTRESL ; Load the multiplication result
         LDA #$00
         STA ARRAY_BASE_ADDRESS,Y
         STA VALUE_BASE_ADDRESS,Y
-        PLA
-        TAY ; Restore Y
+        JSR RESTXY
         INY ; j++
         JMP FOR_J_MULT_I_LT_N
     END:
@@ -135,25 +130,15 @@
         TYA
         PHA
 
-        ; Test out our multiply routine
-        lda #$00
-        sta $80
-        sta $81
-        sta $82
-        sta $83
-
-        lda #$05
-        sta $80
-        sta $82
-        JSR MULT
-        ; Save results to memory
-        STY $80
-        STX $81
-        PLA
-        TAY
-        PLA
-        TAX
-        JMP START
+        SAVEXY:
+            STX SAVEX
+            STY SAVEY
+            RTS
+        
+        RESTXY:
+            LDX SAVEX
+            LDY SAVEY
+            RTS
 
 ; Multiply, adapted from the 65xx programmers reference
 ; result: returned in X - Y (hi - lo)
