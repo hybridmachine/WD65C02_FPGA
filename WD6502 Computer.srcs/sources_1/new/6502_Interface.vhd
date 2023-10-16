@@ -109,31 +109,44 @@ MemoryManagement : MemoryManager port map (
     RESET => RESET
 );
 
--- Concurrent signal propogation
-WRITE_FLAG <= not RWB;
+---- Concurrent signal propogation
+--WRITE_FLAG <= not RWB;
+--MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
+--                       -- For now just pulse FPGA clock straight to memory clock
+
+--DATA <= BUS_READ_DATA when RWB = PROCESSOR_READING_FROM_MEMORY;
+--BUS_WRITE_DATA <= DATA when RWB = PROCESSOR_WRITING_TO_MEMORY;
+--BUS_ADDRESS <= ADDRESS;
+                       
+---- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
+---- Otherwise RDY is always high.
+--RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
+---- Push the internal signal out to the CPU clock PIN
+PHI2 <= WD6502_CLOCK;
 MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
                        -- For now just pulse FPGA clock straight to memory clock
-
-DATA <= BUS_READ_DATA when RWB = PROCESSOR_READING_FROM_MEMORY;
-BUS_WRITE_DATA <= DATA when RWB = PROCESSOR_WRITING_TO_MEMORY;
-BUS_ADDRESS <= ADDRESS;
-                       
--- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
--- Otherwise RDY is always high.
-RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
--- Push the internal signal out to the CPU clock PIN
-PHI2 <= WD6502_CLOCK;
 
 wd6502_clockmachine : process (CLOCK, RESET)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
 begin 
-    if (RESET = '0' and RESET_IN_PROGRESS = '0') then -- Reset active low
+    if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
         WD6502_CLOCK <= '0';
         RESET_IN_PROGRESS := '1';
-    elsif (CLOCK'event and CLOCK = '1') then
-        if (RESET = '1' and RESET_IN_PROGRESS = '1') then
+    elsif (CLOCK'event and CLOCK = '1') then      
+        WRITE_FLAG <= not RWB;
+        
+        if (RWB = PROCESSOR_READING_FROM_MEMORY)
+        then
+            DATA <= BUS_READ_DATA;
+        else
+            BUS_WRITE_DATA <="11100011";
+            --BUS_WRITE_DATA <= DATA;
+        end if;
+       
+        BUS_ADDRESS <= ADDRESS;
+        if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
             RESET_IN_PROGRESS := '0';
         end if;
         
@@ -151,8 +164,17 @@ wd6502_statemachine : process (WD6502_CLOCK, RESET)
 variable reset_clock_count : natural := 0;
 variable reset_in_progress : std_logic := '0';
 begin
-    if (WD6502_CLOCK'event and WD6502_CLOCK='1') then
-        if (RESET = '0' and reset_in_progress = '0') then
+    if (WD6502_CLOCK'event and WD6502_CLOCK='1') then                           
+        -- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
+        -- Otherwise RDY is always high.
+        if (SINGLESTEP = '1') then
+            RDY <= SYNC;
+        else
+            RDY <= '1';
+        end if;
+        -- Push the internal signal out to the CPU clock PIN
+
+        if (RESET = CPU_RESET and reset_in_progress = '0') then
             PROCESSOR_STATE <= RESET_START;
             reset_clock_count := RESET_MIN_CLOCKS;
             RESB <= CPU_RESET;

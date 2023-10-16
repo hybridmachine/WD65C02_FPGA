@@ -190,6 +190,8 @@ begin
                 -- Send data value to Peripheral_IO_LED
                 if (WRITE_FLAG = '1') then
                     pio_led_data <= BUS_WRITE_DATA;
+                else
+                    pio_led_data <= "00110011";
                 end if;
             end if;
         else

@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x657D27ADE840EA4E",
+      "boundary_crc": "0x3A2FC917629201B2",
       "device": "xc7a35tcpg236-1",
       "gen_directory": "../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe",
       "name": "design_with_logic_probe",
@@ -11,61 +11,115 @@
       "validated": "true"
     },
     "design_tree": {
-      "WD6502_Interface_0": "",
-      "ila_0": "",
-      "clk_wiz_0": "",
       "constant_1": "",
       "constant_0": "",
-      "util_vector_logic_0": ""
+      "invert_phi2O": "",
+      "ila_0": "",
+      "invert_reset_signal": "",
+      "WD6502_Interface_0": ""
     },
     "ports": {
       "Reset": {
-        "direction": "I"
+        "direction": "I",
+        "parameters": {
+          "PortType": {
+            "value": "undef",
+            "value_src": "ip_prop"
+          },
+          "PortType.PROP_SRC": {
+            "value": "false",
+            "value_src": "ip_prop"
+          }
+        }
       },
       "ADDRESS_IN": {
         "direction": "I",
         "left": "15",
         "right": "0"
       },
-      "sys_clock": {
-        "type": "clk",
-        "direction": "I",
-        "parameters": {
-          "CLK_DOMAIN": {
-            "value": "design_with_logic_probe_sys_clock",
-            "value_src": "default"
-          },
-          "FREQ_HZ": {
-            "value": "100000000"
-          },
-          "FREQ_TOLERANCE_HZ": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.0"
-          }
-        }
-      },
       "LED_OUT": {
         "direction": "O",
         "left": "7",
         "right": "0"
       },
+      "RWB_PIN": {
+        "direction": "I"
+      },
+      "CLOCK": {
+        "direction": "I"
+      },
       "DATA": {
         "direction": "IO",
         "left": "7",
         "right": "0"
-      },
-      "RWB": {
-        "direction": "I"
       }
     },
     "components": {
+      "constant_1": {
+        "vlnv": "xilinx.com:ip:xlconstant:1.1",
+        "xci_name": "design_with_logic_probe_xlconstant_0_0",
+        "xci_path": "ip\\design_with_logic_probe_xlconstant_0_0\\design_with_logic_probe_xlconstant_0_0.xci",
+        "inst_hier_path": "constant_1"
+      },
+      "constant_0": {
+        "vlnv": "xilinx.com:ip:xlconstant:1.1",
+        "xci_name": "design_with_logic_probe_xlconstant_0_1",
+        "xci_path": "ip\\design_with_logic_probe_xlconstant_0_1\\design_with_logic_probe_xlconstant_0_1.xci",
+        "inst_hier_path": "constant_0",
+        "parameters": {
+          "CONST_VAL": {
+            "value": "0"
+          }
+        }
+      },
+      "invert_phi2O": {
+        "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
+        "xci_name": "design_with_logic_probe_util_vector_logic_0_1",
+        "xci_path": "ip\\design_with_logic_probe_util_vector_logic_0_1\\design_with_logic_probe_util_vector_logic_0_1.xci",
+        "inst_hier_path": "invert_phi2O",
+        "parameters": {
+          "C_OPERATION": {
+            "value": "not"
+          },
+          "C_SIZE": {
+            "value": "1"
+          }
+        }
+      },
+      "ila_0": {
+        "vlnv": "xilinx.com:ip:ila:6.2",
+        "xci_name": "design_with_logic_probe_ila_0_0",
+        "xci_path": "ip\\design_with_logic_probe_ila_0_0\\design_with_logic_probe_ila_0_0.xci",
+        "inst_hier_path": "ila_0",
+        "parameters": {
+          "C_MONITOR_TYPE": {
+            "value": "Native"
+          },
+          "C_NUM_OF_PROBES": {
+            "value": "5"
+          },
+          "C_PROBE0_WIDTH": {
+            "value": "16"
+          },
+          "C_PROBE2_WIDTH": {
+            "value": "8"
+          }
+        }
+      },
+      "invert_reset_signal": {
+        "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
+        "xci_name": "design_with_logic_probe_util_vector_logic_1_0",
+        "xci_path": "ip\\design_with_logic_probe_util_vector_logic_1_0\\design_with_logic_probe_util_vector_logic_1_0.xci",
+        "inst_hier_path": "invert_reset_signal",
+        "parameters": {
+          "C_OPERATION": {
+            "value": "not"
+          },
+          "C_SIZE": {
+            "value": "1"
+          }
+        }
+      },
       "WD6502_Interface_0": {
         "vlnv": "xilinx.com:module_ref:WD6502_Interface:1.0",
         "xci_name": "design_with_logic_probe_WD6502_Interface_0_0",
@@ -84,18 +138,6 @@
               "ASSOCIATED_RESET": {
                 "value": "RESET",
                 "value_src": "constant"
-              },
-              "FREQ_HZ": {
-                "value": "100000000",
-                "value_src": "ip_prop"
-              },
-              "PHASE": {
-                "value": "0.0",
-                "value_src": "ip_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "/clk_wiz_0_clk_out1",
-                "value_src": "ip_prop"
               }
             }
           },
@@ -191,71 +233,14 @@
             "right": "0"
           }
         }
-      },
-      "ila_0": {
-        "vlnv": "xilinx.com:ip:ila:6.2",
-        "xci_name": "design_with_logic_probe_ila_0_0",
-        "xci_path": "ip\\design_with_logic_probe_ila_0_0\\design_with_logic_probe_ila_0_0.xci",
-        "inst_hier_path": "ila_0",
-        "parameters": {
-          "C_MONITOR_TYPE": {
-            "value": "Native"
-          },
-          "C_NUM_OF_PROBES": {
-            "value": "2"
-          },
-          "C_PROBE0_WIDTH": {
-            "value": "16"
-          }
-        }
-      },
-      "clk_wiz_0": {
-        "vlnv": "xilinx.com:ip:clk_wiz:6.0",
-        "xci_name": "design_with_logic_probe_clk_wiz_0_0",
-        "xci_path": "ip\\design_with_logic_probe_clk_wiz_0_0\\design_with_logic_probe_clk_wiz_0_0.xci",
-        "inst_hier_path": "clk_wiz_0",
-        "parameters": {
-          "CLK_IN1_BOARD_INTERFACE": {
-            "value": "sys_clock"
-          },
-          "USE_BOARD_FLOW": {
-            "value": "true"
-          }
-        }
-      },
-      "constant_1": {
-        "vlnv": "xilinx.com:ip:xlconstant:1.1",
-        "xci_name": "design_with_logic_probe_xlconstant_0_0",
-        "xci_path": "ip\\design_with_logic_probe_xlconstant_0_0\\design_with_logic_probe_xlconstant_0_0.xci",
-        "inst_hier_path": "constant_1"
-      },
-      "constant_0": {
-        "vlnv": "xilinx.com:ip:xlconstant:1.1",
-        "xci_name": "design_with_logic_probe_xlconstant_0_1",
-        "xci_path": "ip\\design_with_logic_probe_xlconstant_0_1\\design_with_logic_probe_xlconstant_0_1.xci",
-        "inst_hier_path": "constant_0"
-      },
-      "util_vector_logic_0": {
-        "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
-        "xci_name": "design_with_logic_probe_util_vector_logic_0_1",
-        "xci_path": "ip\\design_with_logic_probe_util_vector_logic_0_1\\design_with_logic_probe_util_vector_logic_0_1.xci",
-        "inst_hier_path": "util_vector_logic_0",
-        "parameters": {
-          "C_OPERATION": {
-            "value": "not"
-          },
-          "C_SIZE": {
-            "value": "1"
-          }
-        }
       }
     },
     "nets": {
       "Net": {
         "ports": [
           "ADDRESS_IN",
-          "WD6502_Interface_0/ADDRESS",
-          "ila_0/probe0"
+          "ila_0/probe0",
+          "WD6502_Interface_0/ADDRESS"
         ]
       },
       "Net1": {
@@ -264,24 +249,25 @@
           "WD6502_Interface_0/DATA"
         ]
       },
-      "RWB_1": {
+      "RWB_PIN_1": {
         "ports": [
-          "RWB",
+          "RWB_PIN",
+          "ila_0/probe3",
           "WD6502_Interface_0/RWB"
         ]
       },
       "Reset_1": {
         "ports": [
           "Reset",
-          "WD6502_Interface_0/RESET"
+          "invert_reset_signal/Op1"
         ]
       },
       "WD6502_Interface_0_PHI2": {
         "ports": [
           "WD6502_Interface_0/PHI2",
+          "invert_phi2O/Op1",
           "ila_0/probe1",
-          "WD6502_Interface_0/PHI2O",
-          "util_vector_logic_0/Op1"
+          "WD6502_Interface_0/PHI2O"
         ]
       },
       "WD6502_Interface_0_PIO_LED_OUT": {
@@ -292,7 +278,7 @@
       },
       "clk_wiz_0_clk_out1": {
         "ports": [
-          "clk_wiz_0/clk_out1",
+          "CLOCK",
           "ila_0/clk",
           "WD6502_Interface_0/CLOCK"
         ]
@@ -300,29 +286,30 @@
       "constant_0_dout": {
         "ports": [
           "constant_0/dout",
+          "WD6502_Interface_0/IRQB",
+          "WD6502_Interface_0/NMIB",
           "WD6502_Interface_0/SYNC",
           "WD6502_Interface_0/VPB",
-          "WD6502_Interface_0/NMIB",
-          "WD6502_Interface_0/IRQB"
-        ]
-      },
-      "sys_clock_1": {
-        "ports": [
-          "sys_clock",
-          "clk_wiz_0/clk_in1"
+          "WD6502_Interface_0/SINGLESTEP"
         ]
       },
       "util_vector_logic_0_Res": {
         "ports": [
-          "util_vector_logic_0/Res",
+          "invert_phi2O/Res",
           "WD6502_Interface_0/PHI1O"
+        ]
+      },
+      "util_vector_logic_1_Res": {
+        "ports": [
+          "invert_reset_signal/Res",
+          "ila_0/probe4",
+          "WD6502_Interface_0/RESET"
         ]
       },
       "xlconstant_0_dout": {
         "ports": [
           "constant_1/dout",
-          "WD6502_Interface_0/SOB",
-          "WD6502_Interface_0/SINGLESTEP"
+          "WD6502_Interface_0/SOB"
         ]
       }
     }

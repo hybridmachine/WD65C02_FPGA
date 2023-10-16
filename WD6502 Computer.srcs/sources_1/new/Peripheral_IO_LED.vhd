@@ -46,9 +46,10 @@ begin
 process (CLOCK,RESET)
 begin
     if (RESET = CPU_RESET) then
-        LED_CTL <= x"00";
+        LED_CTL <= "01010101";
     else
         if (CLOCK'event and CLOCK='1') then
+--          LED_CTL <= "11111111";  
             LED_CTL <= DATA; -- Just pass through for now, simplest memory mapped IO for now
         end if;
     end if;

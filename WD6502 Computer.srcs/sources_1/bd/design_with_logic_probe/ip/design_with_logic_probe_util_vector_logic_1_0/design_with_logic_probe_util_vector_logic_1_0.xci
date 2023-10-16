@@ -1,14 +1,14 @@
 {
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
-    "xci_name": "design_with_logic_probe_util_vector_logic_0_1",
-    "cell_name": "invert_phi2O",
+    "xci_name": "design_with_logic_probe_util_vector_logic_1_0",
+    "cell_name": "invert_reset_signal",
     "component_reference": "xilinx.com:ip:util_vector_logic:2.0",
     "ip_revision": "2",
-    "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_util_vector_logic_0_1",
+    "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_util_vector_logic_1_0",
     "parameters": {
       "component_parameters": {
-        "Component_Name": [ { "value": "design_with_logic_probe_util_vector_logic_0_1", "resolve_type": "user", "usage": "all" } ],
+        "Component_Name": [ { "value": "design_with_logic_probe_util_vector_logic_1_0", "resolve_type": "user", "usage": "all" } ],
         "C_SIZE": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "C_OPERATION": [ { "value": "not", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
         "LOGO_FILE": [ { "value": "data/sym_notgate.png", "resolve_type": "user", "enabled": false, "usage": "all" } ]
@@ -34,7 +34,7 @@
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
         "IPREVISION": [ { "value": "2" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_util_vector_logic_0_1" } ],
+        "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_util_vector_logic_1_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
         "SWVERSION": [ { "value": "2023.1" } ],

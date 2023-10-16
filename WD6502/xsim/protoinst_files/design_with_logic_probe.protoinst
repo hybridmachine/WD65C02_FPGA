@@ -1,0 +1,9 @@
+{
+	"version": "1.0",
+	"modules": {
+		"design_with_logic_probe": {
+			"proto_instances": {
+			}
+		}
+	}
+}
