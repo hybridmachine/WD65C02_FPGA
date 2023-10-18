@@ -118,9 +118,9 @@ GEN1: for i in 0 to 7 generate
              IOSTANDARD => "DEFAULT",
              SLEW => "SLOW")
              port map (
-             O => BUS_READ_DATA(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
+             O => BUS_WRITE_DATA(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
              IO => DATA(i),     	-- Data inout port (connect directly to top-level port)
-             I => BUS_WRITE_DATA(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
+             I => BUS_READ_DATA(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
              T => WRITE_FLAG          	-- 3-state enable input, high=input, low=output
          );  
 
