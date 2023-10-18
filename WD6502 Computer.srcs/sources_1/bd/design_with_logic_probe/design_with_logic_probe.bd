@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x3A2FC917629201B2",
+      "boundary_crc": "0xF8789B9EA388A70B",
       "device": "xc7a35tcpg236-1",
       "gen_directory": "../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe",
       "name": "design_with_logic_probe",
@@ -46,12 +46,43 @@
         "direction": "I"
       },
       "CLOCK": {
-        "direction": "I"
+        "type": "clk",
+        "direction": "I",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "design_with_logic_probe_CLOCK",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "100000000"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
       },
-      "DATA": {
+      "BE_0": {
+        "direction": "O"
+      },
+      "DATA_0": {
         "direction": "IO",
         "left": "7",
         "right": "0"
+      },
+      "RDY_0": {
+        "direction": "O"
+      },
+      "RESB_0": {
+        "direction": "O"
       }
     },
     "components": {
@@ -138,6 +169,14 @@
               "ASSOCIATED_RESET": {
                 "value": "RESET",
                 "value_src": "constant"
+              },
+              "FREQ_HZ": {
+                "value": "100000000",
+                "value_src": "user_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "design_with_logic_probe_CLOCK",
+                "value_src": "default_prop"
               }
             }
           },
@@ -163,9 +202,6 @@
           },
           "IRQB": {
             "direction": "I"
-          },
-          "MLB": {
-            "direction": "IO"
           },
           "NMIB": {
             "direction": "I"
@@ -245,7 +281,7 @@
       },
       "Net1": {
         "ports": [
-          "DATA",
+          "DATA_0",
           "WD6502_Interface_0/DATA"
         ]
       },
@@ -262,6 +298,12 @@
           "invert_reset_signal/Op1"
         ]
       },
+      "WD6502_Interface_0_BE": {
+        "ports": [
+          "WD6502_Interface_0/BE",
+          "BE_0"
+        ]
+      },
       "WD6502_Interface_0_PHI2": {
         "ports": [
           "WD6502_Interface_0/PHI2",
@@ -273,7 +315,20 @@
       "WD6502_Interface_0_PIO_LED_OUT": {
         "ports": [
           "WD6502_Interface_0/PIO_LED_OUT",
-          "LED_OUT"
+          "LED_OUT",
+          "ila_0/probe2"
+        ]
+      },
+      "WD6502_Interface_0_RDY": {
+        "ports": [
+          "WD6502_Interface_0/RDY",
+          "RDY_0"
+        ]
+      },
+      "WD6502_Interface_0_RESB": {
+        "ports": [
+          "WD6502_Interface_0/RESB",
+          "RESB_0"
         ]
       },
       "clk_wiz_0_clk_out1": {
@@ -286,11 +341,11 @@
       "constant_0_dout": {
         "ports": [
           "constant_0/dout",
+          "WD6502_Interface_0/SINGLESTEP",
           "WD6502_Interface_0/IRQB",
           "WD6502_Interface_0/NMIB",
           "WD6502_Interface_0/SYNC",
-          "WD6502_Interface_0/VPB",
-          "WD6502_Interface_0/SINGLESTEP"
+          "WD6502_Interface_0/VPB"
         ]
       },
       "util_vector_logic_0_Res": {

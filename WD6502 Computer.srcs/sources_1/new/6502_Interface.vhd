@@ -29,8 +29,8 @@ use work.W65C02_DEFINITIONS.all;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+library UNISIM;
+use UNISIM.VComponents.all;
 
 entity WD6502_Interface is
     Port ( CLOCK        : in STD_LOGIC; -- Assume 100mhz clock
@@ -40,8 +40,10 @@ entity WD6502_Interface is
            ADDRESS      : in std_logic_vector(15 downto 0);                     -- Address bus
            BE           : out std_logic;                         -- Bus Enable
            DATA         : inout std_logic_vector(7 downto 0);                     -- Data bus
+           --signal BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0);
+           --signal BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0);
            IRQB         : in std_logic;                        -- Interrupt Request
-           MLB          : inout std_logic;                      -- Memory Lock
+           --MLB          : inout std_logic;                      -- Memory Lock
            NMIB         : in std_logic;                        -- Non-Maskable Interrupt
            PHI1O        : in std_logic;                       -- Phase 1 out clock
            PHI2         : out std_logic;                       -- Phase 2 in clock (main clock)
@@ -95,7 +97,7 @@ signal BUS_READ_DATA :  STD_LOGIC_VECTOR (7 downto 0);
 signal BUS_WRITE_DATA:  STD_LOGIC_VECTOR (7 downto 0);
 signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
 signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
-signal WRITE_FLAG :  STD_LOGIC;
+signal WRITE_FLAG :  STD_LOGIC := '0';
 
 begin -- Begin architecture definition
 
@@ -108,6 +110,24 @@ MemoryManagement : MemoryManager port map (
     PIO_LED_OUT => PIO_LED_OUT,
     RESET => RESET
 );
+
+GEN1: for i in 0 to 7 generate     
+     IOBx : IOBUF
+         generic map(
+             DRIVE => 12,
+             IOSTANDARD => "DEFAULT",
+             SLEW => "SLOW")
+             port map (
+             O => BUS_READ_DATA(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
+             IO => DATA(i),     	-- Data inout port (connect directly to top-level port)
+             I => BUS_WRITE_DATA(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
+             T => WRITE_FLAG          	-- 3-state enable input, high=input, low=output
+         );  
+
+
+end generate GEN1;
+
+-- End of IOBUF_inst instantiation
 
 ---- Concurrent signal propogation
 --WRITE_FLAG <= not RWB;
@@ -136,14 +156,6 @@ begin
         RESET_IN_PROGRESS := '1';
     elsif (CLOCK'event and CLOCK = '1') then      
         WRITE_FLAG <= not RWB;
-        
-        if (RWB = PROCESSOR_READING_FROM_MEMORY)
-        then
-            DATA <= BUS_READ_DATA;
-        else
-            BUS_WRITE_DATA <="11100011";
-            --BUS_WRITE_DATA <= DATA;
-        end if;
        
         BUS_ADDRESS <= ADDRESS;
         if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
