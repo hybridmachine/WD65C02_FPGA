@@ -1,14 +1,14 @@
 {
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
-    "xci_name": "design_with_logic_probe_WD6502_Interface_0_0",
-    "cell_name": "WD6502_Interface_0",
+    "xci_name": "design_with_logic_probe_WD6502_Interface_0_1",
+    "cell_name": "WDC65C02_Interface",
     "component_reference": "xilinx.com:module_ref:WD6502_Interface:1.0",
     "ip_revision": "1",
-    "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WD6502_Interface_0_0",
+    "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WD6502_Interface_0_1",
     "parameters": {
       "component_parameters": {
-        "Component_Name": [ { "value": "design_with_logic_probe_WD6502_Interface_0_0", "resolve_type": "user", "usage": "all" } ]
+        "Component_Name": [ { "value": "design_with_logic_probe_WD6502_Interface_0_1", "resolve_type": "user", "usage": "all" } ]
       },
       "project_parameters": {
         "ARCHITECTURE": [ { "value": "artix7" } ],
@@ -27,7 +27,7 @@
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
         "IPREVISION": [ { "value": "1" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WD6502_Interface_0_0" } ],
+        "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WD6502_Interface_0_1" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
         "SWVERSION": [ { "value": "2023.1" } ],
@@ -40,19 +40,16 @@
         "RESET": [ { "direction": "in" } ],
         "SINGLESTEP": [ { "direction": "in" } ],
         "ADDRESS": [ { "direction": "in", "size_left": "15", "size_right": "0" } ],
-        "BE": [ { "direction": "out" } ],
         "DATA": [ { "direction": "inout", "size_left": "7", "size_right": "0" } ],
-        "IRQB": [ { "direction": "in" } ],
-        "NMIB": [ { "direction": "in" } ],
-        "PHI1O": [ { "direction": "in" } ],
+        "DATA_TO_CPU_TAP": [ { "direction": "out", "size_left": "7", "size_right": "0" } ],
+        "DATA_FROM_CPU_TAP": [ { "direction": "out", "size_left": "7", "size_right": "0" } ],
+        "IRQB": [ { "direction": "out" } ],
+        "NMIB": [ { "direction": "out" } ],
         "PHI2": [ { "direction": "out" } ],
-        "PHI2O": [ { "direction": "in" } ],
         "RDY": [ { "direction": "out" } ],
         "RESB": [ { "direction": "out" } ],
         "RWB": [ { "direction": "in" } ],
-        "SOB": [ { "direction": "in" } ],
         "SYNC": [ { "direction": "in" } ],
-        "VPB": [ { "direction": "in" } ],
         "PIO_LED_OUT": [ { "direction": "out", "size_left": "7", "size_right": "0" } ]
       },
       "interfaces": {

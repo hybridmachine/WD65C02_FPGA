@@ -36,7 +36,9 @@
 ;***************************************************************************
 
 	LED_IO_ADDR:	equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
-	
+	; Note RAM Base is 0400, see PKG_65C02.vhd 
+	CNTL:			equ $0400 ; Count value low byte
+	CNTH:			equ $0401 ; Count value high byte
 		CHIP	65C02
 		LONGI	OFF
 		LONGA	OFF
@@ -55,17 +57,19 @@
 		sta	LED_IO_ADDR	; Turn off the LEDs
 		; To make debugging carry flag easier, start with a high lower byte value
 		lda #$DD
-		sta $00 ; Store DD in zero page 00
+		sta CNTL ; Store DD in zero page 00
 
 BLINKER:
 		; Increment a 16 bit counter, output the high byte out to the LEDs
 		clc			; Clear the carry bit	
-		lda $00
+		lda CNTL
 		adc #$01
-		sta $00
+		sta CNTL
 		lda #$00	; Load 0 to A then add with carry , this pulls in the carry flag for the next byte
-		adc $01
-		sta $01
+		adc CNTH
+		sta CNTH
+		lda CNTH
+		;lda #$F0 	; Lets show high nibble, off nibble for testing
 		sta LED_IO_ADDR	; Display high byte value on LEDs. 
 		jmp BLINKER		; Loop forever
 

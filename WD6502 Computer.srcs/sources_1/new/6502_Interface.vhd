@@ -38,22 +38,24 @@ entity WD6502_Interface is
            SINGLESTEP   : in STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
            -- 6502 Connected Pins
            ADDRESS      : in std_logic_vector(15 downto 0);                     -- Address bus
-           BE           : out std_logic;                         -- Bus Enable
+           --BE           : out std_logic;                         -- Bus Enable
            DATA         : inout std_logic_vector(7 downto 0);                     -- Data bus
+           DATA_TO_CPU_TAP : out std_logic_vector(7 downto 0);                    -- Signal tap to see what's going out to CPU
+           DATA_FROM_CPU_TAP : out std_logic_vector(7 downto 0);                  -- Signal tap to see what's coming in from CPU
            --signal BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0);
            --signal BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0);
-           IRQB         : in std_logic;                        -- Interrupt Request
+           IRQB         : out std_logic;                        -- Interrupt Request
            --MLB          : inout std_logic;                      -- Memory Lock
-           NMIB         : in std_logic;                        -- Non-Maskable Interrupt
-           PHI1O        : in std_logic;                       -- Phase 1 out clock
+           NMIB         : out std_logic;                        -- Non-Maskable Interrupt
+           --PHI1O        : in std_logic;                       -- Phase 1 out clock
            PHI2         : out std_logic;                       -- Phase 2 in clock (main clock)
-           PHI2O        : in std_logic;                       -- Phase 2 out clock
+           --PHI2O        : in std_logic;                       -- Phase 2 out clock
            RDY          : out std_logic;                        -- Ready
            RESB         : out std_logic;                       -- Reset
            RWB          : in std_logic;                         -- Read/Write
-           SOB          : in std_logic;                         -- Set Overflow
+           --SOB          : out std_logic;                         -- Set Overflow
            SYNC         : in std_logic;                        -- Synchronize
-           VPB          : in std_logic;                         -- Vector Pull
+           --VPB          : in std_logic;                         -- Vector Pull
            -- IO pins
            PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0));                        
 end WD6502_Interface;
@@ -93,17 +95,22 @@ signal PROCESSOR_STATE : PROCESSOR_STATE_T;
 
 signal WD6502_CLOCK : std_logic;
 
-signal BUS_READ_DATA :  STD_LOGIC_VECTOR (7 downto 0);
-signal BUS_WRITE_DATA:  STD_LOGIC_VECTOR (7 downto 0);
+signal DATA_FROM_6502 :  STD_LOGIC_VECTOR (7 downto 0);
+signal DATA_TO_6502:  STD_LOGIC_VECTOR (7 downto 0);
 signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
 signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
 signal WRITE_FLAG :  STD_LOGIC := '0';
 
 begin -- Begin architecture definition
 
+--SOB <= '1'; -- Not really used, spec says to keep it high
+IRQB <= '1'; -- Not using interrupts just yet, will connect this later
+--BE <= '1'; -- For now bus is always on
+NMIB <= '1'; -- Not currently using, keep high for now.
+
 MemoryManagement : MemoryManager port map (
-    BUS_READ_DATA => BUS_READ_DATA,
-    BUS_WRITE_DATA => BUS_WRITE_DATA,
+    BUS_READ_DATA => DATA_FROM_6502,
+    BUS_WRITE_DATA => DATA_TO_6502,
     BUS_ADDRESS => BUS_ADDRESS,
     MEMORY_CLOCK => MEMORY_CLOCK,
     WRITE_FLAG => WRITE_FLAG,
@@ -118,9 +125,9 @@ GEN1: for i in 0 to 7 generate
              IOSTANDARD => "DEFAULT",
              SLEW => "SLOW")
              port map (
-             O => BUS_WRITE_DATA(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
+             O => DATA_TO_6502(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
              IO => DATA(i),     	-- Data inout port (connect directly to top-level port)
-             I => BUS_READ_DATA(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
+             I => DATA_FROM_6502(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
              T => WRITE_FLAG          	-- 3-state enable input, high=input, low=output
          );  
 
@@ -140,11 +147,14 @@ end generate GEN1;
                        
 ---- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
 ---- Otherwise RDY is always high.
---RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
+RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
 ---- Push the internal signal out to the CPU clock PIN
 PHI2 <= WD6502_CLOCK;
 MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
                        -- For now just pulse FPGA clock straight to memory clock
+
+DATA_TO_CPU_TAP <= DATA_TO_6502;
+DATA_FROM_CPU_TAP <= DATA_FROM_6502;
 
 wd6502_clockmachine : process (CLOCK, RESET)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
@@ -179,11 +189,12 @@ begin
     if (WD6502_CLOCK'event and WD6502_CLOCK='1') then                           
         -- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
         -- Otherwise RDY is always high.
-        if (SINGLESTEP = '1') then
-            RDY <= SYNC;
-        else
-            RDY <= '1';
-        end if;
+        -- Lets do this concurrently instead, TODO remove once confirmed
+--        if (SINGLESTEP = '1') then
+--            RDY <= SYNC;
+--        else
+--            RDY <= '1';
+--        end if;
         -- Push the internal signal out to the CPU clock PIN
 
         if (RESET = CPU_RESET and reset_in_progress = '0') then

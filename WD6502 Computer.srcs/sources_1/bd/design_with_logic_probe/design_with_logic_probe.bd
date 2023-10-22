@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xF8789B9EA388A70B",
+      "boundary_crc": "0x5F6400212848B302",
       "device": "xc7a35tcpg236-1",
       "gen_directory": "../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe",
       "name": "design_with_logic_probe",
@@ -11,12 +11,9 @@
       "validated": "true"
     },
     "design_tree": {
-      "constant_1": "",
-      "constant_0": "",
-      "invert_phi2O": "",
       "ila_0": "",
       "invert_reset_signal": "",
-      "WD6502_Interface_0": ""
+      "WDC65C02_Interface": ""
     },
     "ports": {
       "Reset": {
@@ -42,7 +39,7 @@
         "left": "7",
         "right": "0"
       },
-      "RWB_PIN": {
+      "RWB": {
         "direction": "I"
       },
       "CLOCK": {
@@ -70,53 +67,44 @@
           }
         }
       },
-      "BE_0": {
-        "direction": "O"
-      },
-      "DATA_0": {
+      "DATA": {
         "direction": "IO",
         "left": "7",
         "right": "0"
       },
-      "RDY_0": {
+      "RDY": {
         "direction": "O"
       },
-      "RESB_0": {
+      "RESB": {
+        "direction": "O"
+      },
+      "SingleStep": {
+        "direction": "I"
+      },
+      "PHI2": {
+        "direction": "O"
+      },
+      "SYNC": {
+        "direction": "I",
+        "parameters": {
+          "PortType": {
+            "value": "undef",
+            "value_src": "ip_prop"
+          },
+          "PortType.PROP_SRC": {
+            "value": "false",
+            "value_src": "ip_prop"
+          }
+        }
+      },
+      "IRQB": {
+        "direction": "O"
+      },
+      "NMIB": {
         "direction": "O"
       }
     },
     "components": {
-      "constant_1": {
-        "vlnv": "xilinx.com:ip:xlconstant:1.1",
-        "xci_name": "design_with_logic_probe_xlconstant_0_0",
-        "xci_path": "ip\\design_with_logic_probe_xlconstant_0_0\\design_with_logic_probe_xlconstant_0_0.xci",
-        "inst_hier_path": "constant_1"
-      },
-      "constant_0": {
-        "vlnv": "xilinx.com:ip:xlconstant:1.1",
-        "xci_name": "design_with_logic_probe_xlconstant_0_1",
-        "xci_path": "ip\\design_with_logic_probe_xlconstant_0_1\\design_with_logic_probe_xlconstant_0_1.xci",
-        "inst_hier_path": "constant_0",
-        "parameters": {
-          "CONST_VAL": {
-            "value": "0"
-          }
-        }
-      },
-      "invert_phi2O": {
-        "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
-        "xci_name": "design_with_logic_probe_util_vector_logic_0_1",
-        "xci_path": "ip\\design_with_logic_probe_util_vector_logic_0_1\\design_with_logic_probe_util_vector_logic_0_1.xci",
-        "inst_hier_path": "invert_phi2O",
-        "parameters": {
-          "C_OPERATION": {
-            "value": "not"
-          },
-          "C_SIZE": {
-            "value": "1"
-          }
-        }
-      },
       "ila_0": {
         "vlnv": "xilinx.com:ip:ila:6.2",
         "xci_name": "design_with_logic_probe_ila_0_0",
@@ -127,12 +115,18 @@
             "value": "Native"
           },
           "C_NUM_OF_PROBES": {
-            "value": "5"
+            "value": "8"
           },
           "C_PROBE0_WIDTH": {
             "value": "16"
           },
           "C_PROBE2_WIDTH": {
+            "value": "8"
+          },
+          "C_PROBE6_WIDTH": {
+            "value": "8"
+          },
+          "C_PROBE7_WIDTH": {
             "value": "8"
           }
         }
@@ -151,11 +145,11 @@
           }
         }
       },
-      "WD6502_Interface_0": {
+      "WDC65C02_Interface": {
         "vlnv": "xilinx.com:module_ref:WD6502_Interface:1.0",
-        "xci_name": "design_with_logic_probe_WD6502_Interface_0_0",
-        "xci_path": "ip\\design_with_logic_probe_WD6502_Interface_0_0\\design_with_logic_probe_WD6502_Interface_0_0.xci",
-        "inst_hier_path": "WD6502_Interface_0",
+        "xci_name": "design_with_logic_probe_WD6502_Interface_0_1",
+        "xci_path": "ip\\design_with_logic_probe_WD6502_Interface_0_1\\design_with_logic_probe_WD6502_Interface_0_1.xci",
+        "inst_hier_path": "WDC65C02_Interface",
         "reference_info": {
           "ref_type": "hdl",
           "ref_name": "WD6502_Interface",
@@ -192,58 +186,29 @@
             "left": "15",
             "right": "0"
           },
-          "BE": {
-            "direction": "O"
-          },
           "DATA": {
             "direction": "IO",
             "left": "7",
             "right": "0"
           },
+          "DATA_TO_CPU_TAP": {
+            "direction": "O",
+            "left": "7",
+            "right": "0"
+          },
+          "DATA_FROM_CPU_TAP": {
+            "direction": "O",
+            "left": "7",
+            "right": "0"
+          },
           "IRQB": {
-            "direction": "I"
+            "direction": "O"
           },
           "NMIB": {
-            "direction": "I"
-          },
-          "PHI1O": {
-            "direction": "I",
-            "parameters": {
-              "PortType": {
-                "value": "undef",
-                "value_src": "ip_prop"
-              },
-              "PortType.PROP_SRC": {
-                "value": "false",
-                "value_src": "ip_prop"
-              }
-            }
+            "direction": "O"
           },
           "PHI2": {
-            "direction": "O",
-            "parameters": {
-              "PortType": {
-                "value": "undef",
-                "value_src": "ip_prop"
-              },
-              "PortType.PROP_SRC": {
-                "value": "false",
-                "value_src": "ip_prop"
-              }
-            }
-          },
-          "PHI2O": {
-            "direction": "I",
-            "parameters": {
-              "PortType": {
-                "value": "undef",
-                "value_src": "ip_prop"
-              },
-              "PortType.PROP_SRC": {
-                "value": "false",
-                "value_src": "ip_prop"
-              }
-            }
+            "direction": "O"
           },
           "RDY": {
             "direction": "O"
@@ -254,14 +219,18 @@
           "RWB": {
             "direction": "I"
           },
-          "SOB": {
-            "direction": "I"
-          },
           "SYNC": {
-            "direction": "I"
-          },
-          "VPB": {
-            "direction": "I"
+            "direction": "I",
+            "parameters": {
+              "PortType": {
+                "value": "undef",
+                "value_src": "ip_prop"
+              },
+              "PortType.PROP_SRC": {
+                "value": "false",
+                "value_src": "ip_prop"
+              }
+            }
           },
           "PIO_LED_OUT": {
             "direction": "O",
@@ -276,20 +245,20 @@
         "ports": [
           "ADDRESS_IN",
           "ila_0/probe0",
-          "WD6502_Interface_0/ADDRESS"
+          "WDC65C02_Interface/ADDRESS"
         ]
       },
       "Net1": {
         "ports": [
-          "DATA_0",
-          "WD6502_Interface_0/DATA"
+          "DATA",
+          "WDC65C02_Interface/DATA"
         ]
       },
       "RWB_PIN_1": {
         "ports": [
-          "RWB_PIN",
+          "RWB",
           "ila_0/probe3",
-          "WD6502_Interface_0/RWB"
+          "WDC65C02_Interface/RWB"
         ]
       },
       "Reset_1": {
@@ -298,73 +267,81 @@
           "invert_reset_signal/Op1"
         ]
       },
-      "WD6502_Interface_0_BE": {
+      "SYNC_1": {
         "ports": [
-          "WD6502_Interface_0/BE",
-          "BE_0"
+          "SYNC",
+          "ila_0/probe4",
+          "WDC65C02_Interface/SYNC"
+        ]
+      },
+      "SingleStep_1": {
+        "ports": [
+          "SingleStep",
+          "ila_0/probe5",
+          "WDC65C02_Interface/SINGLESTEP"
+        ]
+      },
+      "WD6502_Interface_0_IRQB": {
+        "ports": [
+          "WDC65C02_Interface/IRQB",
+          "IRQB"
+        ]
+      },
+      "WD6502_Interface_0_NMIB": {
+        "ports": [
+          "WDC65C02_Interface/NMIB",
+          "NMIB"
         ]
       },
       "WD6502_Interface_0_PHI2": {
         "ports": [
-          "WD6502_Interface_0/PHI2",
-          "invert_phi2O/Op1",
-          "ila_0/probe1",
-          "WD6502_Interface_0/PHI2O"
+          "WDC65C02_Interface/PHI2",
+          "PHI2",
+          "ila_0/probe1"
         ]
       },
       "WD6502_Interface_0_PIO_LED_OUT": {
         "ports": [
-          "WD6502_Interface_0/PIO_LED_OUT",
+          "WDC65C02_Interface/PIO_LED_OUT",
           "LED_OUT",
           "ila_0/probe2"
         ]
       },
       "WD6502_Interface_0_RDY": {
         "ports": [
-          "WD6502_Interface_0/RDY",
-          "RDY_0"
+          "WDC65C02_Interface/RDY",
+          "RDY"
         ]
       },
       "WD6502_Interface_0_RESB": {
         "ports": [
-          "WD6502_Interface_0/RESB",
-          "RESB_0"
+          "WDC65C02_Interface/RESB",
+          "RESB"
+        ]
+      },
+      "WDC65C02_Interface_DATA_FROM_CPU_TAP": {
+        "ports": [
+          "WDC65C02_Interface/DATA_FROM_CPU_TAP",
+          "ila_0/probe7"
+        ]
+      },
+      "WDC65C02_Interface_DATA_TO_CPU_TAP": {
+        "ports": [
+          "WDC65C02_Interface/DATA_TO_CPU_TAP",
+          "ila_0/probe6"
         ]
       },
       "clk_wiz_0_clk_out1": {
         "ports": [
           "CLOCK",
           "ila_0/clk",
-          "WD6502_Interface_0/CLOCK"
-        ]
-      },
-      "constant_0_dout": {
-        "ports": [
-          "constant_0/dout",
-          "WD6502_Interface_0/SINGLESTEP",
-          "WD6502_Interface_0/IRQB",
-          "WD6502_Interface_0/NMIB",
-          "WD6502_Interface_0/SYNC",
-          "WD6502_Interface_0/VPB"
-        ]
-      },
-      "util_vector_logic_0_Res": {
-        "ports": [
-          "invert_phi2O/Res",
-          "WD6502_Interface_0/PHI1O"
+          "WDC65C02_Interface/CLOCK"
         ]
       },
       "util_vector_logic_1_Res": {
         "ports": [
           "invert_reset_signal/Res",
-          "ila_0/probe4",
-          "WD6502_Interface_0/RESET"
-        ]
-      },
-      "xlconstant_0_dout": {
-        "ports": [
-          "constant_1/dout",
-          "WD6502_Interface_0/SOB"
+          "WDC65C02_Interface/RESET"
         ]
       }
     }
