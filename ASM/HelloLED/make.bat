@@ -8,7 +8,7 @@ del *.sym
 REM build the Intel HEX file then output to VHD ROM file
 WDC02AS -DUSING_02 HelloLED.asm
 WDCLN -HI .\HelloLED.obj -O .\HelloLED.hex
-python .\ConvertHexToVHD_ROM.py --hex_file .\HelloLED.hex --vhd_template "..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd" --start_address 0xFC00 --end_address 0xFCFF --output_vhd ROM_BLINK.vhd
+python ..\HexToVHDLTools\ConvertHexToVHD_ROM.py --hex_file .\HelloLED.hex --vhd_template "..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd" --start_address 0xFC00 --end_address 0xFCFF --output_vhd ROM.vhd
 
 REM Build and start in simulator
 del *.bin

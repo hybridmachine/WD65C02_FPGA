@@ -69,7 +69,7 @@ package W65C02_DEFINITIONS is
     constant BOOT_VEC_ADDRESS_HIGH      : std_logic_vector(15 downto 0) := x"FFFD";
 
     constant RAM_END                    : std_logic_vector(15 downto 0) := x"FBFF";
-    constant RAM_BASE                   : std_logic_vector(15 downto 0) := x"0400";
+    constant RAM_BASE                   : std_logic_vector(15 downto 0) := x"0000";
     
     constant MEM_MAPPED_IO_END          : std_logic_vector(15 downto 0) := x"03FF";
     constant MEM_MAPPED_IO_BASE         : std_logic_vector(15 downto 0) := x"0200";

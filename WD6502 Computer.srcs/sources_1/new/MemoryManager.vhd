@@ -175,21 +175,23 @@ begin
             end if;
         -- Read/Write from/to RAM
         elsif(unsigned(RAM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(RAM_END)) then
-            SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(RAM_BASE);
-            -- Write on port A, read on port B
-            if (WRITE_FLAG = '1') then
-                ram_addra <= std_logic_vector(SHIFTED_ADDRESS);
-                ram_dina <= BUS_WRITE_DATA; 
+            if(unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(MEM_MAPPED_IO_END)) then
+                if (unsigned(PERIPHERAL_IO_LED_ADDR) = MEMORY_ADDRESS) then
+                    -- Send data value to Peripheral_IO_LED
+                    if (WRITE_FLAG = '1') then
+                        pio_led_data <= BUS_WRITE_DATA;
+                    end if;
+                end if;
             else
-                -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
-                ram_addrb <= std_logic_vector(SHIFTED_ADDRESS);
-                BUS_READ_DATA <= ram_doutb;
-            end if;
-        elsif(unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(MEM_MAPPED_IO_END)) then
-            if (unsigned(PERIPHERAL_IO_LED_ADDR) = MEMORY_ADDRESS) then
-                -- Send data value to Peripheral_IO_LED
+                SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(RAM_BASE);
+                -- Write on port A, read on port B
                 if (WRITE_FLAG = '1') then
-                    pio_led_data <= BUS_WRITE_DATA;
+                    ram_addra <= std_logic_vector(SHIFTED_ADDRESS);
+                    ram_dina <= BUS_WRITE_DATA; 
+                else
+                    -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
+                    ram_addrb <= std_logic_vector(SHIFTED_ADDRESS);
+                    BUS_READ_DATA <= ram_doutb;
                 end if;
             end if;
         else

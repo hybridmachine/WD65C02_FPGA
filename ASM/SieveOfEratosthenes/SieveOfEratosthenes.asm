@@ -37,14 +37,16 @@
 
 	LED_IO_ADDR:	    equ	    $0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 	PRIMES_LESS_THAN:	equ     $FE ; Primes up to 254
-    ARRAY_BASE_ADDRESS: equ     $0300
-    VALUE_BASE_ADDRESS: equ     $0400
-    MULTARG1:           equ     $80
-    MULTARG2:           equ     $82
-    MULTRESL:           equ     $01
-    MULTRESH:           equ     $02
-    SAVEX:              equ     $03
-    SAVEY:              equ     $04
+    ARRAY_BASE_ADDRESS: equ     $0400
+    VALUE_BASE_ADDRESS: equ     $0500
+    CNTL:			    equ     $0600 ; Count value low byte
+	CNTH:			    equ     $0601 ; Count value high byte
+    MULTARG1:           equ     $0780
+    MULTARG2:           equ     $0782
+    MULTRESL:           equ     $0701
+    MULTRESH:           equ     $0702
+    SAVEX:              equ     $0703
+    SAVEY:              equ     $0704
 		CHIP	65C02
 		LONGI	OFF
 		LONGA	OFF
@@ -57,6 +59,9 @@
 		cld				; Clear decimal mode
         clc             ; Clear carry
 
+        LDA #$00
+        STA CNTL        ; Initialize counter mem
+        STA CNTH
     ; First, Turn off all of the LEDs
 		lda	#$00
 		sta	LED_IO_ADDR	; Turn off the LEDs
@@ -83,7 +88,7 @@
         inx
         TXA
         CMP #PRIMES_LESS_THAN+1 ; i <= N (when X equal N end)
-        BEQ END
+        BEQ DISPLAY
         ; if (a[i])
         lda #$01
         cmp ARRAY_BASE_ADDRESS,x
@@ -97,14 +102,18 @@
         sta MULTARG1+1
         sta MULTARG2
         sta MULTARG2+1
-        stx MULTARG1    ; Store the multiplicands in X and Y
-        sty MULTARG2
+        TXA
+        STA MULTARG1    ; Store the multiplicands in X and Y
+        TYA
+        STA MULTARG2
         ; Save off X and Y since MULT will overwrite them
         JSR SAVEXY
         JSR MULT
         ; Save result in X and Y
-        STX MULTRESH
-        STY MULTRESL
+        TXA
+        STA MULTRESH
+        TYA
+        STA MULTRESL
         ; Restore X and Y
         JSR RESTXY
         LDA MULTRESH
@@ -121,31 +130,66 @@
         JSR RESTXY
         INY ; j++
         JMP FOR_J_MULT_I_LT_N
-    END:
-        ; Test preserving X and Y reg values
-        LDX #$FE
-        LDY #$ED
-        TXA
-        PHA
+
+    GO_TO_START:
+        JMP START ; BEQ start is too far away so BEQ to here then jump
+
+    DISPLAY:
+        LDY #$00
+    DISP_LOOP:
+        INY
         TYA
-        PHA
+        CMP #$FF
+        BEQ GO_TO_START ; Re-start the process
+        LDA VALUE_BASE_ADDRESS,Y
+        CMP #$00
+        BEQ DISP_LOOP ; Skip over the 0s
+        STA LED_IO_ADDR
+        JSR SAVEXY  ; For now X and Y not touched by counter, but better to be safe
+        JSR COUNTER ; Run the counter for some processor delay
+        JSR RESTXY
+        JMP DISP_LOOP
 
         SAVEXY:
-            STX SAVEX
-            STY SAVEY
+            TXA
+            STA SAVEX
+            TYA
+            STA SAVEY
             RTS
         
         RESTXY:
-            LDX SAVEX
-            LDY SAVEY
+            LDA SAVEX
+            TAX
+            LDA SAVEY
+            TAY
             RTS
+
+        COUNTER:
+            lda #$00
+            sta CNTL
+            sta CNTH
+        COUNT:
+            ; Increment a 16 bit counter, used for delay when showing LEDs
+            clc			; Clear the carry bit	
+            lda CNTL
+            adc #$01
+            sta CNTL
+            lda #$00	; Load 0 to A then add with carry , this pulls in the carry flag for the next byte
+            adc CNTH
+            sta CNTH
+            lda CNTH
+            CMP #$FF
+            BEQ CTRDONE
+            JMP COUNT		; Loope the counter
+        CTRDONE:
+            RTS ; Return to caller
 
 ; Multiply, adapted from the 65xx programmers reference
 ; result: returned in X - Y (hi - lo)
 ; All registers are overwritten , caller must save before call
         MULT:
-        MCAND1:  GEQU    $80
-        MCAND2:  GEQU    $82
+        MCAND1:  GEQU    $0780
+        MCAND2:  GEQU    $0782
 
             LDX #$0
             LDY #$0
