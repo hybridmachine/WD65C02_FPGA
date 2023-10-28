@@ -7,7 +7,7 @@
 	ENDIF
 
 ;***************************************************************************
-;  FILE_NAME: HelloLED.asm
+;  FILE_NAME: SieveOfEratosthenes.asm
 ;
 ;	Copyright (c) 2023 Brian Tabone
 ;
@@ -65,7 +65,7 @@
     ; First, Turn off all of the LEDs
 		lda	#$00
 		sta	LED_IO_ADDR	; Turn off the LEDs
-		; To make debugging carry flag easier, start with a high lower byte value
+
 
     ; MAIN
     ; This program will find all primes less than 254 using the Sieve of Eratosthenes algorithm
