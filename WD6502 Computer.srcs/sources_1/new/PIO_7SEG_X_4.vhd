@@ -65,27 +65,37 @@ architecture Behavioral of PIO_7SEG_X_4 is
     constant CF : std_logic_vector(7 downto 0) := "00100000";
     constant CG : std_logic_vector(7 downto 0) := "01000000";
     constant DP : std_logic_vector(7 downto 0) := "10000000";
+    variable returnVal : std_logic_vector(7 downto 0) := "00000000";
+    
     begin
         case DIGITVAL is
-            when "0000" => return CA & CB & CC & CD & CE & CF;          -- 0
-            when "0001" => return CB & CC;                              -- 1
-            when "0010" => return CA & CB & CD & CE & CG;               -- 2
-            when "0011" => return CA & CB & CC & CD & CG;               -- 3
-            when "0100" => return CB & CC & CF & CG;                    -- 4
-            when "0101" => return CA & CC & CD & CF & CG;               -- 5
-            when "0110" => return CA & CC & CD & CE & CF & CG;          -- 6
-            when "0111" => return CA & CB & CC;                         -- 7
-            when "1000" => return CA & CB & CC & CD & CE & CF & CG;     -- 8
-            when "1001" => return CA & CB & CC & CD & CF & CG;          -- 9
+            when "0000" => returnVal := CA & CB & CC & CD & CE & CF;          -- 0
+            when "0001" => returnVal := CB & CC;                              -- 1
+            when "0010" => returnVal := CA & CB & CD & CE & CG;               -- 2
+            when "0011" => returnVal := CA & CB & CC & CD & CG;               -- 3
+            when "0100" => returnVal := CB & CC & CF & CG;                    -- 4
+            when "0101" => returnVal := CA & CC & CD & CF & CG;               -- 5
+            when "0110" => returnVal := CA & CC & CD & CE & CF & CG;          -- 6
+            when "0111" => returnVal := CA & CB & CC;                         -- 7
+            when "1000" => returnVal := CA & CB & CC & CD & CE & CF & CG;     -- 8
+            when "1001" => returnVal := CA & CB & CC & CD & CF & CG;          -- 9
             -- End BCD compatible digits
-            when "1010" => return CA & CB & CC & CE & CF & CG;          -- A
-            when "1011" => return CC & CD & CE & CF & CG;               -- b
-            when "1100" => return CA & CD & CE & CF;                    -- C
-            when "1101" => return CB & CC & CD & CE & CG;               -- d
-            when "1110" => return CA & CD & CE & CF & CG;               -- E
-            when "1111" => return CA & CE & CF & CG;                    -- F
-            when others => return x"00";
+            when "1010" => returnVal := CA & CB & CC & CE & CF & CG;          -- A
+            when "1011" => returnVal := CC & CD & CE & CF & CG;               -- b
+            when "1100" => returnVal := CA & CD & CE & CF;                    -- C
+            when "1101" => returnVal := CB & CC & CD & CE & CG;               -- d
+            when "1110" => returnVal := CA & CD & CE & CF & CG;               -- E
+            when "1111" => returnVal := CA & CE & CF & CG;                    -- F
+            when others => returnVal := x"00"; -- Default off
         end case;
+        
+        -- Internally we set on to '1', but if in common anode mode, we turn a segment on with a low value
+        if (COMMON_ANODE = '1') then
+            return not returnVal;
+        else 
+            return returnVal; 
+        end if;
+        
     end function;
 begin
     
