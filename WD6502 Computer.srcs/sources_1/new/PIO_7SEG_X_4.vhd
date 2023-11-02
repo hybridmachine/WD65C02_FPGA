@@ -30,17 +30,15 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity PIO_7SEG_X_4 is
     GENERIC(
-    -- On some boards, namely baysis3, the digit selector is actually low instead of high
-    -- most boards are high so 1 is default, set to 0 for boards like baysis 3
-    SELECT_ACTIVE : STD_LOGIC := '1';
-    -- Default to decimal mode Show 0-9 on each digit
-    -- When set to 0 we show HEX mode (0 - F on each digit, lower case for b and d)
-    DECIMAL_MODE : STD_LOGIC := '1';
-    -- How many clock ticks to drive a signle digit before switching
-    CLOCK_TICKS_PER_DIGIT : natural := 1000000
+        -- On some boards, namely baysis3, the digit selector is actually low instead of high
+        -- most boards are high so 1 is default, set to 0 for boards like baysis 3
+        SELECT_ACTIVE : STD_LOGIC := '1';
+        CLOCK_TICKS_PER_DIGIT : natural := 1000000; -- at 100mhz, this will give us 10ms per digit
+        COMMON_ANODE : STD_LOGIC := '1' -- When 1, true otherwise we are in common cathode mode
     );
-    Port ( CLOCK : in STD_LOGIC;
-           VALUE : in STD_LOGIC_VECTOR (7 downto 0);
+    Port ( CLOCK : in STD_LOGIC; -- For now we'll run this at FPGA clock speed of 100mhz
+           DISPLAY_ON : STD_LOGIC; -- 0 for LEDs off, 1 for display value on input
+           VALUE : in STD_LOGIC_VECTOR (15 downto 0); -- 4 digits of 0-F hex. Note if using BCD , caller should limit 0-9, display doesn't truncate BCD illegal bits
            SEGMENT_DRIVERS : out STD_LOGIC_VECTOR (7 downto 0);
            COMMON_DRIVERS : out STD_LOGIC_VECTOR(3 downto 0)
            );
@@ -48,28 +46,76 @@ entity PIO_7SEG_X_4 is
 end PIO_7SEG_X_4;
 
 architecture Behavioral of PIO_7SEG_X_4 is
-
-type t_digit is array (3 downto 0) of integer;
-
+    
+    function DISABLE_SEGMENTS_VALUE return STD_LOGIC is
+    begin
+         if (COMMON_ANODE = '1') then
+                return '1'; -- if common anode, turn off segments by driving cathodes high
+            else
+                return '0'; -- if common cathode, turn off segments by driving anodes low
+            end if;
+    end function;
+    
+    function VALUE_TO_SEGMENT(DIGITVAL : STD_LOGIC_VECTOR(3 downto 0)) return STD_LOGIC_VECTOR is
+    constant CA : std_logic_vector(7 downto 0) := "00000001";
+    constant CB : std_logic_vector(7 downto 0) := "00000010";
+    constant CC : std_logic_vector(7 downto 0) := "00000100";
+    constant CD : std_logic_vector(7 downto 0) := "00001000";
+    constant CE : std_logic_vector(7 downto 0) := "00010000";
+    constant CF : std_logic_vector(7 downto 0) := "00100000";
+    constant CG : std_logic_vector(7 downto 0) := "01000000";
+    constant DP : std_logic_vector(7 downto 0) := "10000000";
+    begin
+        case DIGITVAL is
+            when "0000" => return CA & CB & CC & CD & CE & CF;          -- 0
+            when "0001" => return CB & CC;                              -- 1
+            when "0010" => return CA & CB & CD & CE & CG;               -- 2
+            when "0011" => return CA & CB & CC & CD & CG;               -- 3
+            when "0100" => return CB & CC & CF & CG;                    -- 4
+            when "0101" => return CA & CC & CD & CF & CG;               -- 5
+            when "0110" => return CA & CC & CD & CE & CF & CG;          -- 6
+            when "0111" => return CA & CB & CC;                         -- 7
+            when "1000" => return CA & CB & CC & CD & CE & CF & CG;     -- 8
+            when "1001" => return CA & CB & CC & CD & CF & CG;          -- 9
+            -- End BCD compatible digits
+            when "1010" => return CA & CB & CC & CE & CF & CG;          -- A
+            when "1011" => return CC & CD & CE & CF & CG;               -- b
+            when "1100" => return CA & CD & CE & CF;                    -- C
+            when "1101" => return CB & CC & CD & CE & CG;               -- d
+            when "1110" => return CA & CD & CE & CF & CG;               -- E
+            when "1111" => return CA & CE & CF & CG;                    -- F
+            when others => return x"00";
+        end case;
+    end function;
 begin
     
     -- Drive Digits
     process (CLOCK)
-    variable digit_index : integer := 0;
-    variable digits : t_digit;
-    variable digit : integer;
+    variable display_idx : natural := 0;
+    variable clock_ticks : natural := CLOCK_TICKS_PER_DIGIT;
+    
     begin
-       if (DECIMAL_MODE = '1') then
-        digits(0) := to_integer(unsigned(VALUE)) mod 10;
-        digit := to_integer(unsigned(VALUE)) / 10;
-        digits(1) := digit mod 10;
-        digit := digit / 10;
-        digits(2) := digit mod 10;
-        digit := digit / 10;
-        digits(3) := digit mod 10;
-        -- TODO show segments on out lines
-       else
-       end if;
+        if (clock_ticks = 0) then
+            clock_ticks := CLOCK_TICKS_PER_DIGIT;
+            if (display_idx >= 3) then
+                display_idx := 0;
+            else
+                display_idx := display_idx + 1;
+            end if;
+        else
+            clock_ticks := clock_ticks - 1;
+        end if;
+        
+        if (DISPLAY_ON = '1') then
+            COMMON_DRIVERS <= (others => not SELECT_ACTIVE); -- Turn off all anodes
+            COMMON_DRIVERS(display_idx) <= '1'; -- Turn on the specified digit
+            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE);
+            SEGMENT_DRIVERS <= VALUE_TO_SEGMENT(VALUE);
+        else
+            COMMON_DRIVERS <= (others => not SELECT_ACTIVE); -- Turn off all anodes
+            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE);
+        end if;
+            
     end process;
     
 end Behavioral;
