@@ -26,10 +26,51 @@
 ;
 ;
 ;***************************************************************************    
-BOARD_WIDTH:        equ 32
-BOARD_HEIGHT:       equ 32
-BOARD_MEM_SIZE:     equ BOARD_WIDTH * BOARD_HEIGHT
+BOARD_WIDTH:            equ 32
+BOARD_HEIGHT:           equ 32
+BOARD_MEM_SIZE:         equ BOARD_WIDTH * BOARD_HEIGHT
+BOARD_MEM_BASE_ADDR:    equ $0300
+BOARD_ROW_PTR_ADDR:     equ $10   ; 16 bit pointer to the current row $10L $11H
+EXTERN MULT             ; Multiply routine defined in Multiply.asm
 
 CODE
+    CHIP	65C02
+    LONGI	OFF
+    LONGA	OFF
     org $FC00   ; Must match ROM_START in PKG_65C02.vhd
 
+START:
+    sei             ; Mask maskable interrupts
+
+    cld				; Clear decimal mode
+    clc             ; Clear carry
+
+INITGAMEBOARD:
+    ldx #0
+    ldy #0
+    ; Set pointer to board memory
+    lda #(BOARD_MEM_BASE_ADDR).low.
+    sta $BOARD_ROW_PTR_ADDR
+    lda #(BOARD_MEM_BASE_ADDR).high.
+    sta $BOARD_ROW_PTR_ADDR+1
+    lda #0
+    
+INITY:
+    pha         ; Save A on the stack
+    tya
+    pha         ; Save Y on the stack
+    tyx
+    pha         ; Save X on the stack
+    jmp MULT    ; Get row starting address
+LD_ROW_PTR:
+    STY $BOARD_ROW_PTR_ADDR    ; Store row pointer low
+    STX $BOARD_ROW_PTR_ADDR+1  ; Store row pointer high
+    pla         ; Restore X
+    tax
+    pla         ; Restore Y
+    tay
+    pla         ; Restore A     
+INITX:
+    dex         ; Decrement column pointer
+    sta $(BOARD_ROW_PTR_ADDR),x
+    bne INITGAMEBOARD
