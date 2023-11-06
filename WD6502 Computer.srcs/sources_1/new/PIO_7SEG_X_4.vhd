@@ -22,6 +22,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.SEVEN_SEGMENT_CA.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -45,65 +46,16 @@ entity PIO_7SEG_X_4 is
             
 end PIO_7SEG_X_4;
 
-architecture Behavioral of PIO_7SEG_X_4 is
-    
-    function DISABLE_SEGMENTS_VALUE return STD_LOGIC is
-    begin
-         if (COMMON_ANODE = '1') then
-                return '1'; -- if common anode, turn off segments by driving cathodes high
-            else
-                return '0'; -- if common cathode, turn off segments by driving anodes low
-            end if;
-    end function;
-    
-    function VALUE_TO_SEGMENT(DIGITVAL : STD_LOGIC_VECTOR(3 downto 0)) return STD_LOGIC_VECTOR is
-    constant CA : std_logic_vector(7 downto 0) := "00000001";
-    constant CB : std_logic_vector(7 downto 0) := "00000010";
-    constant CC : std_logic_vector(7 downto 0) := "00000100";
-    constant CD : std_logic_vector(7 downto 0) := "00001000";
-    constant CE : std_logic_vector(7 downto 0) := "00010000";
-    constant CF : std_logic_vector(7 downto 0) := "00100000";
-    constant CG : std_logic_vector(7 downto 0) := "01000000";
-    constant DP : std_logic_vector(7 downto 0) := "10000000";
-    variable returnVal : std_logic_vector(7 downto 0) := "00000000";
-    
-    begin
-        case DIGITVAL is
-            when "0000" => returnVal := CA & CB & CC & CD & CE & CF;          -- 0
-            when "0001" => returnVal := CB & CC;                              -- 1
-            when "0010" => returnVal := CA & CB & CD & CE & CG;               -- 2
-            when "0011" => returnVal := CA & CB & CC & CD & CG;               -- 3
-            when "0100" => returnVal := CB & CC & CF & CG;                    -- 4
-            when "0101" => returnVal := CA & CC & CD & CF & CG;               -- 5
-            when "0110" => returnVal := CA & CC & CD & CE & CF & CG;          -- 6
-            when "0111" => returnVal := CA & CB & CC;                         -- 7
-            when "1000" => returnVal := CA & CB & CC & CD & CE & CF & CG;     -- 8
-            when "1001" => returnVal := CA & CB & CC & CD & CF & CG;          -- 9
-            -- End BCD compatible digits
-            when "1010" => returnVal := CA & CB & CC & CE & CF & CG;          -- A
-            when "1011" => returnVal := CC & CD & CE & CF & CG;               -- b
-            when "1100" => returnVal := CA & CD & CE & CF;                    -- C
-            when "1101" => returnVal := CB & CC & CD & CE & CG;               -- d
-            when "1110" => returnVal := CA & CD & CE & CF & CG;               -- E
-            when "1111" => returnVal := CA & CE & CF & CG;                    -- F
-            when others => returnVal := x"00"; -- Default off
-        end case;
-        
-        -- Internally we set on to '1', but if in common anode mode, we turn a segment on with a low value
-        if (COMMON_ANODE = '1') then
-            return not returnVal;
-        else 
-            return returnVal; 
-        end if;
-        
-    end function;
+architecture Behavioral of PIO_7SEG_X_4 is    
 begin
     
     -- Drive Digits
     process (CLOCK)
     variable display_idx : natural := 0;
     variable clock_ticks : natural := CLOCK_TICKS_PER_DIGIT;
-    
+    constant nibble_width : natural := 4;
+    variable nibble_high : natural := (nibble_width * (display_idx + 1)) - 1;
+    variable nibble_low : natural := nibble_high - (nibble_width - 1);
     begin
         if (clock_ticks = 0) then
             clock_ticks := CLOCK_TICKS_PER_DIGIT;
@@ -112,18 +64,20 @@ begin
             else
                 display_idx := display_idx + 1;
             end if;
+            nibble_high := (nibble_width * (display_idx + 1)) - 1;
+            nibble_low := nibble_high - (nibble_width - 1);
         else
             clock_ticks := clock_ticks - 1;
         end if;
         
         if (DISPLAY_ON = '1') then
             COMMON_DRIVERS <= (others => not SELECT_ACTIVE); -- Turn off all anodes
-            COMMON_DRIVERS(display_idx) <= '1'; -- Turn on the specified digit
-            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE);
-            SEGMENT_DRIVERS <= VALUE_TO_SEGMENT(VALUE);
+            COMMON_DRIVERS(display_idx) <= SELECT_ACTIVE; -- Turn on the specified digit
+            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE(COMMON_ANODE));
+            SEGMENT_DRIVERS <= VALUE_TO_SEGMENT(VALUE(nibble_high downto nibble_low), COMMON_ANODE);
         else
             COMMON_DRIVERS <= (others => not SELECT_ACTIVE); -- Turn off all anodes
-            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE);
+            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE(COMMON_ANODE));
         end if;
             
     end process;
