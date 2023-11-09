@@ -41,6 +41,8 @@ entity MemoryManager is
            MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
            WRITE_FLAG : in STD_LOGIC; -- When 1, data to address, read address and store on data line otherwise
            PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
+           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
            RESET : in STD_LOGIC
            );
 end MemoryManager;
@@ -70,6 +72,9 @@ signal rom_douta: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 signal rom_clka: std_logic;
 	
 signal pio_led_data: std_logic_vector(7 downto 0);
+
+signal PIO_7SEG_DISPLAY_VAL :std_logic_vector(15 downto 0);
+signal PIO_7SEG_ACTIVE: std_logic;
 
 COMPONENT RAM is
     GENERIC(
@@ -107,6 +112,24 @@ COMPONENT Peripheral_IO_LED is
            CLOCK : in STD_LOGIC;
            RESET : in STD_LOGIC);
 end COMPONENT;
+
+COMPONENT PIO_7SEG_X_4 is
+    GENERIC(
+        -- On some boards, namely baysis3, the digit selector is actually low instead of high
+        -- most boards are high so 1 is default, set to 0 for boards like baysis 3
+        SELECT_ACTIVE : STD_LOGIC := '1';
+        CLOCK_TICKS_PER_DIGIT : natural := 1000000; -- at 100mhz, this will give us 10ms per digit
+        COMMON_ANODE : STD_LOGIC := '1' -- When 1, true otherwise we are in common cathode mode
+    );
+    Port ( CLOCK : in STD_LOGIC; -- For now we'll run this at FPGA clock speed of 100mhz
+           DISPLAY_ON : STD_LOGIC; -- 0 for LEDs off, 1 for display value on input
+           VALUE : in STD_LOGIC_VECTOR (15 downto 0); -- 4 digits of 0-F hex. Note if using BCD , caller should limit 0-9, display doesn't truncate BCD illegal bits
+           SEGMENT_DRIVERS : out STD_LOGIC_VECTOR (7 downto 0);
+           COMMON_DRIVERS : out STD_LOGIC_VECTOR(3 downto 0)
+           );
+            
+end COMPONENT;
+
 begin
 
 MAIN_RAM: RAM port map (
@@ -136,6 +159,17 @@ PIO_LED: peripheral_io_led port map (
     led_ctl => PIO_LED_OUT,
     reset => RESET
 );
+
+PIO_7SEGMENT: PIO_7SEG_X_4 generic map (
+    SELECT_ACTIVE => '0'
+)
+port map (
+    CLOCK => MEMORY_CLOCK,
+    DISPLAY_ON => PIO_7SEG_ACTIVE,
+    VALUE => PIO_7SEG_DISPLAY_VAL,
+    SEGMENT_DRIVERS => PIO_7SEG_SEGMENTS,
+    COMMON_DRIVERS => PIO_7SEG_COMMON
+    );
 
 -- Concurrent processes to distribute clock signals to RAM and ROM
 rom_clka <= MEMORY_CLOCK;
@@ -181,6 +215,16 @@ begin
                     if (WRITE_FLAG = '1') then
                         pio_led_data <= BUS_WRITE_DATA;
                     end if;
+                elsif (unsigned(PERIPHERAL_IO_7SEG_ACTIVE) = MEMORY_ADDRESS AND WRITE_FLAG = '1') then
+                    if (BUS_WRITE_DATA /= x"00") then -- Any non zero value will activate the displays
+                        PIO_7SEG_ACTIVE <= '1';
+                    else
+                        PIO_7SEG_ACTIVE <= '0';
+                    end if;
+                elsif (MEMORY_ADDRESS = unsigned(PERIPHERAL_IO_7SEG_VAL) AND WRITE_FLAG = '1') then
+                    PIO_7SEG_DISPLAY_VAL(7 downto 0) <= BUS_WRITE_DATA;
+                elsif (MEMORY_ADDRESS = (unsigned(PERIPHERAL_IO_7SEG_VAL) + 1) AND WRITE_FLAG = '1') then
+                    PIO_7SEG_DISPLAY_VAL(15 downto 8) <= BUS_WRITE_DATA;
                 end if;
             else
                 SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(RAM_BASE);
