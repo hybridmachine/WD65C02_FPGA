@@ -31,23 +31,43 @@ BOARD_HEIGHT:           equ 48
 BOARD_MEM_SIZE:         equ (BOARD_WIDTH/8)*BOARD_HEIGHT ; We use bits for each cell, so columns are 1 bit wide
 BOARD_MEM_BASE_ADDR:    equ $0300
 BOARD_MEM_END_ADDR:     equ BOARD_MEM_BASE_ADDR+BOARD_MEM_SIZE
+CELL_MASK_BASE          equ $20
 CELL_DEAD:              equ 0
 CELL_LIVE:              equ 1
 CELL_PTR:               equ $10 ; $11, $10 is a 16 bit pointer to game board
-;EXTERN MULT             ; Multiply routine defined in Multiply.asm
 
 CODE
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
     org $FC00   ; Must match ROM_START in PKG_65C02.vhd
+    XREF MULT
+    XREF MCAND1
+    XREF MCAND2
 
 START:
     sei             ; Mask maskable interrupts
 
     cld				; Clear decimal mode
     clc             ; Clear carry
-    ; Store off the end ptr for debugging
+    lda #CELL_LIVE
+    sta CELL_MASK_BASE
+    lda #CELL_LIVE<<1
+    sta CELL_MASK_BASE+1
+    lda #CELL_LIVE<<2
+    sta CELL_MASK_BASE+2
+    lda #CELL_LIVE<<3
+    sta CELL_MASK_BASE+3
+    lda #CELL_LIVE<<4
+    sta CELL_MASK_BASE+4
+    lda #CELL_LIVE<<5
+    sta CELL_MASK_BASE+5
+    lda #CELL_LIVE<<6
+    sta CELL_MASK_BASE+6
+    lda #CELL_LIVE<<7
+    sta CELL_MASK_BASE+7
+
+    ; Store off the end ptr for debugging    
     lda #BOARD_MEM_END_ADDR
     sta CELL_PTR+2    
     lda #>BOARD_MEM_END_ADDR
@@ -60,7 +80,7 @@ START:
 INITGAMEBOARD:
     ldx #0
     ldy #0
-    lda #CELL_LIVE
+    lda #CELL_DEAD
     sta (CELL_PTR)
     clc
     lda #1
@@ -79,6 +99,11 @@ TEST_PTR:
     lda CELL_PTR+1
     sbc #>BOARD_MEM_END_ADDR
     bne INITGAMEBOARD ; High byte doesn't match, continue loop
+    lda #90
+    sta MCAND1
+    lda #90
+    sta MCAND2
+    jsr MULT
     brk ; All done, brk for debugging for now
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
@@ -132,3 +157,4 @@ vectors	SECTION OFFSET $FFFA
 	        ends
 
 	        end
+END ; CODE

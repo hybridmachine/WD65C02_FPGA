@@ -16,6 +16,6 @@ del *.obj
 del *.lst
 del *.sym
 WDC02AS -g -l -DUSING_02 GameOfLife.asm
-WDCLN -g -sz -t -HZ GameOfLife
+WDC02AS -g -l -DUSING_02 Multiply.asm
+WDCLN -g -sz -t -HZ GameOfLife Multiply.obj
 WDCDB.exe
-pause
