@@ -13,8 +13,8 @@ CODE
     GLOBAL MCAND2
 
     MULT:
-    MCAND1:  GEQU    $0780
-    MCAND2:  GEQU    $0782
+    MCAND1:  GEQU    $80
+    MCAND2:  GEQU    $82
 
         LDX #$0
         LDY #$0

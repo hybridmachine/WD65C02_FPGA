@@ -44,6 +44,9 @@ CODE
     XREF MULT
     XREF MCAND1
     XREF MCAND2
+    XREF DIV
+    XREF DIVDND
+    XREF DIVSOR
 
 START:
     sei             ; Mask maskable interrupts
@@ -99,11 +102,14 @@ TEST_PTR:
     lda CELL_PTR+1
     sbc #>BOARD_MEM_END_ADDR
     bne INITGAMEBOARD ; High byte doesn't match, continue loop
-    lda #90
-    sta MCAND1
-    lda #90
-    sta MCAND2
-    jsr MULT
+
+LOAD_R_PENTOMINO:
+    ; Test division
+    lda #14
+    sta DIVDND
+    lda #3
+    sta DIVSOR
+    jsr DIV
     brk ; All done, brk for debugging for now
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
