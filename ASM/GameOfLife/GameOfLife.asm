@@ -26,12 +26,15 @@
 ;
 ;
 ;***************************************************************************    
-BOARD_WIDTH:            equ 32
-BOARD_HEIGHT:           equ 32
-BOARD_MEM_SIZE:         equ BOARD_WIDTH * BOARD_HEIGHT
+BOARD_WIDTH:            equ 48
+BOARD_HEIGHT:           equ 48
+BOARD_MEM_SIZE:         equ (BOARD_WIDTH/8)*BOARD_HEIGHT ; We use bits for each cell, so columns are 1 bit wide
 BOARD_MEM_BASE_ADDR:    equ $0300
-BOARD_ROW_PTR_ADDR:     equ $10   ; 16 bit pointer to the current row $10L $11H
-EXTERN MULT             ; Multiply routine defined in Multiply.asm
+BOARD_MEM_END_ADDR:     equ BOARD_MEM_BASE_ADDR+BOARD_MEM_SIZE
+CELL_DEAD:              equ 0
+CELL_LIVE:              equ 1
+CELL_PTR:               equ $10 ; $11, $10 is a 16 bit pointer to game board
+;EXTERN MULT             ; Multiply routine defined in Multiply.asm
 
 CODE
     CHIP	65C02
@@ -44,33 +47,88 @@ START:
 
     cld				; Clear decimal mode
     clc             ; Clear carry
-
+    ; Store off the end ptr for debugging
+    lda #BOARD_MEM_END_ADDR
+    sta CELL_PTR+2    
+    lda #>BOARD_MEM_END_ADDR
+    sta CELL_PTR+3
+    ; Load cell pointer with base address location
+    lda #BOARD_MEM_BASE_ADDR
+    sta CELL_PTR    
+    lda #>BOARD_MEM_BASE_ADDR
+    sta CELL_PTR+1
 INITGAMEBOARD:
     ldx #0
     ldy #0
-    ; Set pointer to board memory
-    lda #(BOARD_MEM_BASE_ADDR).low.
-    sta $BOARD_ROW_PTR_ADDR
-    lda #(BOARD_MEM_BASE_ADDR).high.
-    sta $BOARD_ROW_PTR_ADDR+1
-    lda #0
-    
-INITY:
-    pha         ; Save A on the stack
-    tya
-    pha         ; Save Y on the stack
-    tyx
-    pha         ; Save X on the stack
-    jmp MULT    ; Get row starting address
-LD_ROW_PTR:
-    STY $BOARD_ROW_PTR_ADDR    ; Store row pointer low
-    STX $BOARD_ROW_PTR_ADDR+1  ; Store row pointer high
-    pla         ; Restore X
-    tax
-    pla         ; Restore Y
-    tay
-    pla         ; Restore A     
-INITX:
-    dex         ; Decrement column pointer
-    sta $(BOARD_ROW_PTR_ADDR),x
-    bne INITGAMEBOARD
+    lda #CELL_LIVE
+    sta (CELL_PTR)
+    clc
+    lda #1
+    adc CELL_PTR
+    sta CELL_PTR
+    bcc TEST_PTR ; skip the high byte if carry is clear
+    lda #0 ; Carry the carry flag if set
+    adc CELL_PTR+1
+    sta CELL_PTR+1
+TEST_PTR:
+    sec ; Set carry for subtraction
+    lda CELL_PTR
+    sbc #BOARD_MEM_END_ADDR
+    bne INITGAMEBOARD ; Low byte doesn't match, continue loop
+    sec
+    lda CELL_PTR+1
+    sbc #>BOARD_MEM_END_ADDR
+    bne INITGAMEBOARD ; High byte doesn't match, continue loop
+    brk ; All done, brk for debugging for now
+
+;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
+unexpectedInt:		; $FFE0 - IRQRVD2(134)
+	php
+	pha
+	lda #$FF
+	
+	;clear Irq
+	pla
+	plp
+	rti
+
+IRQHandler:
+		pla
+		rti
+
+	bits:	db	1
+	cnt:	db	0
+	wraps:	dw	0
+	delay:	db	10
+
+;***************************************************************************
+;***************************************************************************
+; New for WDCMON V1.04
+;  Needed to move Shadow Vectors into proper area
+;***************************************************************************
+;***************************************************************************
+	SH_vectors:	section
+Shadow_VECTORS	SECTION OFFSET $7EFA
+					;65C02 Interrupt Vectors
+					; Common 8 bit Vectors for all CPUs
+
+		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
+		dw	START				; $FFFC -  RESET (ALL)
+		dw	IRQHandler			; $FFFE -  IRQBRK (ALL)
+
+	        ends
+
+
+;***************************************************************************
+
+vectors	SECTION OFFSET $FFFA
+					;65C02 Interrupt Vectors
+					; Common 8 bit Vectors for all CPUs
+
+		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
+		dw	START		; $FFFC -  RESET (ALL)
+		dw	IRQHandler	; $FFFE -  IRQBRK (ALL)
+
+	        ends
+
+	        end
