@@ -107,16 +107,31 @@ TEST_PTR:
     bne INITGAMEBOARD ; High byte doesn't match, continue loop
 
 LOAD_R_PENTOMINO:
-    ; Test get cell byte address
-    LDX #7
-    LDY #0
+    ; Load an R-Pentomino into gameboard
+    ;   **
+    ;  **
+    ;   *
+    LDX #23
+    LDY #22
     LDA #CELL_LIVE
     JSR SUB_SET_CELL_VALUE
-    LDX #7
-    LDY #0
-    LDA #CELL_DEAD
+    LDX #24
+    LDY #22
+    LDA #CELL_LIVE
     JSR SUB_SET_CELL_VALUE
-    brk ; All done, brk for debugging for now
+    LDX #22
+    LDY #23
+    LDA #CELL_LIVE
+    JSR SUB_SET_CELL_VALUE
+    LDX #23
+    LDY #23
+    LDA #CELL_LIVE
+    JSR SUB_SET_CELL_VALUE
+    LDX #23
+    LDY #24
+    LDA #CELL_LIVE
+    JSR SUB_SET_CELL_VALUE
+    BRK ; Stop for debugging for now
 
 ; Subroutine to set the cell value. Arguments are in X, Y, and A (X, Y are position, A is CELL_LIVE/CELL_DEAD value)
 SUB_SET_CELL_VALUE:
