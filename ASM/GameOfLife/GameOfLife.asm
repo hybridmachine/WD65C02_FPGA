@@ -32,6 +32,7 @@ BOARD_MEM_SIZE:         equ (BOARD_WIDTH/8)*BOARD_HEIGHT ; We use bits for each 
 BOARD_MEM_BASE_ADDR:    equ $0300
 BOARD_MEM_END_ADDR:     equ BOARD_MEM_BASE_ADDR+BOARD_MEM_SIZE
 CELL_MASK_BASE          equ $20
+CELL_MASK_INVERT        equ (CELL_MASK_BASE+8) ; Temp store for when we need to save a mask invert
 CELL_DEAD:              equ 0
 CELL_LIVE:              equ 1
 CELL_PTR:               equ $10 ; $11, $10 is a 16 bit pointer to game board, $12 is the bit location in the byte
@@ -53,22 +54,24 @@ START:
 
     cld				; Clear decimal mode
     clc             ; Clear carry
+    ; Note the inversion here, conceptually the LSb (least significant bit) is far right of the byte, and 
+    ; the MSb is far left so to set the conceptual bit 0 in the array (X goes 0 to N left to right), we start at the MSb
     lda #CELL_LIVE
-    sta CELL_MASK_BASE
-    lda #CELL_LIVE<<1
-    sta CELL_MASK_BASE+1
-    lda #CELL_LIVE<<2
-    sta CELL_MASK_BASE+2
-    lda #CELL_LIVE<<3
-    sta CELL_MASK_BASE+3
-    lda #CELL_LIVE<<4
-    sta CELL_MASK_BASE+4
-    lda #CELL_LIVE<<5
-    sta CELL_MASK_BASE+5
-    lda #CELL_LIVE<<6
-    sta CELL_MASK_BASE+6
-    lda #CELL_LIVE<<7
     sta CELL_MASK_BASE+7
+    lda #CELL_LIVE<<1
+    sta CELL_MASK_BASE+6
+    lda #CELL_LIVE<<2
+    sta CELL_MASK_BASE+5
+    lda #CELL_LIVE<<3
+    sta CELL_MASK_BASE+4
+    lda #CELL_LIVE<<4
+    sta CELL_MASK_BASE+3
+    lda #CELL_LIVE<<5
+    sta CELL_MASK_BASE+2
+    lda #CELL_LIVE<<6
+    sta CELL_MASK_BASE+1
+    lda #CELL_LIVE<<7
+    sta CELL_MASK_BASE
 
     ; Store off the end ptr for debugging    
     lda #BOARD_MEM_END_ADDR
@@ -105,11 +108,38 @@ TEST_PTR:
 
 LOAD_R_PENTOMINO:
     ; Test get cell byte address
-    LDX #47
-    LDY #47
-    JSR SUB_GET_CELL_BYTE_ADDRESS
+    LDX #7
+    LDY #0
+    LDA #CELL_LIVE
+    JSR SUB_SET_CELL_VALUE
+    LDX #7
+    LDY #0
+    LDA #CELL_DEAD
+    JSR SUB_SET_CELL_VALUE
     brk ; All done, brk for debugging for now
 
+; Subroutine to set the cell value. Arguments are in X, Y, and A (X, Y are position, A is CELL_LIVE/CELL_DEAD value)
+SUB_SET_CELL_VALUE:
+    ; We assume X and Y already have values loaded by our caller, get cell address and its offset in that byte
+    PHA  ; Save off A
+    JSR SUB_GET_CELL_BYTE_ADDRESS
+    LDX CELL_PTR+2 ; Put the bit offset into X
+    PLA
+    CMP CELL_DEAD   ; If A is CELL_DEAD, turn cell off
+    BEQ CELL_OFF
+CELL_ON:
+    LDA (CELL_PTR)
+    ORA CELL_MASK_BASE,X
+    STA (CELL_PTR)
+    RTS
+CELL_OFF:
+    LDA CELL_MASK_BASE,X
+    EOR #$FF ; Invert mask
+    STA CELL_MASK_INVERT
+    LDA (CELL_PTR)
+    AND CELL_MASK_INVERT
+    STA (CELL_PTR)
+    RTS
 ; Subroutine to get cell address given an X and Y value (passed in X and Y registers)
 ; Formula is (Y * (BOARD_WIDTH/8)) + (X/8), this gets you the byte that the cell is in, the remainder of X/8 gives you the 
 ; bit which is the cell.
