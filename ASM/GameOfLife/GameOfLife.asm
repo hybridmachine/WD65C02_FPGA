@@ -26,7 +26,7 @@
 ;
 ;
 ;***************************************************************************    
-BOARD_WIDTH:            equ 48
+BOARD_WIDTH:            equ 48  ; Must be multiple of a byte wide and both width and height must be <= 255 (one byte values)
 BOARD_HEIGHT:           equ 48
 BOARD_MEM_SIZE:         equ (BOARD_WIDTH/8)*BOARD_HEIGHT ; We use bits for each cell, so columns are 1 bit wide
 BOARD_MEM_BASE_ADDR:    equ $0300
@@ -34,7 +34,7 @@ BOARD_MEM_END_ADDR:     equ BOARD_MEM_BASE_ADDR+BOARD_MEM_SIZE
 CELL_MASK_BASE          equ $20
 CELL_DEAD:              equ 0
 CELL_LIVE:              equ 1
-CELL_PTR:               equ $10 ; $11, $10 is a 16 bit pointer to game board
+CELL_PTR:               equ $10 ; $11, $10 is a 16 bit pointer to game board, $12 is the bit location in the byte
 
 CODE
     CHIP	65C02
@@ -72,9 +72,9 @@ START:
 
     ; Store off the end ptr for debugging    
     lda #BOARD_MEM_END_ADDR
-    sta CELL_PTR+2    
+    sta CELL_PTR+3    
     lda #>BOARD_MEM_END_ADDR
-    sta CELL_PTR+3
+    sta CELL_PTR+4
     ; Load cell pointer with base address location
     lda #BOARD_MEM_BASE_ADDR
     sta CELL_PTR    
@@ -104,13 +104,76 @@ TEST_PTR:
     bne INITGAMEBOARD ; High byte doesn't match, continue loop
 
 LOAD_R_PENTOMINO:
-    ; Test division
-    lda #14
-    sta DIVDND
-    lda #3
-    sta DIVSOR
-    jsr DIV
+    ; Test get cell byte address
+    LDX #47
+    LDY #47
+    JSR SUB_GET_CELL_BYTE_ADDRESS
     brk ; All done, brk for debugging for now
+
+; Subroutine to get cell address given an X and Y value (passed in X and Y registers)
+; Formula is (Y * (BOARD_WIDTH/8)) + (X/8), this gets you the byte that the cell is in, the remainder of X/8 gives you the 
+; bit which is the cell.
+; The byte address is in CELL_PTR,CELL_PTR+1 (low, high) and the remainder (bit location) is in CELL_PTR + 2
+SUB_GET_CELL_BYTE_ADDRESS:
+    ; Arguments X and Y are passed in via X and Y registers
+    ; Calculate (Y * (BOARD_WIDTH/8))
+    ; Zero out multiply argument locations
+    ; First set cell pointer to base of board memory
+    lda #BOARD_MEM_BASE_ADDR
+    sta CELL_PTR    
+    lda #>BOARD_MEM_BASE_ADDR
+    sta CELL_PTR+1
+    LDA #0
+    STA MCAND1
+    STA MCAND1+1
+    STA MCAND2
+    STA MCAND2+1
+    STY MCAND1
+    LDA #(BOARD_WIDTH/8)
+    STA MCAND2
+    ; Preserve X and Y registers
+    PHX
+    PHY 
+    JSR MULT
+    ; Save off pointer calculation thus far, next up add X offset
+    CLC
+    TYA
+    ADC CELL_PTR
+    STA CELL_PTR
+    LDA #0
+    ADC CELL_PTR+1 ; Add any carry bit
+    STA CELL_PTR+1
+    TXA
+    ADC CELL_PTR+1 
+    BCS OVERFLOW_DETECTED
+    STA CELL_PTR+1
+    PLY
+    PLX
+    ; Clear out divide memory locations
+    LDA #0
+    STA DIVDND
+    STA DIVDND+1
+    STA DIVSOR
+    STA DIVSOR+1
+    ; Divide X by 8
+    STX DIVDND
+    LDA #8
+    STA DIVSOR
+    JSR DIV
+    ; Sixteen bit add of A which is low byte of result (should be one byte only value so ignore high)
+    CLC
+    ADC CELL_PTR
+    STA CELL_PTR
+    LDA #0 ; Add any carry bit
+    ADC CELL_PTR+1
+    BCS OVERFLOW_DETECTED
+    STA CELL_PTR+1
+    LDA DIVDND  ; Load the remainder, which is the bit offset
+    STA CELL_PTR+2
+    rts
+
+OVERFLOW_DETECTED:
+    BRK ; Overflow detected, bail out
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
