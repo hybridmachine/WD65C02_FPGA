@@ -29,8 +29,10 @@
 BOARD_WIDTH:            equ 48  ; Must be multiple of a byte wide and both width and height must be <= 255 (one byte values)
 BOARD_HEIGHT:           equ 48
 BOARD_MEM_SIZE:         equ (BOARD_WIDTH/8)*BOARD_HEIGHT ; We use bits for each cell, so columns are 1 bit wide
-BOARD_MEM_BASE_ADDR:    equ $0300
-BOARD_MEM_END_ADDR:     equ BOARD_MEM_BASE_ADDR+BOARD_MEM_SIZE
+BOARD1_MEM_BASE_ADDR:   equ $0300
+BOARD1_MEM_END_ADDR:    equ BOARD1_MEM_BASE_ADDR+BOARD_MEM_SIZE
+BOARD2_MEM_BASE_ADDR:   equ BOARD1_MEM_END_ADDR+1
+BOARD2_MEM_END_ADDR:    equ BOARD2_MEM_BASE_ADDR+BOARD_MEM_SIZE
 CELL_MASK_BASE          equ $20
 CELL_MASK_INVERT        equ (CELL_MASK_BASE+8) ; Temp store for when we need to save a mask invert
 CELL_DEAD:              equ 0
@@ -74,14 +76,14 @@ START:
     sta CELL_MASK_BASE
 
     ; Store off the end ptr for debugging    
-    lda #BOARD_MEM_END_ADDR
+    lda #BOARD1_MEM_END_ADDR
     sta CELL_PTR+3    
-    lda #>BOARD_MEM_END_ADDR
+    lda #>BOARD1_MEM_END_ADDR
     sta CELL_PTR+4
     ; Load cell pointer with base address location
-    lda #BOARD_MEM_BASE_ADDR
+    lda #BOARD1_MEM_BASE_ADDR
     sta CELL_PTR    
-    lda #>BOARD_MEM_BASE_ADDR
+    lda #>BOARD1_MEM_BASE_ADDR
     sta CELL_PTR+1
 INITGAMEBOARD:
     ldx #0
@@ -99,11 +101,11 @@ INITGAMEBOARD:
 TEST_PTR:
     sec ; Set carry for subtraction
     lda CELL_PTR
-    sbc #BOARD_MEM_END_ADDR
+    sbc #BOARD1_MEM_END_ADDR
     bne INITGAMEBOARD ; Low byte doesn't match, continue loop
     sec
     lda CELL_PTR+1
-    sbc #>BOARD_MEM_END_ADDR
+    sbc #>BOARD1_MEM_END_ADDR
     bne INITGAMEBOARD ; High byte doesn't match, continue loop
 
 LOAD_R_PENTOMINO:
@@ -131,7 +133,28 @@ LOAD_R_PENTOMINO:
     LDY #24
     LDA #CELL_LIVE
     JSR SUB_SET_CELL_VALUE
+    ; Test out the GET_CELL_VALUE Subroutine, check value in A after each call
+    LDX #23
+    LDY #22
+    JSR SUB_GET_CELL_VALUE
+    LDX #22
+    LDY #22
+    JSR SUB_GET_CELL_VALUE
+
     BRK ; Stop for debugging for now
+
+; Subroutine to get the current cell value. Arguments are in X,Y , return value goes into A
+SUB_GET_CELL_VALUE:
+    JSR SUB_GET_CELL_BYTE_ADDRESS
+    LDX CELL_PTR+2 ; Put the bit offset into X
+    LDA (CELL_PTR)
+    AND CELL_MASK_BASE,X
+    BEQ RETURN_CELL_DEAD ; If AND returns 0, cell was dead
+    LDA #CELL_LIVE ; Otherwise cell was live
+    RTS
+RETURN_CELL_DEAD
+    LDA #CELL_DEAD
+    RTS
 
 ; Subroutine to set the cell value. Arguments are in X, Y, and A (X, Y are position, A is CELL_LIVE/CELL_DEAD value)
 SUB_SET_CELL_VALUE:
@@ -164,9 +187,9 @@ SUB_GET_CELL_BYTE_ADDRESS:
     ; Calculate (Y * (BOARD_WIDTH/8))
     ; Zero out multiply argument locations
     ; First set cell pointer to base of board memory
-    lda #BOARD_MEM_BASE_ADDR
+    lda #BOARD1_MEM_BASE_ADDR
     sta CELL_PTR    
-    lda #>BOARD_MEM_BASE_ADDR
+    lda #>BOARD1_MEM_BASE_ADDR
     sta CELL_PTR+1
     LDA #0
     STA MCAND1

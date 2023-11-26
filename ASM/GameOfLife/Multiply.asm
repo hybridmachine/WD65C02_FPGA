@@ -6,7 +6,7 @@ CODE
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
-    org $FD1B   ; Must Come after main code
+    org $FD3B   ; Must Come after main code
 
     GLOBAL MULT
     GLOBAL MCAND1
