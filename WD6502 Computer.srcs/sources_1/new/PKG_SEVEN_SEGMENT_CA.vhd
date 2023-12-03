@@ -33,7 +33,7 @@ package SEVEN_SEGMENT_CA is
     constant DP : std_logic_vector(7 downto 0) := "10000000";
     
     function VALUE_TO_SEGMENT(
-        DIGITVAL : STD_LOGIC_VECTOR;
+        DIGITVAL : STD_LOGIC_VECTOR(3 downto 0);
         COMMON_ANODE : STD_LOGIC) return STD_LOGIC_VECTOR; 
     
     function DISABLE_SEGMENTS_VALUE(COMMON_ANODE : STD_LOGIC) return STD_LOGIC; 
@@ -52,7 +52,7 @@ package body SEVEN_SEGMENT_CA is
             end if;
     end function;
     
-    function VALUE_TO_SEGMENT(DIGITVAL : STD_LOGIC_VECTOR;
+    function VALUE_TO_SEGMENT(DIGITVAL : STD_LOGIC_VECTOR(3 downto 0);
             COMMON_ANODE : STD_LOGIC) return STD_LOGIC_VECTOR is
     variable returnVal : std_logic_vector(7 downto 0) := "00000000";
     

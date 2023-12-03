@@ -57,7 +57,9 @@ entity WD6502_Interface is
            SYNC         : in std_logic;                        -- Synchronize
            --VPB          : in std_logic;                         -- Vector Pull
            -- IO pins
-           PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0));                        
+           PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0);    
+           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
+           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0));                    
 end WD6502_Interface;
 
 architecture Behavioral of WD6502_Interface is
@@ -69,6 +71,8 @@ COMPONENT MemoryManager is
            MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
            WRITE_FLAG : in STD_LOGIC; -- When 1, data to address, read address and store on data line otherwise
            PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
+           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
+           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
            RESET : in STD_LOGIC
            );
 end COMPONENT;
@@ -115,6 +119,8 @@ MemoryManagement : MemoryManager port map (
     MEMORY_CLOCK => MEMORY_CLOCK,
     WRITE_FLAG => WRITE_FLAG,
     PIO_LED_OUT => PIO_LED_OUT,
+    PIO_7SEG_COMMON => PIO_7SEG_COMMON,
+    PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
     RESET => RESET
 );
 

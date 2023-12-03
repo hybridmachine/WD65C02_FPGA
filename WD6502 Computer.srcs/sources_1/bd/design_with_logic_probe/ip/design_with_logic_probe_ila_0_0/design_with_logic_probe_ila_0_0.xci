@@ -4,7 +4,7 @@
     "xci_name": "design_with_logic_probe_ila_0_0",
     "cell_name": "ila_0",
     "component_reference": "xilinx.com:ip:ila:6.2",
-    "ip_revision": "13",
+    "ip_revision": "14",
     "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_ila_0_0",
     "parameters": {
       "component_parameters": {
@@ -3138,7 +3138,7 @@
         "C_NUM_OF_PROBES": [ { "value": "8", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_DATA_DEPTH": [ { "value": "1024", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_MAJOR_VERSION": [ { "value": "2023", "resolve_type": "generated", "format": "long", "usage": "all" } ],
-        "C_MINOR_VERSION": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ],
+        "C_MINOR_VERSION": [ { "value": "2", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_BUILD_REVISION": [ { "value": "0", "format": "long", "usage": "all" } ],
         "C_CORE_MAJOR_VER": [ { "value": "6", "resolve_type": "generated", "format": "long", "enabled": false, "usage": "all" } ],
         "C_CORE_MINOR_VER": [ { "value": "0", "format": "long", "usage": "all" } ],
@@ -6247,7 +6247,7 @@
       },
       "project_parameters": {
         "ARCHITECTURE": [ { "value": "artix7" } ],
-        "BASE_BOARD_PART": [ { "value": "digilentinc.com:basys3:part0:1.2" } ],
+        "BASE_BOARD_PART": [ { "value": "" } ],
         "BOARD_CONNECTIONS": [ { "value": "" } ],
         "DEVICE": [ { "value": "xc7a35t" } ],
         "PACKAGE": [ { "value": "cpg236" } ],
@@ -6260,12 +6260,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "13" } ],
+        "IPREVISION": [ { "value": "14" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_ila_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.1" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "GLOBAL" } ]
       }
     },

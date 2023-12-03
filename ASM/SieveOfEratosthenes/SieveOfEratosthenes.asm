@@ -36,6 +36,8 @@
 ;***************************************************************************
 
 	LED_IO_ADDR:	    equ	    $0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+    SEVEN_SEG_IO_ADDR:  equ     $0201 ; 8 bits after LED_IO_ADDR, see WD65C02_FPGA/WD6502 Computer.srcs/sources_1/new/PKG_65C02.vhd
+    SEVEN_SEG_ACT_ADDR: equ     $0203 ; 16 bits after value, turn this to 01 to turn it on, 00 for off
 	PRIMES_LESS_THAN:	equ     $FE ; Primes up to 254
     ARRAY_BASE_ADDRESS: equ     $0400
     VALUE_BASE_ADDRESS: equ     $0500
@@ -65,6 +67,10 @@
     ; First, Turn off all of the LEDs
 		lda	#$00
 		sta	LED_IO_ADDR	; Turn off the LEDs
+        sta SEVEN_SEG_IO_ADDR   ; Set low and high byte to 0
+        sta SEVEN_SEG_IO_ADDR + 1
+        lda #$01
+        sta SEVEN_SEG_ACT_ADDR ; Turn the sevent segment display on
 
 
     ; MAIN
@@ -145,6 +151,7 @@
         CMP #$00
         BEQ DISP_LOOP ; Skip over the 0s
         STA LED_IO_ADDR
+        STA SEVEN_SEG_IO_ADDR ; Also display hex (for now) on seven segment display. Will try BCD later
         JSR SAVEXY  ; For now X and Y not touched by counter, but better to be safe
         JSR COUNTER ; Run the counter for some processor delay
         JSR RESTXY

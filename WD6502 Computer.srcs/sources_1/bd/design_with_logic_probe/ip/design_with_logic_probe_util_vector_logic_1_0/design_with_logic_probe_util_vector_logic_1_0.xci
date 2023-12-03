@@ -4,14 +4,14 @@
     "xci_name": "design_with_logic_probe_util_vector_logic_1_0",
     "cell_name": "invert_reset_signal",
     "component_reference": "xilinx.com:ip:util_vector_logic:2.0",
-    "ip_revision": "2",
+    "ip_revision": "3",
     "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_util_vector_logic_1_0",
     "parameters": {
       "component_parameters": {
         "Component_Name": [ { "value": "design_with_logic_probe_util_vector_logic_1_0", "resolve_type": "user", "usage": "all" } ],
         "C_SIZE": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "C_OPERATION": [ { "value": "not", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
-        "LOGO_FILE": [ { "value": "data/sym_notgate.png", "resolve_type": "user", "enabled": false, "usage": "all" } ]
+        "LOGO_FILE": [ { "value": "data/sym_notgate.png", "value_src": "user", "resolve_type": "user", "enabled": false, "usage": "all" } ]
       },
       "model_parameters": {
         "C_OPERATION": [ { "value": "not", "resolve_type": "generated", "usage": "all" } ],
@@ -19,7 +19,7 @@
       },
       "project_parameters": {
         "ARCHITECTURE": [ { "value": "artix7" } ],
-        "BASE_BOARD_PART": [ { "value": "digilentinc.com:basys3:part0:1.2" } ],
+        "BASE_BOARD_PART": [ { "value": "" } ],
         "BOARD_CONNECTIONS": [ { "value": "" } ],
         "DEVICE": [ { "value": "xc7a35t" } ],
         "PACKAGE": [ { "value": "cpg236" } ],
@@ -32,12 +32,12 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "2" } ],
+        "IPREVISION": [ { "value": "3" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_util_vector_logic_1_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2023.1" } ],
+        "SWVERSION": [ { "value": "2023.2" } ],
         "SYNTHESISFLOW": [ { "value": "GLOBAL" } ]
       }
     },

@@ -38,7 +38,7 @@ entity PIO_7SEG_X_4 is
         COMMON_ANODE : STD_LOGIC := '1' -- When 1, true otherwise we are in common cathode mode
     );
     Port ( CLOCK : in STD_LOGIC; -- For now we'll run this at FPGA clock speed of 100mhz
-           DISPLAY_ON : STD_LOGIC; -- 0 for LEDs off, 1 for display value on input
+           DISPLAY_ON : in STD_LOGIC; -- 0 for LEDs off, 1 for display value on input
            VALUE : in STD_LOGIC_VECTOR (15 downto 0); -- 4 digits of 0-F hex. Note if using BCD , caller should limit 0-9, display doesn't truncate BCD illegal bits
            SEGMENT_DRIVERS : out STD_LOGIC_VECTOR (7 downto 0);
            COMMON_DRIVERS : out STD_LOGIC_VECTOR(3 downto 0)
@@ -46,40 +46,73 @@ entity PIO_7SEG_X_4 is
             
 end PIO_7SEG_X_4;
 
-architecture Behavioral of PIO_7SEG_X_4 is    
+architecture Behavioral of PIO_7SEG_X_4 is  
+signal display_idx : natural := 0;  
+signal clock_ticks : natural := CLOCK_TICKS_PER_DIGIT;
+signal COMMON_DRIVERS_REG : STD_LOGIC_VECTOR(3 downto 0);
+signal SEGMENT_DRIVERS_REG : STD_LOGIC_VECTOR (7 downto 0);
 begin
     
-    -- Drive Digits
+    -- Register propogation
+    process (CLOCK, SEGMENT_DRIVERS_REG, COMMON_DRIVERS_REG)
+    BEGIN
+        SEGMENT_DRIVERS <= SEGMENT_DRIVERS_REG;
+        COMMON_DRIVERS <= COMMON_DRIVERS_REG;
+    END PROCESS;
+    
     process (CLOCK)
-    variable display_idx : natural := 0;
-    variable clock_ticks : natural := CLOCK_TICKS_PER_DIGIT;
-    constant nibble_width : natural := 4;
-    variable nibble_high : natural := (nibble_width * (display_idx + 1)) - 1;
-    variable nibble_low : natural := nibble_high - (nibble_width - 1);
-    begin
+    variable clock_ticks_var : natural := CLOCK_TICKS_PER_DIGIT;    
+    BEGIN
+        clock_ticks_var := clock_ticks_var - 1;
+        if (clock_ticks_var <= 0) then
+            clock_ticks_var := CLOCK_TICKS_PER_DIGIT;    
+        end if;    
+        clock_ticks <= clock_ticks_var;
+    END PROCESS;
+    
+    process (clock_ticks)
+    variable display_idx_var : natural := 0;
+    BEGIN
         if (clock_ticks = 0) then
-            clock_ticks := CLOCK_TICKS_PER_DIGIT;
-            if (display_idx >= 3) then
-                display_idx := 0;
+            if (display_idx_var < 3) then
+                display_idx_var := display_idx_var + 1; 
             else
-                display_idx := display_idx + 1;
+                display_idx_var := 0;
+            end if;                   
+        end if;
+        display_idx <= display_idx_var;
+    END PROCESS;
+    
+    process (display_idx)
+    begin
+        if (display_idx < 4) then  
+            if (display_idx = 0) then
+                COMMON_DRIVERS_REG <= (0 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
+            elsif (display_idx = 1) then
+                COMMON_DRIVERS_REG <= (1 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
+            elsif (display_idx = 2) then
+                COMMON_DRIVERS_REG <= (2 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
+            else
+                COMMON_DRIVERS_REG <= (3 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
             end if;
-            nibble_high := (nibble_width * (display_idx + 1)) - 1;
-            nibble_low := nibble_high - (nibble_width - 1);
         else
-            clock_ticks := clock_ticks - 1;
+            COMMON_DRIVERS_REG <= (others => not SELECT_ACTIVE);
         end if;
-        
-        if (DISPLAY_ON = '1') then
-            COMMON_DRIVERS <= (others => not SELECT_ACTIVE); -- Turn off all anodes
-            COMMON_DRIVERS(display_idx) <= SELECT_ACTIVE; -- Turn on the specified digit
-            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE(COMMON_ANODE));
-            SEGMENT_DRIVERS <= VALUE_TO_SEGMENT(VALUE(nibble_high downto nibble_low), COMMON_ANODE);
+    end process;
+    
+    -- Drive Digits
+    process (display_idx,VALUE)
+    begin  
+        SEGMENT_DRIVERS_REG <= (others => DISABLE_SEGMENTS_VALUE(COMMON_ANODE));      
+        if (display_idx = 0) then
+            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(3 downto 0), COMMON_ANODE);
+        elsif (display_idx = 1) then
+            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(7 downto 4), COMMON_ANODE);
+        elsif (display_idx = 2) then
+            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(11 downto 8), COMMON_ANODE);
         else
-            COMMON_DRIVERS <= (others => not SELECT_ACTIVE); -- Turn off all anodes
-            SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE(COMMON_ANODE));
+            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(15 downto 12), COMMON_ANODE);
         end if;
-            
     end process;
     
 end Behavioral;

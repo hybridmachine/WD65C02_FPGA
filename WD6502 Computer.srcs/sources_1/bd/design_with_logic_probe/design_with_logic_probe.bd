@@ -1,13 +1,14 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x5F6400212848B302",
+      "boundary_crc": "0x23B26FBA2749A87B",
       "device": "xc7a35tcpg236-1",
       "gen_directory": "../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe",
       "name": "design_with_logic_probe",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "None",
-      "tool_version": "2023.1"
+      "tool_version": "2023.2",
+      "validated": "true"
     },
     "design_tree": {
       "ila_0": "",
@@ -16,7 +17,17 @@
     },
     "ports": {
       "Reset": {
-        "direction": "I"
+        "direction": "I",
+        "parameters": {
+          "PortType": {
+            "value": "undef",
+            "value_src": "ip_prop"
+          },
+          "PortType.PROP_SRC": {
+            "value": "false",
+            "value_src": "ip_prop"
+          }
+        }
       },
       "ADDRESS_IN": {
         "direction": "I",
@@ -35,8 +46,24 @@
         "type": "clk",
         "direction": "I",
         "parameters": {
+          "CLK_DOMAIN": {
+            "value": "design_with_logic_probe_CLOCK",
+            "value_src": "default"
+          },
           "FREQ_HZ": {
             "value": "100000000"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
           }
         }
       },
@@ -65,11 +92,22 @@
       },
       "NMIB": {
         "direction": "O"
+      },
+      "PIO_7SEG_COMMON": {
+        "direction": "O",
+        "left": "3",
+        "right": "0"
+      },
+      "PIO_7SEG_SEGMENTS": {
+        "direction": "O",
+        "left": "7",
+        "right": "0"
       }
     },
     "components": {
       "ila_0": {
         "vlnv": "xilinx.com:ip:ila:6.2",
+        "ip_revision": "14",
         "xci_name": "design_with_logic_probe_ila_0_0",
         "xci_path": "ip\\design_with_logic_probe_ila_0_0\\design_with_logic_probe_ila_0_0.xci",
         "inst_hier_path": "ila_0",
@@ -96,6 +134,7 @@
       },
       "invert_reset_signal": {
         "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
+        "ip_revision": "3",
         "xci_name": "design_with_logic_probe_util_vector_logic_1_0",
         "xci_path": "ip\\design_with_logic_probe_util_vector_logic_1_0\\design_with_logic_probe_util_vector_logic_1_0.xci",
         "inst_hier_path": "invert_reset_signal",
@@ -110,6 +149,7 @@
       },
       "WDC65C02_Interface": {
         "vlnv": "xilinx.com:module_ref:WD6502_Interface:1.0",
+        "ip_revision": "1",
         "xci_name": "design_with_logic_probe_WD6502_Interface_0_1",
         "xci_path": "ip\\design_with_logic_probe_WD6502_Interface_0_1\\design_with_logic_probe_WD6502_Interface_0_1.xci",
         "inst_hier_path": "WDC65C02_Interface",
@@ -126,6 +166,14 @@
               "ASSOCIATED_RESET": {
                 "value": "RESET",
                 "value_src": "constant"
+              },
+              "FREQ_HZ": {
+                "value": "100000000",
+                "value_src": "user_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "design_with_logic_probe_CLOCK",
+                "value_src": "default_prop"
               }
             }
           },
@@ -181,6 +229,16 @@
             "direction": "O",
             "left": "7",
             "right": "0"
+          },
+          "PIO_7SEG_COMMON": {
+            "direction": "O",
+            "left": "3",
+            "right": "0"
+          },
+          "PIO_7SEG_SEGMENTS": {
+            "direction": "O",
+            "left": "7",
+            "right": "0"
           }
         }
       }
@@ -189,8 +247,8 @@
       "Net": {
         "ports": [
           "ADDRESS_IN",
-          "ila_0/probe0",
-          "WDC65C02_Interface/ADDRESS"
+          "WDC65C02_Interface/ADDRESS",
+          "ila_0/probe0"
         ]
       },
       "Net1": {
@@ -202,8 +260,8 @@
       "RWB_PIN_1": {
         "ports": [
           "RWB",
-          "ila_0/probe3",
-          "WDC65C02_Interface/RWB"
+          "WDC65C02_Interface/RWB",
+          "ila_0/probe3"
         ]
       },
       "Reset_1": {
@@ -215,15 +273,15 @@
       "SYNC_1": {
         "ports": [
           "SYNC",
-          "ila_0/probe4",
-          "WDC65C02_Interface/SYNC"
+          "WDC65C02_Interface/SYNC",
+          "ila_0/probe4"
         ]
       },
       "SingleStep_1": {
         "ports": [
           "SingleStep",
-          "ila_0/probe5",
-          "WDC65C02_Interface/SINGLESTEP"
+          "WDC65C02_Interface/SINGLESTEP",
+          "ila_0/probe5"
         ]
       },
       "WD6502_Interface_0_IRQB": {
@@ -276,11 +334,23 @@
           "ila_0/probe6"
         ]
       },
+      "WDC65C02_Interface_PIO_7SEG_COMMON": {
+        "ports": [
+          "WDC65C02_Interface/PIO_7SEG_COMMON",
+          "PIO_7SEG_COMMON"
+        ]
+      },
+      "WDC65C02_Interface_PIO_7SEG_SEGMENTS": {
+        "ports": [
+          "WDC65C02_Interface/PIO_7SEG_SEGMENTS",
+          "PIO_7SEG_SEGMENTS"
+        ]
+      },
       "clk_wiz_0_clk_out1": {
         "ports": [
           "CLOCK",
-          "ila_0/clk",
-          "WDC65C02_Interface/CLOCK"
+          "WDC65C02_Interface/CLOCK",
+          "ila_0/clk"
         ]
       },
       "util_vector_logic_1_Res": {

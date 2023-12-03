@@ -74,9 +74,9 @@ package W65C02_DEFINITIONS is
     
     constant MEM_MAPPED_IO_END          : std_logic_vector(15 downto 0) := x"03FF";
     constant MEM_MAPPED_IO_BASE         : std_logic_vector(15 downto 0) := x"0200";
-    constant PERIPHERAL_IO_LED_ADDR     : std_logic_vector(15 downto 0) := MEM_MAPPED_IO_BASE;
-    constant PERIPHERAL_IO_7SEG_VAL     : std_logic_vector(15 downto 0) := std_logic_vector(to_unsigned(to_integer(unsigned(PERIPHERAL_IO_LED_ADDR))+PERIPHERAL_IO_LED_ADDR'length,16));
-    constant PERIPHERAL_IO_7SEG_ACTIVE  : std_logic_vector(15 downto 0) := std_logic_vector(to_unsigned(to_integer(unsigned(PERIPHERAL_IO_7SEG_VAL))+PERIPHERAL_IO_7SEG_VAL'length,16));
+    constant PERIPHERAL_IO_LED_ADDR     : std_logic_vector(15 downto 0) := MEM_MAPPED_IO_BASE; -- 1 byte
+    constant PERIPHERAL_IO_7SEG_VAL     : std_logic_vector(15 downto 0) := x"0201"; -- 2 bytes
+    constant PERIPHERAL_IO_7SEG_ACTIVE  : std_logic_vector(15 downto 0) := x"0203"; -- 1 byte
     constant STACK_END                  : std_logic_vector(15 downto 0) := x"01FF";
     constant STACK_BASE                 : std_logic_vector(15 downto 0) := x"0100";
     

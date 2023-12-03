@@ -75,6 +75,8 @@ signal pio_led_data: std_logic_vector(7 downto 0);
 
 signal PIO_7SEG_DISPLAY_VAL :std_logic_vector(15 downto 0);
 signal PIO_7SEG_ACTIVE: std_logic;
+signal PIO_7SEG_SEGMENTS_SIG:std_logic_vector(7 downto 0);
+signal PIO_7SEG_COMMON_SIG:std_logic_vector(3 downto 0);
 
 COMPONENT RAM is
     GENERIC(
@@ -167,8 +169,8 @@ port map (
     CLOCK => MEMORY_CLOCK,
     DISPLAY_ON => PIO_7SEG_ACTIVE,
     VALUE => PIO_7SEG_DISPLAY_VAL,
-    SEGMENT_DRIVERS => PIO_7SEG_SEGMENTS,
-    COMMON_DRIVERS => PIO_7SEG_COMMON
+    SEGMENT_DRIVERS => PIO_7SEG_SEGMENTS_SIG,
+    COMMON_DRIVERS => PIO_7SEG_COMMON_SIG
     );
 
 -- Concurrent processes to distribute clock signals to RAM and ROM
@@ -182,6 +184,13 @@ ram_web <= '0';
 
 ram_ena <= '1';
 ram_enb <= '1';
+
+-- Propogate the 7 SEGMENT signals 
+process(MEMORY_CLOCK, PIO_7SEG_SEGMENTS_SIG, PIO_7SEG_COMMON_SIG)
+BEGIN
+    PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_SIG;
+    PIO_7SEG_COMMON <= PIO_7SEG_COMMON_SIG;
+END PROCESS;
 
 process(MEMORY_CLOCK)
 variable MEMORY_ADDRESS : unsigned(15 downto 0);
