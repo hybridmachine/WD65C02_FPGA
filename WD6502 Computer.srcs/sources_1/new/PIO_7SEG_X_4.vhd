@@ -34,7 +34,7 @@ entity PIO_7SEG_X_4 is
         -- On some boards, namely baysis3, the digit selector is actually low instead of high
         -- most boards are high so 1 is default, set to 0 for boards like baysis 3
         SELECT_ACTIVE : STD_LOGIC := '1';
-        CLOCK_TICKS_PER_DIGIT : natural := 1000000; -- at 100mhz, this will give us 10ms per digit
+        CLOCK_TICKS_PER_DIGIT : natural := 100000; -- at 100mhz, this will give us 10ms per digit
         COMMON_ANODE : STD_LOGIC := '1' -- When 1, true otherwise we are in common cathode mode
     );
     Port ( CLOCK : in STD_LOGIC; -- For now we'll run this at FPGA clock speed of 100mhz
@@ -47,72 +47,96 @@ entity PIO_7SEG_X_4 is
 end PIO_7SEG_X_4;
 
 architecture Behavioral of PIO_7SEG_X_4 is  
-signal display_idx : natural := 0;  
-signal clock_ticks : natural := CLOCK_TICKS_PER_DIGIT;
-signal COMMON_DRIVERS_REG : STD_LOGIC_VECTOR(3 downto 0);
-signal SEGMENT_DRIVERS_REG : STD_LOGIC_VECTOR (7 downto 0);
+
+signal segments_digit_1 : std_logic_vector (7 downto 0);
+signal segments_digit_2 : std_logic_vector (7 downto 0);
+signal segments_digit_3 : std_logic_vector (7 downto 0);
+signal segments_digit_4 : std_logic_vector (7 downto 0);
+
+type DIGIT_DRIVE_T is ( DIGIT1,
+                        DIGIT2,
+                        DIGIT3,
+                        DIGIT4,
+                        ALLOFF);
+
+signal DIGIT_DRIVE : DIGIT_DRIVE_T := ALLOFF;
+
 begin
-    
-    -- Register propogation
-    process (CLOCK, SEGMENT_DRIVERS_REG, COMMON_DRIVERS_REG)
-    BEGIN
-        SEGMENT_DRIVERS <= SEGMENT_DRIVERS_REG;
-        COMMON_DRIVERS <= COMMON_DRIVERS_REG;
-    END PROCESS;
-    
-    process (CLOCK)
-    variable clock_ticks_var : natural := CLOCK_TICKS_PER_DIGIT;    
-    BEGIN
-        clock_ticks_var := clock_ticks_var - 1;
-        if (clock_ticks_var <= 0) then
-            clock_ticks_var := CLOCK_TICKS_PER_DIGIT;    
-        end if;    
-        clock_ticks <= clock_ticks_var;
-    END PROCESS;
-    
-    process (clock_ticks)
-    variable display_idx_var : natural := 0;
-    BEGIN
-        if (clock_ticks = 0) then
-            if (display_idx_var < 3) then
-                display_idx_var := display_idx_var + 1; 
-            else
-                display_idx_var := 0;
-            end if;                   
+
+    segments_digit_1 <= VALUE_TO_SEGMENT(VALUE(3 downto 0), COMMON_ANODE); 
+    segments_digit_2 <= VALUE_TO_SEGMENT(VALUE(7 downto 4), COMMON_ANODE); 
+    segments_digit_3 <= VALUE_TO_SEGMENT(VALUE(11 downto 8), COMMON_ANODE); 
+    segments_digit_4 <= VALUE_TO_SEGMENT(VALUE(15 downto 12), COMMON_ANODE); 
+
+seven_segment_statemachine: process(CLOCK)
+variable clock_ticks_var : natural := CLOCK_TICKS_PER_DIGIT;
+BEGIN
+    if (CLOCK'event and CLOCK = '1') then
+        if (clock_ticks_var > 0) then
+            clock_ticks_var := clock_ticks_var - 1;
         end if;
-        display_idx <= display_idx_var;
-    END PROCESS;
-    
-    process (display_idx)
-    begin
-        if (display_idx < 4) then  
-            if (display_idx = 0) then
-                COMMON_DRIVERS_REG <= (0 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
-            elsif (display_idx = 1) then
-                COMMON_DRIVERS_REG <= (1 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
-            elsif (display_idx = 2) then
-                COMMON_DRIVERS_REG <= (2 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
-            else
-                COMMON_DRIVERS_REG <= (3 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
-            end if;
-        else
-            COMMON_DRIVERS_REG <= (others => not SELECT_ACTIVE);
-        end if;
-    end process;
-    
-    -- Drive Digits
-    process (display_idx,VALUE)
-    begin  
-        SEGMENT_DRIVERS_REG <= (others => DISABLE_SEGMENTS_VALUE(COMMON_ANODE));      
-        if (display_idx = 0) then
-            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(3 downto 0), COMMON_ANODE);
-        elsif (display_idx = 1) then
-            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(7 downto 4), COMMON_ANODE);
-        elsif (display_idx = 2) then
-            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(11 downto 8), COMMON_ANODE);
-        else
-            SEGMENT_DRIVERS_REG <= VALUE_TO_SEGMENT(VALUE(15 downto 12), COMMON_ANODE);
-        end if;
-    end process;
+            
+        case DIGIT_DRIVE is
+            when ALLOFF =>
+                if (DISPLAY_ON = '1') then
+                    DIGIT_DRIVE <= DIGIT1;
+                else
+                    SEGMENT_DRIVERS <= (others => DISABLE_SEGMENTS_VALUE(COMMON_ANODE));
+                    COMMON_DRIVERS <= (others => not SELECT_ACTIVE); -- All common anodes off
+                    DIGIT_DRIVE <= ALLOFF;
+                end if;
+            when DIGIT1 =>
+                COMMON_DRIVERS <= (0 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
+                SEGMENT_DRIVERS <= segments_digit_1;
+                if (DISPLAY_ON = '1') then
+                    DIGIT_DRIVE <= DIGIT1;
+                    if (clock_ticks_var = 0) then
+                        clock_ticks_var := CLOCK_TICKS_PER_DIGIT;
+                        DIGIT_DRIVE <= DIGIT2;
+                    end if;
+                else
+                    DIGIT_DRIVE <= ALLOFF;
+                end if;
+            when DIGIT2 =>
+                COMMON_DRIVERS <= (1 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
+                SEGMENT_DRIVERS <= segments_digit_2;
+                if (DISPLAY_ON = '1') then
+                    DIGIT_DRIVE <= DIGIT2;
+                    if (clock_ticks_var = 0) then
+                        clock_ticks_var := CLOCK_TICKS_PER_DIGIT;
+                        DIGIT_DRIVE <= DIGIT3;
+                    end if;
+                else
+                    DIGIT_DRIVE <= ALLOFF;
+                end if;
+            when DIGIT3 =>
+                COMMON_DRIVERS <= (2 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
+                SEGMENT_DRIVERS <= segments_digit_3;
+                if (DISPLAY_ON = '1') then
+                    DIGIT_DRIVE <= DIGIT3;
+                    if (clock_ticks_var = 0) then
+                        clock_ticks_var := CLOCK_TICKS_PER_DIGIT;
+                        DIGIT_DRIVE <= DIGIT4;
+                    end if;
+                else
+                    DIGIT_DRIVE <= ALLOFF;
+                end if;
+            when DIGIT4 =>
+                COMMON_DRIVERS <= (3 => SELECT_ACTIVE, others => not SELECT_ACTIVE);
+                SEGMENT_DRIVERS <= segments_digit_4;
+                if (DISPLAY_ON = '1') then
+                    DIGIT_DRIVE <= DIGIT4;
+                    if (clock_ticks_var = 0) then
+                        clock_ticks_var := CLOCK_TICKS_PER_DIGIT;
+                        DIGIT_DRIVE <= DIGIT1; -- Start from the top
+                    end if;
+                else
+                    DIGIT_DRIVE <= ALLOFF;
+                end if;
+            when others =>
+                DIGIT_DRIVE <= ALLOFF;
+        end case;
+    end if;
+END PROCESS seven_segment_statemachine; 
     
 end Behavioral;

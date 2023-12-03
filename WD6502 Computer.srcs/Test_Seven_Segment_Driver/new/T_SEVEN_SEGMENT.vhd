@@ -88,6 +88,7 @@ begin
     T_VALUE <= x"0001";
 
     WAIT UNTIL T_COMMON_DRIVERS = not x"0"; -- On Baysis 3, all F is off 
+    WAIT for 100ns;
     
     ASSERT T_SEGMENT_DRIVERS = T_SEGMENT_ALL_OFF report "Segments not off!" severity failure;
     
