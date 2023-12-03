@@ -163,7 +163,8 @@ PIO_LED: peripheral_io_led port map (
 );
 
 PIO_7SEGMENT: PIO_7SEG_X_4 generic map (
-    SELECT_ACTIVE => '0'
+    SELECT_ACTIVE => '0',
+    CLOCK_TICKS_PER_DIGIT => 200000
 )
 port map (
     CLOCK => MEMORY_CLOCK,
@@ -186,10 +187,12 @@ ram_ena <= '1';
 ram_enb <= '1';
 
 -- Propogate the 7 SEGMENT signals 
-process(MEMORY_CLOCK, PIO_7SEG_SEGMENTS_SIG, PIO_7SEG_COMMON_SIG)
+process(MEMORY_CLOCK)
 BEGIN
-    PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_SIG;
-    PIO_7SEG_COMMON <= PIO_7SEG_COMMON_SIG;
+    if (MEMORY_CLOCK'event and MEMORY_CLOCK = '1') then
+        PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_SIG;
+        PIO_7SEG_COMMON <= PIO_7SEG_COMMON_SIG;
+    end if;
 END PROCESS;
 
 process(MEMORY_CLOCK)

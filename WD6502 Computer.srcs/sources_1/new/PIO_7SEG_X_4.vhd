@@ -34,7 +34,7 @@ entity PIO_7SEG_X_4 is
         -- On some boards, namely baysis3, the digit selector is actually low instead of high
         -- most boards are high so 1 is default, set to 0 for boards like baysis 3
         SELECT_ACTIVE : STD_LOGIC := '1';
-        CLOCK_TICKS_PER_DIGIT : natural := 100000; -- at 100mhz, this will give us 10ms per digit
+        CLOCK_TICKS_PER_DIGIT : natural := 100000000; -- at 100mhz, this will give us 10ms per digit
         COMMON_ANODE : STD_LOGIC := '1' -- When 1, true otherwise we are in common cathode mode
     );
     Port ( CLOCK : in STD_LOGIC; -- For now we'll run this at FPGA clock speed of 100mhz
