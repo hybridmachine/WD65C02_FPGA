@@ -12,3 +12,6 @@ The 65C02 was chosen partly for its simplicity and ease of [programmability](htt
 
 ## Loading Programs
 See the [SieveOfEratosthenes](ASM/SieveOfEratosthenes) [make.bat](ASM/SieveOfEratosthenes/make.bat) file, this uses the WDC assembler and linker to generate both binary and Intel HEX versions of the executable. The Intel HEX format is then [converted](ASM/HexToVHDLTools/ConvertHexToVHD_ROM.py) into a ROM.vhd file that can then be pasted into the [ROM.vhd](WD6502%20Computer.srcs/sources_1/new/ROM.vhd) file in the FPGA project. Building the bit stream and pushing to the Baysis 3 will load this program for execution. To build the bit stream you will need the free version of [Vivado](https://www.xilinx.com/products/design-tools/vivado.html) from AMD Xilinx
+
+## Blink the lights!
+[Das Blinkenlights](https://clipchamp.com/watch/oJGOsdOMNKB)
