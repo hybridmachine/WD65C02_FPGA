@@ -1,2 +1,12 @@
 # WD65C02_FPGA
- #3 updated Sep 24, 2023 FPGA memory and peripheral IO wrapped around a physical WD65C02. The FPGA generates the PHI2 clock signal and manages processor state. It also provides RAM and ROM to the CPU as well as memory mapped peripheral IO.
+ This is an FPGA based microcomputer with a physical 65C02 central processor. This project is aimed at
+ * Learning FPGA based system design and interfacing with physical chips 
+ * Learning basic microcomputer architecture 
+ * Learning low level assembly.
+
+The 65C02 was chosen partly for its simplicity and ease of [programmability](http://wdc65xx.com/Programming-Manual/) and partly for nostalgia. This family of CPUs is one of the great 8bit families which helped start the home computer revolution. The [6502](https://www.team6502.org/) is found in the Apple I, Apple II, Atari 2600, and Nintendo Entertainment System. The 65C02 is the next generation of this chip, has the same instruction set (backward compatible) with some minor fixes and a few extra handy instructions. 65C02s in 40 pin dual inline packages (DIP) can be [found online new](https://wdc65xx.com/where-to-buy) for around $10 (as of 2023). The Western Design Center has [C compilers and assemblers](https://wdc65xx.com/WDCTools) for all of its CPUs including the 65C02.
+
+# System Architecture
+
+![FPGA 6502 Computer - VHDL Component Map](https://github.com/hybridmachine/WD65C02_FPGA/assets/486078/8325e0e3-2560-4494-9ff5-6c02033a7c6d)
+
