@@ -195,7 +195,7 @@
             adc CNTH
             sta CNTH
             lda CNTH
-            CMP #$FF
+            CMP #$0F
             BEQ CTRDONE
             JMP COUNT		; Loope the counter
         CTRDONE:

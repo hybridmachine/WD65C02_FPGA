@@ -103,7 +103,7 @@ architecture inferred_rom_arch of ROM is
             x"00", x"06", x"A9", x"00",
             x"6D", x"01", x"06", x"8D",
             x"01", x"06", x"AD", x"01",
-            x"06", x"C9", x"FF", x"F0",
+            x"06", x"C9", x"0F", x"F0",
             x"03", x"4C", x"D5", x"FC",
             x"60", x"48", x"A9", x"00",
             x"85", x"04", x"85", x"05",
