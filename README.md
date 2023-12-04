@@ -1,5 +1,5 @@
 # WD65C02_FPGA
- This is an FPGA based microcomputer with a physical 65C02 central processor. This project is aimed at
+ This is an [FPGA](https://www.xilinx.com/products/boards-and-kits/1-54wqge.html) based microcomputer with a physical 65C02 central processor and an Artix 7 FPGA. This project is aimed at
  * Learning FPGA based system design and interfacing with physical chips 
  * Learning basic microcomputer architecture 
  * Learning low level assembly.
@@ -10,3 +10,5 @@ The 65C02 was chosen partly for its simplicity and ease of [programmability](htt
 
 ![FPGA 6502 Computer - VHDL Component Map](https://github.com/hybridmachine/WD65C02_FPGA/assets/486078/8325e0e3-2560-4494-9ff5-6c02033a7c6d)
 
+## Loading Programs
+See the SieveOfEratosthenes [make.bat](ASM/SieveOfEratosthenes/make.bat) file, this uses the WDC assembler and linker to generate both binary and Intel HEX versions of the executable. The Intel HEX format is then [converted](ASM/HexToVHDLTools/ConvertHexToVHD_ROM.py) into a ROM.vhd file that can then be pasted into the [ROM.vhd](WD6502%20Computer.srcs/sources_1/new/ROM.vhd) file in the FPGA project. Building the bit stream and pushing to the Baysis 3 will load this program for execution. To build the bit stream you will need the free version of [Vivado](https://www.xilinx.com/products/design-tools/vivado.html) from AMD Xilinx
