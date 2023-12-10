@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['clock_0',['CLOCK',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#a0d7b5b5412df0bf7fcbc00468907e554',1,'PIO_7SEG_X_4']]],
-  ['clock_5fticks_5fper_5fdigit_1',['CLOCK_TICKS_PER_DIGIT',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#a1e895e50b1bd4f4f988948a0e15cd1e2',1,'PIO_7SEG_X_4']]],
-  ['common_5fanode_2',['COMMON_ANODE',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#ae7060844ba373faa694a36e05b54f5cc',1,'PIO_7SEG_X_4']]],
-  ['common_5fdrivers_3',['COMMON_DRIVERS',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#a77eed50971a28571acfd27bab0d723f0',1,'PIO_7SEG_X_4']]]
+  ['addra_0',['addra',['../d6/d69/class_r_o_m.html#a945a2ea6ee78e900a7b4015aa5fa8906',1,'ROM.addra()'],['../dc/d32/class_r_a_m.html#a92eae541fd47b1f5cf518ba85fec2ddb',1,'RAM.addra()']]],
+  ['addrb_1',['addrb',['../dc/d32/class_r_a_m.html#ad60c30dbd7127dbd9b409fb424482287',1,'RAM']]],
+  ['address_2',['ADDRESS',['../d9/dde/class_w_d_c65_c02___interface.html#af8e57b27268841c268698ae91820198d',1,'WDC65C02_Interface']]]
 ];

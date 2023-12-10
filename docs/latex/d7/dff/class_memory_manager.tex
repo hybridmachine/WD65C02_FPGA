@@ -1,5 +1,10 @@
 \hypertarget{class_memory_manager}{}\doxysection{Memory\+Manager Entity Reference}
 \label{class_memory_manager}\index{MemoryManager@{MemoryManager}}
+
+
+Manages the memory map of the computer.  
+
+
 Inheritance diagram for Memory\+Manager\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -34,32 +39,40 @@ Inheritance diagram for Memory\+Manager\+:\begin{figure}[H]
 \item 
 \mbox{\Hypertarget{class_memory_manager_a07b5900ccd5fea0fdba3d79dc703b8a3}\label{class_memory_manager_a07b5900ccd5fea0fdba3d79dc703b8a3}} 
 \mbox{\hyperlink{class_memory_manager_a07b5900ccd5fea0fdba3d79dc703b8a3}{BUS\+\_\+\+READ\+\_\+\+DATA}}  {\bfseries {\bfseries \textcolor{keywordflow}{out}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Read data. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_a2c6bce09c3f4e395f8491d6edd88d017}\label{class_memory_manager_a2c6bce09c3f4e395f8491d6edd88d017}} 
 \mbox{\hyperlink{class_memory_manager_a2c6bce09c3f4e395f8491d6edd88d017}{BUS\+\_\+\+WRITE\+\_\+\+DATA}}  {\bfseries {\bfseries \textcolor{keywordflow}{in}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Data to be written. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_ae0dfa1af9ffb9595161cf3444ac76360}\label{class_memory_manager_ae0dfa1af9ffb9595161cf3444ac76360}} 
 \mbox{\hyperlink{class_memory_manager_ae0dfa1af9ffb9595161cf3444ac76360}{BUS\+\_\+\+ADDRESS}}  {\bfseries {\bfseries \textcolor{keywordflow}{in}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{15} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Read/\+Write address. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_a99d5bc4590d52f951bee2ace3b408ef5}\label{class_memory_manager_a99d5bc4590d52f951bee2ace3b408ef5}} 
 \mbox{\hyperlink{class_memory_manager_a99d5bc4590d52f951bee2ace3b408ef5}{MEMORY\+\_\+\+CLOCK}}  {\bfseries {\bfseries \textcolor{keywordflow}{in}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Memory clock, typically full FPGA clock speed. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_acd0612753a1b88af0270ce22189c6dac}\label{class_memory_manager_acd0612753a1b88af0270ce22189c6dac}} 
 \mbox{\hyperlink{class_memory_manager_acd0612753a1b88af0270ce22189c6dac}{WRITE\+\_\+\+FLAG}}  {\bfseries {\bfseries \textcolor{keywordflow}{in}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em When 1, write data to address, otherwise read address and output on data line. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_a2fc0b007069b95e66af1d2c1428b140b}\label{class_memory_manager_a2fc0b007069b95e66af1d2c1428b140b}} 
 \mbox{\hyperlink{class_memory_manager_a2fc0b007069b95e66af1d2c1428b140b}{PIO\+\_\+\+LED\+\_\+\+OUT}}  {\bfseries {\bfseries \textcolor{keywordflow}{out}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em 8 bit LED out, mapped to physical LEDs at interface \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_a6a005bfacd0927d2c8cb3a0397f1598b}\label{class_memory_manager_a6a005bfacd0927d2c8cb3a0397f1598b}} 
 \mbox{\hyperlink{class_memory_manager_a6a005bfacd0927d2c8cb3a0397f1598b}{PIO\+\_\+7\+SEG\+\_\+\+COMMON}}  {\bfseries {\bfseries \textcolor{keywordflow}{out}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{3} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Common drivers for seven segment displays. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_a69c4ebe38dafc8d05cd992296b6df262}\label{class_memory_manager_a69c4ebe38dafc8d05cd992296b6df262}} 
 \mbox{\hyperlink{class_memory_manager_a69c4ebe38dafc8d05cd992296b6df262}{PIO\+\_\+7\+SEG\+\_\+\+SEGMENTS}}  {\bfseries {\bfseries \textcolor{keywordflow}{out}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Segment drivers for selected seven segment display. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_memory_manager_a81d302aefbb7db133dc340bbb1c477ac}\label{class_memory_manager_a81d302aefbb7db133dc340bbb1c477ac}} 
 \mbox{\hyperlink{class_memory_manager_a81d302aefbb7db133dc340bbb1c477ac}{RESET}}  {\bfseries {\bfseries \textcolor{keywordflow}{in}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC}\textcolor{vhdlchar}{ }} 
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Reset. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
+
+\doxysubsection{Detailed Description}
+Manages the memory map of the computer. 
+
+\begin{DoxyAuthor}{Author}
+Brian Tabone
+\end{DoxyAuthor}
+Implements the memory map as specified in PKG\+\_\+65\+C02. Also manages the boot vector Note boot vector and start address in \mbox{\hyperlink{class_r_o_m}{ROM}} assembly must match 
 
 The documentation for this design unit was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 

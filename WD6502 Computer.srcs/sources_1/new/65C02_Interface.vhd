@@ -33,42 +33,38 @@ library UNISIM;
 use UNISIM.VComponents.all;
 
 --! \author Brian Tabone
---! This is the top level module which interfaces directly with the 65C02 CPU. All
---! input/output signals route through here
---! \param CLOCK    The 100mhz inbound clock from the FPGA
---! \param RESERT   The incoming reset signal (from a user button)
---! \param SINGLESTEP   When active, this ties SYNC to RDY to single step the chip
---! \param ADDRESS      16 bit address line
---! \param DATA         8 bit in/out data line
+--! @brief Top level module which interfaces directly with the 65C02 CPU. 
+--! @details All input/output signals route through here. This is connected via block diagram to external pins
+--! See Baysis.xdc for physical pin mapping
 --!
 entity WDC65C02_Interface is
-    Port ( CLOCK        : in STD_LOGIC; -- Assume 100mhz clock
-           RESET        : in STD_LOGIC; -- User input reset button
-           SINGLESTEP   : in STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
+    Port ( CLOCK        : in STD_LOGIC; --! Assume 100mhz clock
+           RESET        : in STD_LOGIC; --! User input reset button
+           SINGLESTEP   : in STD_LOGIC; --! When high, connect SYNC to RDY for single step operation
            -- 6502 Connected Pins
-           ADDRESS      : in std_logic_vector(15 downto 0);                     -- Address bus
+           ADDRESS      : in std_logic_vector(15 downto 0);                     --! Address bus
            --BE           : out std_logic;                         -- Bus Enable
-           DATA         : inout std_logic_vector(7 downto 0);                     -- Data bus
-           DATA_TO_CPU_TAP : out std_logic_vector(7 downto 0);                    -- Signal tap to see what's going out to CPU
-           DATA_FROM_CPU_TAP : out std_logic_vector(7 downto 0);                  -- Signal tap to see what's coming in from CPU
+           DATA         : inout std_logic_vector(7 downto 0);                     --! Data bus
+           DATA_TO_CPU_TAP : out std_logic_vector(7 downto 0);                    --! Signal tap to see what's going out to CPU
+           DATA_FROM_CPU_TAP : out std_logic_vector(7 downto 0);                  --! Signal tap to see what's coming in from CPU
            --signal BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0);
            --signal BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0);
-           IRQB         : out std_logic;                        -- Interrupt Request
+           IRQB         : out std_logic;                        --! Interrupt Request
            --MLB          : inout std_logic;                      -- Memory Lock
-           NMIB         : out std_logic;                        -- Non-Maskable Interrupt
+           NMIB         : out std_logic;                        --! Non-Maskable Interrupt
            --PHI1O        : in std_logic;                       -- Phase 1 out clock
-           PHI2         : out std_logic;                       -- Phase 2 in clock (main clock)
+           PHI2         : out std_logic;                       --! Phase 2 in clock (main clock)
            --PHI2O        : in std_logic;                       -- Phase 2 out clock
-           RDY          : out std_logic;                        -- Ready
-           RESB         : out std_logic;                       -- Reset
-           RWB          : in std_logic;                         -- Read/Write
+           RDY          : out std_logic;                        --! Ready
+           RESB         : out std_logic;                       --! Reset
+           RWB          : in std_logic;                         --! Read/Write
            --SOB          : out std_logic;                         -- Set Overflow
-           SYNC         : in std_logic;                        -- Synchronize
+           SYNC         : in std_logic;                        --! Synchronize
            --VPB          : in std_logic;                         -- Vector Pull
            -- IO pins
-           PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0);    
-           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
-           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0));                    
+           PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0); --! PIO Led pins    
+           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0); --! 7 Segment common drivers
+           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0)); --! 7 Segment segment drivers                    
 end WDC65C02_Interface;
 
 architecture Behavioral of WDC65C02_Interface is

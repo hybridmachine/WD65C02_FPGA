@@ -23,27 +23,20 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.W65C02_DEFINITIONS.ALL;
 
--- This modules manages the memory map of the computer. In this revision we have a very simple
--- map. 
---      $FFFF downto $EFFF is ROM, 1KB of ROM
---      $EFFE downto $0400 is RAM, 60KB of RAM (60,414)
---      $03FF downto $0200 is Memory mapped I/O, 511 bytes of I/O space
---      $01FF downto $0100 is processor reserved stack, 256 bytes of processor reserved stack space
---      $00FF downot $0001 is system reserved, unused for now.
---      $0000 is memory manager exception flags
---          $80 -> Write to illegal address exception. Attempt to write to ROM or status register or reserved memory area
---          $40 -> Read from illegal address exception (set only by the memmory mapped I/O subsystem)
--- This is a simple, nonconfigurable at runtime map. Longer term we'll probably want to mimic the Commodore 64 map with config bytes at $0000 and $0001
+--! \author Brian Tabone
+--! @brief Manages the memory map of the computer. 
+--! @details Implements the memory map as specified in PKG_65C02. Also manages the boot vector
+--! Note boot vector and start address in ROM assembly must match
 entity MemoryManager is
-    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0); -- We could do this with inout but harder to test bench so splitting
-           BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0);
-           BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
-           MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
-           WRITE_FLAG : in STD_LOGIC; -- When 1, data to address, read address and store on data line otherwise
-           PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
-           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
-           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
-           RESET : in STD_LOGIC
+    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0); --! Read data
+           BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0); --! Data to be written
+           BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0); --! Read/Write address
+           MEMORY_CLOCK : in STD_LOGIC; --! Memory clock, typically full FPGA clock speed
+           WRITE_FLAG : in STD_LOGIC; --! When 1, write data to address, otherwise read address and output on data line
+           PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
+           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0); --! Common drivers for seven segment displays
+           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0); --! Segment drivers for selected seven segment display
+           RESET : in STD_LOGIC --! Reset 
            );
 end MemoryManager;
 

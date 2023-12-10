@@ -78,14 +78,17 @@ $(function() {
   <div class="headertitle"><div class="title">ROM Entity Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Contains the executable that will run when the 65C02 boots.  
+ <a href="../../d6/d69/class_r_o_m.html#details">More...</a></p>
 <div class="dynheader">
 Inheritance diagram for ROM:</div>
 <div class="dyncontent">
  <div class="center">
   <img src="../../d6/d69/class_r_o_m.png" usemap="#ROM_map" alt=""/>
   <map id="ROM_map" name="ROM_map">
-<area href="../../d7/dff/class_memory_manager.html" alt="MemoryManager" shape="rect" coords="160,56,470,80"/>
-<area href="../../d9/dde/class_w_d_c65_c02___interface.html" alt="WDC65C02_Interface" shape="rect" coords="0,112,310,136"/>
+<area href="../../d7/dff/class_memory_manager.html" title="Manages the memory map of the computer." alt="MemoryManager" shape="rect" coords="160,56,470,80"/>
+<area href="../../d9/dde/class_w_d_c65_c02___interface.html" title="Top level module which interfaces directly with the 65C02 CPU." alt="WDC65C02_Interface" shape="rect" coords="0,112,310,136"/>
 <area href="../../d9/dbe/class_t___m_e_m_o_r_y___m_a_n_a_g_e_r.html" alt="T_MEMORY_MANAGER" shape="rect" coords="320,112,630,136"/>
 <area href="../../d4/d33/classdesign__with__logic__probe___w_d_c65_c02___interface__0__0.html" alt="design_with_logic_probe_WDC65C02_Interface_0_0" shape="rect" coords="0,168,310,192"/>
 <area href="../../da/d44/classdesign__with__logic__probe.html" alt="design_with_logic_probe" shape="rect" coords="0,224,310,248"/>
@@ -116,12 +119,19 @@ Use Clauses</h2></td></tr>
 Ports</h2></td></tr>
  <tr class="memitem:a945a2ea6ee78e900a7b4015aa5fa8906"><td class="memItemLeft" align="right" valign="top"><a id="a945a2ea6ee78e900a7b4015aa5fa8906" name="a945a2ea6ee78e900a7b4015aa5fa8906"></a>
 <a class="el" href="../../d6/d69/class_r_o_m.html#a945a2ea6ee78e900a7b4015aa5fa8906">addra</a> &#160;</td><td class="memItemLeft" align="right" valign="top"> <b><b><span class="keywordflow">in</span><span class="vhdlchar"> </span></b></b>&#160;</td><td class="memItemRight" valign="bottom"> <b><span class="keywordtype">std_logic_VECTOR</span><span class="vhdlchar"> </span><span class="vhdlchar">(</span><span class="vhdlchar"> </span><span class="vhdlchar"> </span> <span class="vhdldigit">15</span> <span class="vhdlchar"> </span><span class="keywordflow">downto</span><span class="vhdlchar"> </span><span class="vhdlchar"> </span> <span class="vhdldigit">0</span> <span class="vhdlchar"> </span><span class="vhdlchar">)</span><span class="vhdlchar"> </span></b></td></tr>
+<tr class="memdesc:a945a2ea6ee78e900a7b4015aa5fa8906"><td class="mdescLeft">&#160;</td><td class="mdescLeft">&#160;</td><td class="mdescRight">Address to be read. <br /></td></tr>
 <tr class="memitem:a91f8797838ee68d7575022cb59825cf7"><td class="memItemLeft" align="right" valign="top"><a id="a91f8797838ee68d7575022cb59825cf7" name="a91f8797838ee68d7575022cb59825cf7"></a>
 <a class="el" href="../../d6/d69/class_r_o_m.html#a91f8797838ee68d7575022cb59825cf7">clka</a> &#160;</td><td class="memItemLeft" align="right" valign="top"> <b><b><span class="keywordflow">in</span><span class="vhdlchar"> </span></b></b>&#160;</td><td class="memItemRight" valign="bottom"> <b><span class="keywordtype">std_logic</span><span class="vhdlchar"> </span></b></td></tr>
+<tr class="memdesc:a91f8797838ee68d7575022cb59825cf7"><td class="mdescLeft">&#160;</td><td class="mdescLeft">&#160;</td><td class="mdescRight">Memory clock (typically just FPGA clock) <br /></td></tr>
 <tr class="memitem:afedaa062c6809d0ecc1f0e0b54bc10e1"><td class="memItemLeft" align="right" valign="top"><a id="afedaa062c6809d0ecc1f0e0b54bc10e1" name="afedaa062c6809d0ecc1f0e0b54bc10e1"></a>
 <a class="el" href="../../d6/d69/class_r_o_m.html#afedaa062c6809d0ecc1f0e0b54bc10e1">douta</a> &#160;</td><td class="memItemLeft" align="right" valign="top"> <b><b><span class="keywordflow">out</span><span class="vhdlchar"> </span></b></b>&#160;</td><td class="memItemRight" valign="bottom"> <b><span class="keywordtype">std_logic_VECTOR</span><span class="vhdlchar"> </span><span class="vhdlchar">(</span><span class="vhdlchar"> </span><span class="vhdlchar"> </span> <span class="vhdldigit">7</span> <span class="vhdlchar"> </span><span class="keywordflow">downto</span><span class="vhdlchar"> </span><span class="vhdlchar"> </span> <span class="vhdldigit">0</span> <span class="vhdlchar"> </span><span class="vhdlchar">)</span><span class="vhdlchar"> </span></b></td></tr>
+<tr class="memdesc:afedaa062c6809d0ecc1f0e0b54bc10e1"><td class="mdescLeft">&#160;</td><td class="mdescLeft">&#160;</td><td class="mdescRight">Data. <br /></td></tr>
 </table>
-<hr/>The documentation for this design unit was generated from the following files:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Contains the executable that will run when the 65C02 boots. </p>
+<dl class="section author"><dt>Author</dt><dd>Brian Tabone</dd></dl>
+<p>This <a class="el" href="../../d6/d69/class_r_o_m.html" title="Contains the executable that will run when the 65C02 boots.">ROM</a> file contains the executable that will run when the 65C02 boots. To load it use the Intel HEX to <a class="el" href="../../d6/d69/class_r_o_m.html" title="Contains the executable that will run when the 65C02 boots.">ROM</a> converter ASM\HexToVHDLTools\ConvertHexToVHD_ROM.py . See an example of its usage in ASM\SieveOfEratosthenes\make.bat </p>
+</div><hr/>The documentation for this design unit was generated from the following files:<ul>
 <li>ASM/BCDArithmetic/ROM.vhd</li>
 <li>ASM/HelloLED/ROM_BLINK.vhd</li>
 <li>ASM/SieveOfEratosthenes/ROM.vhd</li>

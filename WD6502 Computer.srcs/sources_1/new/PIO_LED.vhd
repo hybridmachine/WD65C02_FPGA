@@ -33,7 +33,7 @@ use work.W65C02_DEFINITIONS.ALL;
 --use UNISIM.VComponents.all;
 
 --! \author Brian Tabone
---! This is the peripheral IO LED driver which simply shows 8 bit binary values on 8 LEDs
+--! @brief Peripheral IO LED driver which simply shows 8 bit binary values on 8 LEDs
 --! \param DATA    The 8 bit value to display
 --! \param LED_CTL   The outbound signals to drive the LEDS
 --! \param CLOCK   The FPGA 100mhz clock signal

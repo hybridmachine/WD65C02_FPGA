@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['ram_0',['RAM',['../dc/d32/class_r_a_m.html',1,'']]],
-  ['rom_1',['ROM',['../d6/d69/class_r_o_m.html',1,'']]]
+  ['memory_5fclock_0',['MEMORY_CLOCK',['../d7/dff/class_memory_manager.html#a99d5bc4590d52f951bee2ace3b408ef5',1,'MemoryManager']]],
+  ['memorymanager_1',['MemoryManager',['../d7/dff/class_memory_manager.html',1,'']]]
 ];

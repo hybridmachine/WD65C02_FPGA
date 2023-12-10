@@ -28,11 +28,16 @@ use work.W65C02_DEFINITIONS.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
+--! \author Brian Tabone
+--! @brief Contains the executable that will run when the 65C02 boots
+--! @details This ROM file contains the executable that will run when the 65C02 boots. To load it
+--! use the Intel HEX to ROM converter ASM\HexToVHDLTools\ConvertHexToVHD_ROM.py . See an example of its usage in
+--! ASM\SieveOfEratosthenes\make.bat
 entity ROM is
     PORT (
-	addra: IN std_logic_VECTOR(15 downto 0);
-	clka: IN std_logic;
-	douta: OUT std_logic_VECTOR(7 downto 0)
+	addra: IN std_logic_VECTOR(15 downto 0); --! Address to be read
+	clka: IN std_logic; --! Memory clock (typically just FPGA clock)
+	douta: OUT std_logic_VECTOR(7 downto 0) --! Data 
   );
 end ROM;
 

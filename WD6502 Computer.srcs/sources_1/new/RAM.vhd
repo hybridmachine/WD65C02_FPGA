@@ -27,25 +27,29 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
+--! \author Brian Tabone
+--! @brief Dual port inferred RAM (65KB)
+--! @details Dual port inferred RAM , note that the peripheral IO is mapped over this so that address range
+--! is masked. See PKG_65C02 for the memory map
 entity RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
     DATA_WIDTH: natural := 8;
-    RAM_DEPTH: natural := 2**16 -- By default 32kb ram for now, can be adjusted to leave address space for I/O
+    RAM_DEPTH: natural := 2**16 --! 65KB of RAM
   );
     PORT (
-	addra: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
-	addrb: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
-	clka: IN std_logic;
-	clkb: IN std_logic;
-	ena : IN STD_LOGIC;
-	enb : IN STD_LOGIC;
-	dina: IN std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-	dinb: IN std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-	douta: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-	doutb: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-	wea: IN std_logic;
-	web: IN std_logic
+	addra: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0); --! Port a address
+	addrb: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0); --! Port b address
+	clka: IN std_logic; --! Port a clock
+	clkb: IN std_logic; --! Port b clock
+	ena : IN STD_LOGIC; --! Enable port A
+	enb : IN STD_LOGIC; --! Enable port B
+	dina: IN std_logic_VECTOR((DATA_WIDTH - 1) downto 0); --! Data in a
+	dinb: IN std_logic_VECTOR((DATA_WIDTH - 1) downto 0); --! Data in b
+	douta: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0); --! Data out a
+	doutb: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0); --! Data out b
+	wea: IN std_logic; --! Write enable a
+	web: IN std_logic --! Write enable b
   );
 end RAM;
 

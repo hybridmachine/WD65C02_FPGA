@@ -1,12 +1,10 @@
 var searchData=
 [
-  ['design_5fwith_5flogic_5fprobe_0',['design_with_logic_probe',['../da/d44/classdesign__with__logic__probe.html',1,'']]],
-  ['design_5fwith_5flogic_5fprobe_5fila_5f0_5f0_1',['design_with_logic_probe_ila_0_0',['../d3/d74/classdesign__with__logic__probe__ila__0__0.html',1,'']]],
-  ['design_5fwith_5flogic_5fprobe_5fila_5f0_5f0_5farch_2',['design_with_logic_probe_ila_0_0_arch',['../d8/d52/classdesign__with__logic__probe__ila__0__0_1_1design__with__logic__probe__ila__0__0__arch.html',1,'design_with_logic_probe_ila_0_0']]],
-  ['design_5fwith_5flogic_5fprobe_5fwd6502_5finterface_5f0_5f1_3',['design_with_logic_probe_WD6502_Interface_0_1',['../de/d34/classdesign__with__logic__probe___w_d6502___interface__0__1.html',1,'']]],
-  ['design_5fwith_5flogic_5fprobe_5fwd6502_5finterface_5f0_5f1_5farch_4',['design_with_logic_probe_WD6502_Interface_0_1_arch',['../d5/d50/classdesign__with__logic__probe___w_d6502___interface__0__1_1_1design__with__logic__probe___w_d6502___interface__0__1__arch.html',1,'design_with_logic_probe_WD6502_Interface_0_1']]],
-  ['design_5fwith_5flogic_5fprobe_5fwdc65c02_5finterface_5f0_5f0_5',['design_with_logic_probe_WDC65C02_Interface_0_0',['../d4/d33/classdesign__with__logic__probe___w_d_c65_c02___interface__0__0.html',1,'']]],
-  ['design_5fwith_5flogic_5fprobe_5fwdc65c02_5finterface_5f0_5f0_5farch_6',['design_with_logic_probe_WDC65C02_Interface_0_0_arch',['../d9/dd8/classdesign__with__logic__probe___w_d_c65_c02___interface__0__0_1_1design__with__logic__probe___ed03440f10e10a0cfed67be0b0b5d825.html',1,'design_with_logic_probe_WDC65C02_Interface_0_0']]],
-  ['design_5fwith_5flogic_5fprobe_5fwrapper_7',['design_with_logic_probe_wrapper',['../df/de7/classdesign__with__logic__probe__wrapper.html',1,'']]],
-  ['display_5fon_8',['DISPLAY_ON',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#a2511064006f55057240c26b2784d7b63',1,'PIO_7SEG_X_4']]]
+  ['char2std_0',['CHAR2STD',['../dc/d43/class_c_h_a_r2_s_t_d.html',1,'']]],
+  ['clka_1',['clka',['../d6/d69/class_r_o_m.html#a91f8797838ee68d7575022cb59825cf7',1,'ROM.clka()'],['../dc/d32/class_r_a_m.html#a91f8797838ee68d7575022cb59825cf7',1,'RAM.clka()']]],
+  ['clkb_2',['clkb',['../dc/d32/class_r_a_m.html#a27842456a1b8167d9facf4c37289db5a',1,'RAM']]],
+  ['clock_3',['CLOCK',['../d9/dde/class_w_d_c65_c02___interface.html#a0d7b5b5412df0bf7fcbc00468907e554',1,'WDC65C02_Interface.CLOCK()'],['../db/dea/class_p_i_o__7_s_e_g___x__4.html#a0d7b5b5412df0bf7fcbc00468907e554',1,'PIO_7SEG_X_4.CLOCK()']]],
+  ['clock_5fticks_5fper_5fdigit_4',['CLOCK_TICKS_PER_DIGIT',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#a1e895e50b1bd4f4f988948a0e15cd1e2',1,'PIO_7SEG_X_4']]],
+  ['common_5fanode_5',['COMMON_ANODE',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#ae7060844ba373faa694a36e05b54f5cc',1,'PIO_7SEG_X_4']]],
+  ['common_5fdrivers_6',['COMMON_DRIVERS',['../db/dea/class_p_i_o__7_s_e_g___x__4.html#a77eed50971a28571acfd27bab0d723f0',1,'PIO_7SEG_X_4']]]
 ];

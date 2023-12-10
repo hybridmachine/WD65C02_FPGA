@@ -1,5 +1,10 @@
 \hypertarget{class_r_o_m}{}\doxysection{ROM Entity Reference}
 \label{class_r_o_m}\index{ROM@{ROM}}
+
+
+Contains the executable that will run when the 65C02 boots.  
+
+
 Inheritance diagram for ROM\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
@@ -34,14 +39,22 @@ Inheritance diagram for ROM\+:\begin{figure}[H]
 \item 
 \mbox{\Hypertarget{class_r_o_m_a945a2ea6ee78e900a7b4015aa5fa8906}\label{class_r_o_m_a945a2ea6ee78e900a7b4015aa5fa8906}} 
 \mbox{\hyperlink{class_r_o_m_a945a2ea6ee78e900a7b4015aa5fa8906}{addra}}  {\bfseries {\bfseries \textcolor{keywordflow}{in}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{std\_logic\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{15} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Address to be read. \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_r_o_m_a91f8797838ee68d7575022cb59825cf7}\label{class_r_o_m_a91f8797838ee68d7575022cb59825cf7}} 
 \mbox{\hyperlink{class_r_o_m_a91f8797838ee68d7575022cb59825cf7}{clka}}  {\bfseries {\bfseries \textcolor{keywordflow}{in}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{std\_logic}\textcolor{vhdlchar}{ }} 
-\item 
+\begin{DoxyCompactList}\small\item\em Memory clock (typically just FPGA clock) \end{DoxyCompactList}\item 
 \mbox{\Hypertarget{class_r_o_m_afedaa062c6809d0ecc1f0e0b54bc10e1}\label{class_r_o_m_afedaa062c6809d0ecc1f0e0b54bc10e1}} 
 \mbox{\hyperlink{class_r_o_m_afedaa062c6809d0ecc1f0e0b54bc10e1}{douta}}  {\bfseries {\bfseries \textcolor{keywordflow}{out}\textcolor{vhdlchar}{ }}} {\bfseries \textcolor{keywordtype}{std\_logic\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Data. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
+
+\doxysubsection{Detailed Description}
+Contains the executable that will run when the 65C02 boots. 
+
+\begin{DoxyAuthor}{Author}
+Brian Tabone
+\end{DoxyAuthor}
+This \mbox{\hyperlink{class_r_o_m}{ROM}} file contains the executable that will run when the 65C02 boots. To load it use the Intel HEX to \mbox{\hyperlink{class_r_o_m}{ROM}} converter ASM\textbackslash{}\+Hex\+To\+VHDLTools\textbackslash{}\+Convert\+Hex\+To\+VHD\+\_\+\+ROM.\+py . See an example of its usage in ASM\textbackslash{}\+Sieve\+Of\+Eratosthenes\textbackslash{}make.\+bat 
 
 The documentation for this design unit was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 
