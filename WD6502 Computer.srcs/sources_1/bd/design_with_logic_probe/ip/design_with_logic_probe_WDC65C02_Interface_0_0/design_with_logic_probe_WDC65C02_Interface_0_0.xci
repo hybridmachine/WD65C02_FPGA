@@ -1,14 +1,14 @@
 {
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
-    "xci_name": "design_with_logic_probe_WD6502_Interface_0_1",
+    "xci_name": "design_with_logic_probe_WDC65C02_Interface_0_0",
     "cell_name": "WDC65C02_Interface",
-    "component_reference": "xilinx.com:module_ref:WD6502_Interface:1.0",
+    "component_reference": "xilinx.com:module_ref:WDC65C02_Interface:1.0",
     "ip_revision": "1",
-    "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WD6502_Interface_0_1",
+    "gen_directory": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WDC65C02_Interface_0_0",
     "parameters": {
       "component_parameters": {
-        "Component_Name": [ { "value": "design_with_logic_probe_WD6502_Interface_0_1", "resolve_type": "user", "usage": "all" } ]
+        "Component_Name": [ { "value": "design_with_logic_probe_WDC65C02_Interface_0_0", "resolve_type": "user", "usage": "all" } ]
       },
       "project_parameters": {
         "ARCHITECTURE": [ { "value": "artix7" } ],
@@ -27,7 +27,7 @@
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
         "IPREVISION": [ { "value": "1" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WD6502_Interface_0_1" } ],
+        "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WDC65C02_Interface_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
         "SWVERSION": [ { "value": "2023.2" } ],

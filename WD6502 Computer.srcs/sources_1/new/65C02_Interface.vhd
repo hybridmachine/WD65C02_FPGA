@@ -41,7 +41,7 @@ use UNISIM.VComponents.all;
 --! \param ADDRESS      16 bit address line
 --! \param DATA         8 bit in/out data line
 --!
-entity WD6502_Interface is
+entity WDC65C02_Interface is
     Port ( CLOCK        : in STD_LOGIC; -- Assume 100mhz clock
            RESET        : in STD_LOGIC; -- User input reset button
            SINGLESTEP   : in STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
@@ -69,9 +69,9 @@ entity WD6502_Interface is
            PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0);    
            PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0));                    
-end WD6502_Interface;
+end WDC65C02_Interface;
 
-architecture Behavioral of WD6502_Interface is
+architecture Behavioral of WDC65C02_Interface is
 
 COMPONENT MemoryManager is
     Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0);
@@ -106,7 +106,7 @@ type PROCESSOR_STATE_T is ( RESET_START,
 
 signal PROCESSOR_STATE : PROCESSOR_STATE_T;
 
-signal WD6502_CLOCK : std_logic;
+signal wdc65c02_CLOCK : std_logic;
 
 signal DATA_FROM_6502 :  STD_LOGIC_VECTOR (7 downto 0);
 signal DATA_TO_6502:  STD_LOGIC_VECTOR (7 downto 0);
@@ -164,20 +164,20 @@ end generate GEN1;
 ---- Otherwise RDY is always high.
 RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
 ---- Push the internal signal out to the CPU clock PIN
-PHI2 <= WD6502_CLOCK;
+PHI2 <= wdc65c02_CLOCK;
 MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
                        -- For now just pulse FPGA clock straight to memory clock
 
 DATA_TO_CPU_TAP <= DATA_TO_6502;
 DATA_FROM_CPU_TAP <= DATA_FROM_6502;
 
-wd6502_clockmachine : process (CLOCK, RESET)
+wdc65c02_clockmachine : process (CLOCK, RESET)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
 begin 
     if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
-        WD6502_CLOCK <= '0';
+        wdc65c02_CLOCK <= '0';
         RESET_IN_PROGRESS := '1';
     elsif (CLOCK'event and CLOCK = '1') then      
         WRITE_FLAG <= not RWB;
@@ -189,19 +189,19 @@ begin
         
         if (FPGA_CLOCK_COUNTER_FOR_CPU = FPGA_CLOCK_MHZ / CPU_CLOCK_DIVIDER) then
             FPGA_CLOCK_COUNTER_FOR_CPU := 1;
-            WD6502_CLOCK <= not WD6502_CLOCK;
+            wdc65c02_CLOCK <= not wdc65c02_CLOCK;
         else
             FPGA_CLOCK_COUNTER_FOR_CPU := FPGA_CLOCK_COUNTER_FOR_CPU + 1;
-            WD6502_CLOCK <= WD6502_CLOCK; -- Is this needed?
+            wdc65c02_CLOCK <= wdc65c02_CLOCK; -- Is this needed?
         end if;
     end if;
-end process wd6502_clockmachine;
+end process wdc65c02_clockmachine;
 
-wd6502_statemachine : process (WD6502_CLOCK, RESET)
+wdc65c02_statemachine : process (wdc65c02_CLOCK, RESET)
 variable reset_clock_count : natural := 0;
 variable reset_in_progress : std_logic := '0';
 begin
-    if (WD6502_CLOCK'event and WD6502_CLOCK='1') then                           
+    if (wdc65c02_CLOCK'event and wdc65c02_CLOCK='1') then                           
         -- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
         -- Otherwise RDY is always high.
         -- Lets do this concurrently instead, TODO remove once confirmed
@@ -252,6 +252,6 @@ begin
             end case;
         end if;
     end if;
-end process wd6502_statemachine;
+end process wdc65c02_statemachine;
 
 end Behavioral;
