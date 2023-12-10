@@ -108,7 +108,7 @@ COMPONENT ROM is
   );
 end COMPONENT;
 
-COMPONENT Peripheral_IO_LED is
+COMPONENT PIO_LED is
     Port ( DATA : in STD_LOGIC_VECTOR (7 downto 0);
            LED_CTL : out STD_LOGIC_VECTOR (7 downto 0);
            CLOCK : in STD_LOGIC;
@@ -134,7 +134,7 @@ end COMPONENT;
 
 begin
 
-MAIN_RAM: RAM port map (
+RAM_DEVICE: RAM port map (
     addra => ram_addra,
     addrb => ram_addrb,
     dina => ram_dina,
@@ -149,20 +149,20 @@ MAIN_RAM: RAM port map (
     enb => ram_enb
 ); 
 
-MAIN_ROM: ROM port map (
+ROM_DEVICE: ROM port map (
     addra => rom_addra,
     douta => rom_douta,
     clka => rom_clka
 );
 
-PIO_LED: peripheral_io_led port map (
+PIO_LED_DEVICE: PIO_LED port map (
     data => pio_led_data,
     clock => MEMORY_CLOCK,
     led_ctl => PIO_LED_OUT,
     reset => RESET
 );
 
-PIO_7SEGMENT: PIO_7SEG_X_4 generic map (
+PIO_7SEG_X_4_DEVICE: PIO_7SEG_X_4 generic map (
     SELECT_ACTIVE => '0',
     CLOCK_TICKS_PER_DIGIT => 200000
 )
@@ -222,8 +222,8 @@ begin
         -- Read/Write from/to RAM
         elsif(unsigned(RAM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(RAM_END)) then
             if(unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(MEM_MAPPED_IO_END)) then
-                if (unsigned(PERIPHERAL_IO_LED_ADDR) = MEMORY_ADDRESS) then
-                    -- Send data value to Peripheral_IO_LED
+                if (unsigned(PIO_LED_ADDR) = MEMORY_ADDRESS) then
+                    -- Send data value to PIO_LED
                     if (WRITE_FLAG = '1') then
                         pio_led_data <= BUS_WRITE_DATA;
                     end if;

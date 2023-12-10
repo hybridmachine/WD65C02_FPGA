@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 10/08/2023 10:16:31 AM
 -- Design Name: 
--- Module Name: Peripheral_IO_LED - Behavioral
+-- Module Name: PIO_LED - Behavioral
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -32,14 +32,21 @@ use work.W65C02_DEFINITIONS.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity Peripheral_IO_LED is
+--! \author Brian Tabone
+--! This is the peripheral IO LED driver which simply shows 8 bit binary values on 8 LEDs
+--! \param DATA    The 8 bit value to display
+--! \param LED_CTL   The outbound signals to drive the LEDS
+--! \param CLOCK   The FPGA 100mhz clock signal
+--! \param RESET   The reset signal, causes a reset pattern to be displayed
+--!
+entity PIO_LED is
     Port ( DATA : in STD_LOGIC_VECTOR (7 downto 0);
            LED_CTL : out STD_LOGIC_VECTOR (7 downto 0);
            CLOCK : in STD_LOGIC;
            RESET : in STD_LOGIC);
-end Peripheral_IO_LED;
+end PIO_LED;
 
-architecture Behavioral of Peripheral_IO_LED is
+architecture Behavioral of PIO_LED is
 
 begin
 
@@ -49,8 +56,7 @@ begin
         LED_CTL <= "01010101";
     else
         if (CLOCK'event and CLOCK='1') then
---          LED_CTL <= "11111111";  
-            LED_CTL <= DATA; -- Just pass through for now, simplest memory mapped IO for now
+            LED_CTL <= DATA; -- Just pass through
         end if;
     end if;
 end process;

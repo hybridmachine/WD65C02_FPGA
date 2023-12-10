@@ -1,0 +1,4 @@
+/* To set max width on images, such as system diagram on main page*/
+img[src*="#medwidth"] {
+   max-width: 90%;
+}

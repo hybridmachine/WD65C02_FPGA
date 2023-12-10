@@ -1,0 +1,74 @@
+\hypertarget{class_w_d6502___interface_1_1_behavioral}{}\doxysection{Behavioral Architecture Reference}
+\label{class_w_d6502___interface_1_1_behavioral}\index{Behavioral@{Behavioral}}
+{\bfseries Architecture $>$$>$ }\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral}{Behavioral}}\newline
+\doxysubsection*{Processes}
+ \begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a49091d1885a29df86e093413e76816b1}\label{class_w_d6502___interface_1_1_behavioral_a49091d1885a29df86e093413e76816b1}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a49091d1885a29df86e093413e76816b1}{wd6502\+\_\+clockmachine}}{\bfseries  ( {\bfseries \textcolor{vhdlchar}{CLOCK}\textcolor{vhdlchar}{ }} , {\bfseries \textcolor{vhdlchar}{RESET}\textcolor{vhdlchar}{ }} )}
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a3cc312f768e112652404f29965b69785}\label{class_w_d6502___interface_1_1_behavioral_a3cc312f768e112652404f29965b69785}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a3cc312f768e112652404f29965b69785}{wd6502\+\_\+statemachine}}{\bfseries  ( {\bfseries \textcolor{vhdlchar}{WD6502\_CLOCK}\textcolor{vhdlchar}{ }} , {\bfseries \textcolor{vhdlchar}{RESET}\textcolor{vhdlchar}{ }} )}
+\end{DoxyCompactItemize}
+\doxysubsection*{Components}
+ \begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a0fd701297abf85615611729f4854e979}\label{class_w_d6502___interface_1_1_behavioral_a0fd701297abf85615611729f4854e979}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a0fd701297abf85615611729f4854e979}{Memory\+Manager}}  {\bfseries }  
+\end{DoxyCompactItemize}
+\doxysubsection*{Constants}
+ \begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_aecd12fbc815b2a56f20f0afefeedaae3}\label{class_w_d6502___interface_1_1_behavioral_aecd12fbc815b2a56f20f0afefeedaae3}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_aecd12fbc815b2a56f20f0afefeedaae3}{FPGA\+\_\+\+CLOCK\+\_\+\+MHZ}} {\bfseries \textcolor{keywordtype}{integer}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{:}\textcolor{vhdlchar}{=}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{100} \textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_ad359b5e426b20e0109f5b81b9db01dc0}\label{class_w_d6502___interface_1_1_behavioral_ad359b5e426b20e0109f5b81b9db01dc0}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_ad359b5e426b20e0109f5b81b9db01dc0}{CPU\+\_\+\+CLOCK\+\_\+\+DIVIDER}} {\bfseries \textcolor{keywordtype}{integer}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{:}\textcolor{vhdlchar}{=}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{2} \textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_afb070769fcac76804378c3176fc77d2a}\label{class_w_d6502___interface_1_1_behavioral_afb070769fcac76804378c3176fc77d2a}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_afb070769fcac76804378c3176fc77d2a}{CPU\+\_\+\+RESET\+\_\+\+HOLDOFF\+\_\+\+CLOCKTICKS}} {\bfseries \textcolor{keywordtype}{integer}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{:}\textcolor{vhdlchar}{=}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }} 
+\end{DoxyCompactItemize}
+\doxysubsection*{Types}
+ \begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a6bcfdbe2475d4bd23857ab52827cbca2}\label{class_w_d6502___interface_1_1_behavioral_a6bcfdbe2475d4bd23857ab52827cbca2}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a6bcfdbe2475d4bd23857ab52827cbca2}{PROCESSOR\+\_\+\+STATE\+\_\+T}} {\bfseries \textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{RESET\_START}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{,}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{RESET\_COMPLETE}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{,}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{READY}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{,}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{OPCODE\_FETCH}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{,}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{READ\_DATA}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{,}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{WRITE\_DATA}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{,}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{STANDBY}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
+\end{DoxyCompactItemize}
+\doxysubsection*{Signals}
+ \begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_ac0b0483bc24d77c6f17dca46fc84e87d}\label{class_w_d6502___interface_1_1_behavioral_ac0b0483bc24d77c6f17dca46fc84e87d}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_ac0b0483bc24d77c6f17dca46fc84e87d}{PROCESSOR\+\_\+\+STATE}} {\bfseries \textcolor{vhdlchar}{PROCESSOR\_STATE\_T}\textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a22a9fb5f2fe78800d27794627ebcad15}\label{class_w_d6502___interface_1_1_behavioral_a22a9fb5f2fe78800d27794627ebcad15}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a22a9fb5f2fe78800d27794627ebcad15}{WD6502\+\_\+\+CLOCK}} {\bfseries \textcolor{keywordtype}{std\_logic}\textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_ae78658f322ccdad93af4a9b9fd689985}\label{class_w_d6502___interface_1_1_behavioral_ae78658f322ccdad93af4a9b9fd689985}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_ae78658f322ccdad93af4a9b9fd689985}{DATA\+\_\+\+FROM\+\_\+6502}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a53242e0e5e56e6be6d95a26df0f326e3}\label{class_w_d6502___interface_1_1_behavioral_a53242e0e5e56e6be6d95a26df0f326e3}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a53242e0e5e56e6be6d95a26df0f326e3}{DATA\+\_\+\+TO\+\_\+6502}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{7} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a2a229ff88d618e89b33c29f458f75269}\label{class_w_d6502___interface_1_1_behavioral_a2a229ff88d618e89b33c29f458f75269}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a2a229ff88d618e89b33c29f458f75269}{BUS\+\_\+\+ADDRESS}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC\_VECTOR}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{(}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{15} \textcolor{vhdlchar}{ }\textcolor{keywordflow}{downto}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{)}\textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a081ee0b2cfd176090e620c42621fa03d}\label{class_w_d6502___interface_1_1_behavioral_a081ee0b2cfd176090e620c42621fa03d}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a081ee0b2cfd176090e620c42621fa03d}{MEMORY\+\_\+\+CLOCK}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC}\textcolor{vhdlchar}{ }} 
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_abbd66b585c85865a3b42c8f2a79c5bfb}\label{class_w_d6502___interface_1_1_behavioral_abbd66b585c85865a3b42c8f2a79c5bfb}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_abbd66b585c85865a3b42c8f2a79c5bfb}{WRITE\+\_\+\+FLAG}} {\bfseries \textcolor{keywordtype}{STD\_LOGIC}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{:}\textcolor{vhdlchar}{=}\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{ }\textcolor{vhdlchar}{'}\textcolor{vhdlchar}{ } \textcolor{vhdldigit}{0} \textcolor{vhdlchar}{ }\textcolor{vhdlchar}{'}\textcolor{vhdlchar}{ }} 
+\end{DoxyCompactItemize}
+\doxysubsection*{Instantiations}
+ \begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a7990bc15922a8e9bfeb264cd9620bf81}\label{class_w_d6502___interface_1_1_behavioral_a7990bc15922a8e9bfeb264cd9620bf81}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a7990bc15922a8e9bfeb264cd9620bf81}{memorymanagement}}  {\bfseries Memory\+Manager}   
+\item 
+\mbox{\Hypertarget{class_w_d6502___interface_1_1_behavioral_a92ed301627df90362e79c99f8232d9d9}\label{class_w_d6502___interface_1_1_behavioral_a92ed301627df90362e79c99f8232d9d9}} 
+\mbox{\hyperlink{class_w_d6502___interface_1_1_behavioral_a92ed301627df90362e79c99f8232d9d9}{iobx}}  {\bfseries iobuf}   
+\end{DoxyCompactItemize}
+
+
+The documentation for this design unit was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+WD6502 Computer.\+srcs/sources\+\_\+1/new/6502\+\_\+\+Interface.\+vhd\end{DoxyCompactItemize}

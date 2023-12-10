@@ -136,7 +136,7 @@ begin
     assert (T_BUS_READ_DATA = WRITTEN_BYTE_2) report "RAM address 1 value does not match written" severity failure;
        
     T_WRITE_FLAG <= '1';
-    T_BUS_ADDRESS <= std_logic_vector(unsigned(PERIPHERAL_IO_LED_ADDR));
+    T_BUS_ADDRESS <= std_logic_vector(unsigned(PIO_LED_ADDR));
     T_BUS_WRITE_DATA <= x"FE";
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';

@@ -247,8 +247,8 @@
       "Net": {
         "ports": [
           "ADDRESS_IN",
-          "WDC65C02_Interface/ADDRESS",
-          "ila_0/probe0"
+          "ila_0/probe0",
+          "WDC65C02_Interface/ADDRESS"
         ]
       },
       "Net1": {
@@ -260,8 +260,8 @@
       "RWB_PIN_1": {
         "ports": [
           "RWB",
-          "WDC65C02_Interface/RWB",
-          "ila_0/probe3"
+          "ila_0/probe3",
+          "WDC65C02_Interface/RWB"
         ]
       },
       "Reset_1": {
@@ -273,15 +273,15 @@
       "SYNC_1": {
         "ports": [
           "SYNC",
-          "WDC65C02_Interface/SYNC",
-          "ila_0/probe4"
+          "ila_0/probe4",
+          "WDC65C02_Interface/SYNC"
         ]
       },
       "SingleStep_1": {
         "ports": [
           "SingleStep",
-          "WDC65C02_Interface/SINGLESTEP",
-          "ila_0/probe5"
+          "ila_0/probe5",
+          "WDC65C02_Interface/SINGLESTEP"
         ]
       },
       "WD6502_Interface_0_IRQB": {
@@ -349,8 +349,8 @@
       "clk_wiz_0_clk_out1": {
         "ports": [
           "CLOCK",
-          "WDC65C02_Interface/CLOCK",
-          "ila_0/clk"
+          "ila_0/clk",
+          "WDC65C02_Interface/CLOCK"
         ]
       },
       "util_vector_logic_1_Res": {

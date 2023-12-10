@@ -29,19 +29,24 @@ use work.SEVEN_SEGMENT_CA.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
+--! \author Brian Tabone
+--! @brief Seven segment x 4 LED display driver
+--! @details Supports both common anode and common cathode types, also allows
+--! specifying the active level (high or low)
+--! 
 entity PIO_7SEG_X_4 is
     GENERIC(
         -- On some boards, namely baysis3, the digit selector is actually low instead of high
         -- most boards are high so 1 is default, set to 0 for boards like baysis 3
-        SELECT_ACTIVE : STD_LOGIC := '1';
-        CLOCK_TICKS_PER_DIGIT : natural := 100000000; -- at 100mhz, this will give us 10ms per digit
-        COMMON_ANODE : STD_LOGIC := '1' -- When 1, true otherwise we are in common cathode mode
+        SELECT_ACTIVE : STD_LOGIC := '1'; --! Set active high or active low
+        CLOCK_TICKS_PER_DIGIT : natural := 100000000; --! Number of display clock ticks per digit (controls flicker) 
+        COMMON_ANODE : STD_LOGIC := '1' --! When 1, true otherwise we are in common cathode mode
     );
-    Port ( CLOCK : in STD_LOGIC; -- For now we'll run this at FPGA clock speed of 100mhz
-           DISPLAY_ON : in STD_LOGIC; -- 0 for LEDs off, 1 for display value on input
-           VALUE : in STD_LOGIC_VECTOR (15 downto 0); -- 4 digits of 0-F hex. Note if using BCD , caller should limit 0-9, display doesn't truncate BCD illegal bits
-           SEGMENT_DRIVERS : out STD_LOGIC_VECTOR (7 downto 0);
-           COMMON_DRIVERS : out STD_LOGIC_VECTOR(3 downto 0)
+    Port ( CLOCK : in STD_LOGIC; --! FPGA Clock (100mhz)
+           DISPLAY_ON : in STD_LOGIC; --! 0 for LEDs off, 1 for display value on input
+           VALUE : in STD_LOGIC_VECTOR (15 downto 0); --! 4 digits of 0-F hex. Note if using BCD , caller should limit 0-9, display doesn't truncate BCD illegal bits
+           SEGMENT_DRIVERS : out STD_LOGIC_VECTOR (7 downto 0); --! Segment driver values (set to whatever select active is when on)
+           COMMON_DRIVERS : out STD_LOGIC_VECTOR(3 downto 0) --! Which seven segment display is active out of the four available
            );
             
 end PIO_7SEG_X_4;

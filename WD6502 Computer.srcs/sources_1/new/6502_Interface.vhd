@@ -32,6 +32,15 @@ use work.W65C02_DEFINITIONS.all;
 library UNISIM;
 use UNISIM.VComponents.all;
 
+--! \author Brian Tabone
+--! This is the top level module which interfaces directly with the 65C02 CPU. All
+--! input/output signals route through here
+--! \param CLOCK    The 100mhz inbound clock from the FPGA
+--! \param RESERT   The incoming reset signal (from a user button)
+--! \param SINGLESTEP   When active, this ties SYNC to RDY to single step the chip
+--! \param ADDRESS      16 bit address line
+--! \param DATA         8 bit in/out data line
+--!
 entity WD6502_Interface is
     Port ( CLOCK        : in STD_LOGIC; -- Assume 100mhz clock
            RESET        : in STD_LOGIC; -- User input reset button
