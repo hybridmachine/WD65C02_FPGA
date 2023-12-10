@@ -5,7 +5,7 @@
 %%For: 
 %Magnification: 1.00
 %%Orientation: Portrait
-%%BoundingBox: 0 0 500 133.333328
+%%BoundingBox: 0 0 500 125.786163
 %%Pages: 0
 %%BeginSetup
 %%EndSetup
@@ -19,7 +19,7 @@
 /marginwidth 10 def
 /distx 20 def
 /disty 40 def
-/boundaspect 3.750000 def  % aspect ratio of the BoundingBox (width/height)
+/boundaspect 3.975000 def  % aspect ratio of the BoundingBox (width/height)
 /boundx 500 def
 /boundy boundx boundaspect div def
 /xspacing 0 def
@@ -176,10 +176,9 @@ boxfont setfont
 (RAM) cw
 (MemoryManager) cw
 (T_RAM) cw
-(WD6502_Interface) cw
+(WDC65C02_Interface) cw
 (T_MEMORY_MANAGER) cw
-(design_with_logic_probe_WD6502_Interface_0_1) cw
-(T_WD65C02_INTEGRATION) cw
+(design_with_logic_probe_WDC65C02_Interface_0_0) cw
 (design_with_logic_probe) cw
 (design_with_logic_probe_wrapper) cw
 /boxwidth boxwidth marginwidth 2 mul add def
@@ -193,44 +192,39 @@ boundx scalefactor div boundy scalefactor div scale
 
 % ----- classes -----
 
- (RAM) 1.500000 5.000000 box
- (MemoryManager) 1.000000 4.000000 box
- (T_RAM) 2.000000 4.000000 box
- (WD6502_Interface) 0.500000 3.000000 box
- (T_MEMORY_MANAGER) 1.500000 3.000000 box
- (design_with_logic_probe_WD6502_Interface_0_1) 0.000000 2.000000 box
- (T_WD65C02_INTEGRATION) 1.000000 2.000000 box
+ (RAM) 1.000000 5.000000 box
+ (MemoryManager) 0.500000 4.000000 box
+ (T_RAM) 1.500000 4.000000 box
+ (WDC65C02_Interface) 0.000000 3.000000 box
+ (T_MEMORY_MANAGER) 1.000000 3.000000 box
+ (design_with_logic_probe_WDC65C02_Interface_0_0) 0.000000 2.000000 box
  (design_with_logic_probe) 0.000000 1.000000 box
  (design_with_logic_probe_wrapper) 0.000000 0.000000 box
 
 % ----- relations -----
 
 solid
-1 1.500000 4.250000 out
+1 1.000000 4.250000 out
 solid
-1.000000 2.000000 5.000000 conn
+0.500000 1.500000 5.000000 conn
 solid
-0 1.000000 4.750000 in
+0 0.500000 4.750000 in
 solid
-1 1.000000 3.250000 out
+1 0.500000 3.250000 out
 solid
-0.500000 1.500000 4.000000 conn
+0.000000 1.000000 4.000000 conn
 solid
-0 2.000000 4.750000 in
+0 1.500000 4.750000 in
 solid
-0 0.500000 3.750000 in
+0 0.000000 3.750000 in
 solid
-1 0.500000 2.250000 out
+1 0.000000 2.250000 out
 solid
-0.000000 1.000000 3.000000 conn
-solid
-0 1.500000 3.750000 in
+0 1.000000 3.750000 in
 solid
 0 0.000000 2.750000 in
 solid
 1 0.000000 1.250000 out
-solid
-0 1.000000 2.750000 in
 solid
 0 0.000000 1.750000 in
 solid
