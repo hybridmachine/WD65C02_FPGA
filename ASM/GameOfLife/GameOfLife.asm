@@ -74,8 +74,8 @@ START:
     LDA #>BOARD2_MEM_BASE_ADDR
     STA NEXT_GEN_PTR+1
 
-    ; Note the inversion here, conceptually the LSb (least significant bit) is far right of the byte, and 
-    ; the MSb is far left so to set the conceptual bit 0 in the array (X goes 0 to N left to right), we start at the MSb
+    ; Note the inversion here, The LSb (least significant bit) is far right of the byte, and 
+    ; the MSb is far left (X goes 0 to N left to right), we start at the MSb
     lda #CELL_LIVE
     sta CELL_MASK_BASE+7
     lda #CELL_LIVE<<1
@@ -228,12 +228,72 @@ COL_SCAN:
     LDY CUR_Y
     ; Subtract out our own value, only count neighbors
     JSR SUB_GET_CELL_VALUE
-    STA TEMP_SPACE
+    STA TEMP_SPACE ; Holds the current cell value, used below when setting next cell value
     LDA NBR_CNT
     SEC
     SBC TEMP_SPACE
     STA NBR_CNT
-    ; TODO Set next gen bit based on bit status and neighbor count
+    ; Set next gen bit based on bit status and neighbor count
+    
+    ; First save off board_ptr and load with next gen
+    LDA BOARD_PTR+1
+    PHA
+    LDA BOARD_PTR
+    PHA  
+    ; Load next pointer into board_ptr
+    LDA NEXT_GEN_PTR
+    STA BOARD_PTR
+    LDA NEXT_GEN_PTR+1
+    STA BOARD_PTR+1
+
+    LDA TEMP_SPACE ; Holds the current cell value
+    CMP CELL_LIVE
+    BNE CHK_WHEN_CELL_DEAD
+
+CHK_WHEN_CELL_LIVE:
+    ;   Any live cell with fewer than two live neighbours dies, as if by underpopulation.   
+    LDA NBR_CNT
+    CMP #2
+    BMI CHK_LIVE_ONE_OR_NONE
+    ; Any live cell with two or three live neighbours lives on to the next generation.
+    CMP #3
+    BMI CHK_LIVE_TWO_OR_THREE
+    ;   Any live cell with more than three live neighbours dies, as if by overpopulation.
+    LDA CELL_DEAD
+    JSR SUB_SET_CELL_VALUE
+    JMP CHK_COMPLETE 
+
+CHK_LIVE_ONE_OR_NONE:
+    LDA CELL_DEAD
+    JSR SUB_SET_CELL_VALUE
+    JMP CHK_COMPLETE   
+
+CHK_LIVE_TWO_OR_THREE
+    LDA CELL_LIVE
+    JSR SUB_SET_CELL_VALUE
+    JMP CHK_COMPLETE
+    
+CHK_WHEN_CELL_DEAD:
+    ;   Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
+    CMP #3
+    BEQ CHK_DEAD_THREE_NBRS
+    LDA CELL_DEAD
+    JSR SUB_SET_CELL_VALUE
+    JMP CHK_COMPLETE
+
+CHK_DEAD_THREE_NBRS:
+    LDA CELL_LIVE
+    JSR SUB_SET_CELL_VALUE
+    JMP CHK_COMPLETE
+
+CHK_COMPLETE:
+    ; Restore original board pointer
+    PLA
+    STA BOARD_PTR
+    PLA
+    STA BOARD_PTR+1
+
+    ; Next column
     LDA CUR_X
     CLC
     ; X++
@@ -241,7 +301,9 @@ COL_SCAN:
     TAX
     STA CUR_X
     CMP #BOARD_WIDTH-2
-    BNE FOR_COLS
+    BEQ CHECK_ROWS
+    JMP FOR_COLS ; Long jump as BNE wont work, too far away
+CHECK_ROWS:
     ; End FOR_COLS
     ; Y++
     LDA CUR_Y
@@ -251,7 +313,9 @@ COL_SCAN:
     ; IF Y < BOARD_HEIGHT-2, loop
     STA CUR_Y
     CMP #BOARD_HEIGHT-2
-    BNE FOR_ROWS
+    BEQ CHECK_DONE
+    JMP FOR_ROWS ; Long jump, as BNE wont work, too far away
+CHECK_DONE:
     RTS
 
 ; Subroutine to get the current cell value. Arguments are in X,Y , return value goes into A
