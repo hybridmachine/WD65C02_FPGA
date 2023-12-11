@@ -314,6 +314,8 @@ CHECK_ROWS:
     STA CUR_Y
     CMP #BOARD_HEIGHT-2
     BEQ CHECK_DONE
+    LDA #1
+    STA CUR_X ; Start back at X=1 for the next row
     JMP FOR_ROWS ; Long jump, as BNE wont work, too far away
 CHECK_DONE:
     RTS
