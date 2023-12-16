@@ -9,7 +9,7 @@ CODE
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
-    org $FE61   ; Place after multiply
+    org $FE69   ; Place after multiply
 
     GLOBAL DIV
     GLOBAL DIVDND

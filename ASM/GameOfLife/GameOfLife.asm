@@ -246,8 +246,12 @@ COL_SCAN:
     LDA NEXT_GEN_PTR+1
     STA BOARD_PTR+1
 
+    ; Restore cell coords
+    LDX CUR_X
+    LDY CUR_Y
+
     LDA TEMP_SPACE ; Holds the current cell value
-    CMP CELL_LIVE
+    CMP #CELL_LIVE
     BNE CHK_WHEN_CELL_DEAD
 
 CHK_WHEN_CELL_LIVE:
@@ -256,20 +260,20 @@ CHK_WHEN_CELL_LIVE:
     CMP #2
     BMI CHK_LIVE_ONE_OR_NONE
     ; Any live cell with two or three live neighbours lives on to the next generation.
-    CMP #3
+    CMP #4
     BMI CHK_LIVE_TWO_OR_THREE
     ;   Any live cell with more than three live neighbours dies, as if by overpopulation.
-    LDA CELL_DEAD
+    LDA #CELL_DEAD
     JSR SUB_SET_CELL_VALUE
     JMP CHK_COMPLETE 
 
 CHK_LIVE_ONE_OR_NONE:
-    LDA CELL_DEAD
+    LDA #CELL_DEAD
     JSR SUB_SET_CELL_VALUE
     JMP CHK_COMPLETE   
 
 CHK_LIVE_TWO_OR_THREE
-    LDA CELL_LIVE
+    LDA #CELL_LIVE
     JSR SUB_SET_CELL_VALUE
     JMP CHK_COMPLETE
     
@@ -277,12 +281,12 @@ CHK_WHEN_CELL_DEAD:
     ;   Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
     CMP #3
     BEQ CHK_DEAD_THREE_NBRS
-    LDA CELL_DEAD
+    LDA #CELL_DEAD
     JSR SUB_SET_CELL_VALUE
     JMP CHK_COMPLETE
 
 CHK_DEAD_THREE_NBRS:
-    LDA CELL_LIVE
+    LDA #CELL_LIVE
     JSR SUB_SET_CELL_VALUE
     JMP CHK_COMPLETE
 
@@ -292,6 +296,9 @@ CHK_COMPLETE:
     STA BOARD_PTR
     PLA
     STA BOARD_PTR+1
+
+    LDA #0
+    STA NBR_CNT ; reset neighbor count
 
     ; Next column
     LDA CUR_X
@@ -340,7 +347,7 @@ SUB_SET_CELL_VALUE:
     JSR SUB_GET_CELL_BYTE_ADDRESS
     LDX CUR_CELL_PTR+2 ; Put the bit offset into X
     PLA
-    CMP CELL_DEAD   ; If A is CELL_DEAD, turn cell off
+    CMP #CELL_DEAD   ; If A is CELL_DEAD, turn cell off
     BEQ CELL_OFF
 CELL_ON:
     LDA (CUR_CELL_PTR)
