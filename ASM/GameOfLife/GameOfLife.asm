@@ -33,19 +33,24 @@ BOARD1_MEM_BASE_ADDR:   equ $0300
 BOARD1_MEM_END_ADDR:    equ BOARD1_MEM_BASE_ADDR+BOARD_MEM_SIZE
 BOARD2_MEM_BASE_ADDR:   equ BOARD1_MEM_END_ADDR+1
 BOARD2_MEM_END_ADDR:    equ BOARD2_MEM_BASE_ADDR+BOARD_MEM_SIZE
-CURRENT_GEN_PTR         equ BOARD2_MEM_END_ADDR+1
-NEXT_GEN_PTR            equ CURRENT_GEN_PTR+2
+
+; Constants for cell values
 CELL_DEAD:              equ 0
 CELL_LIVE:              equ 1
-CUR_CELL_PTR:           equ $10 ; $11, $10 is a 16 bit pointer to game board, $12 is the bit location in the byte
-NEXT_CELL_PTR:          equ $13 ; $13, $14 is a 16 bit pointer to the next generation, $15 is the bit location in the byte
-TEMP_SPACE:             equ $04 ; $04, $05 used to swap pointer values
-BOARD_PTR:              equ TEMP_SPACE+2 ; Pointer argument for get, set cell function calls
+
+; Zero page locations
+ZERO_PAGE_BASE:         equ $10
+CURRENT_GEN_PTR         equ ZERO_PAGE_BASE ; Pointer to current generation board
+NEXT_GEN_PTR            equ CURRENT_GEN_PTR+2
+BOARD_PTR:              equ NEXT_GEN_PTR+2 ; Pointer argument for get, set cell function calls
 NBR_CNT:                equ BOARD_PTR+2 ; Store count of neighbors during gen calculation
 CUR_X:                  equ NBR_CNT+1
 CUR_Y:                  equ CUR_X+1
 CELL_MASK_BASE          equ CUR_Y+1
 CELL_MASK_INVERT        equ (CELL_MASK_BASE+8) ; Temp store for when we need to save a mask invert
+CUR_CELL_PTR:           equ (CELL_MASK_INVERT+8) ; Current cell pointer
+NEXT_CELL_PTR:          equ (CUR_CELL_PTR+2) ; Next cell pointer
+TEMP_SPACE:             equ (NEXT_CELL_PTR+2) ; Swap space for pointers, etc
 
 CODE
     CHIP	65C02
