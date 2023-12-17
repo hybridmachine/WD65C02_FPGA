@@ -167,6 +167,8 @@ LOAD_R_PENTOMINO:
     JSR SUB_SET_CELL_VALUE
     ; Test out the NEXT GEN Subroutine, check value in A after each call
     JSR SUB_GOL_NEXT_GENERATION
+    JSR SUB_SWAP_BOARD_PTRS
+    JSR SUB_GOL_NEXT_GENERATION
     BRK ; Stop for debugging for now
 
 ; Subroutine to generate the next generation for the game of life
