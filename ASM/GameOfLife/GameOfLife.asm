@@ -187,6 +187,7 @@ SUB_GOL_NEXT_GENERATION:
     ; Save off current X,Y position
     STX CUR_X
     STY CUR_Y
+    
 FOR_ROWS:
 FOR_COLS:
     ; Count live neighbours
@@ -284,6 +285,7 @@ CHK_LIVE_TWO_OR_THREE
     
 CHK_WHEN_CELL_DEAD:
     ;   Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
+    LDA NBR_CNT
     CMP #3
     BEQ CHK_DEAD_THREE_NBRS
     LDA #CELL_DEAD
@@ -304,6 +306,10 @@ CHK_COMPLETE:
 
     LDA #0
     STA NBR_CNT ; reset neighbor count
+
+    ; Reload row pointer; Gets overwritten by SUB_SET_CELL_VALUE
+    LDA CUR_Y
+    TAY
 
     ; Next column
     LDA CUR_X
