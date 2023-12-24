@@ -5,12 +5,11 @@
 ; divide DIVDND  / DIVSOR -> XA (hi-lo); remainder  in DIVDND
 ; DIVDND and  DIVSOR are direct page double byte cells
 ; no  special handling for divide by zero  (returns $FFFF quotient)
-CODE
+
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
-    org $FE69   ; Place after multiply
-
+    
     GLOBAL DIV
     GLOBAL DIVDND
     GLOBAL DIVSOR

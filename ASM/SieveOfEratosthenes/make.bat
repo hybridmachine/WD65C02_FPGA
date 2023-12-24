@@ -16,6 +16,6 @@ del *.obj
 del *.lst
 del *.sym
 WDC02AS -g -l -DUSING_02 SieveOfEratosthenes.asm
-WDCLN -g -sz -t -HZ SieveOfEratosthenes
+WDCLN -CFC00 -g -sz -t -HZ SieveOfEratosthenes
 WDCDB.exe
 pause

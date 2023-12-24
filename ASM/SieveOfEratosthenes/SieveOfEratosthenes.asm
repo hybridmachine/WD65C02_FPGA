@@ -50,11 +50,14 @@
     SAVEX:              equ     $0703
     SAVEY:              equ     $0704
     BCDVAL:             equ     $04  ; 16 bits 04 and 05 to hold 4 BCD digits (max 9999)
-		CHIP	65C02
+    
+    CODE
+        CHIP	65C02
 		LONGI	OFF
 		LONGA	OFF
 
-		org	$FC00		; Must match ROM_START in PKG_65C02.vhd
+        ; Relocatable by the assembler (so is Multiply and Divide), address specifed by -CFC00 on the assembler options
+		; org	$FC00		; Must match ROM_START in PKG_65C02.vhd 
 
 	START:
 		sei             ; Mask maskable interrupts
@@ -74,7 +77,7 @@
         sta SEVEN_SEG_IO_ADDR   ; Set low and high byte to 0
         sta SEVEN_SEG_IO_ADDR + 1
         lda #$01
-        sta SEVEN_SEG_ACT_ADDR ; Turn the sevent segment display on
+        sta SEVEN_SEG_ACT_ADDR ; Turn the seven segment display on
 
 
     ; MAIN

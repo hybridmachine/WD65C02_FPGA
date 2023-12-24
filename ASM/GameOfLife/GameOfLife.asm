@@ -33,6 +33,8 @@ BOARD1_MEM_BASE_ADDR:   equ $0300
 BOARD1_MEM_END_ADDR:    equ BOARD1_MEM_BASE_ADDR+BOARD_MEM_SIZE
 BOARD2_MEM_BASE_ADDR:   equ BOARD1_MEM_END_ADDR+1
 BOARD2_MEM_END_ADDR:    equ BOARD2_MEM_BASE_ADDR+BOARD_MEM_SIZE
+SEVEN_SEG_IO_ADDR:      equ $0201 ; 8 bits after LED_IO_ADDR, see WD65C02_FPGA/WD6502 Computer.srcs/sources_1/new/PKG_65C02.vhd
+SEVEN_SEG_ACT_ADDR:     equ $0203 ; 16 bits after value, turn this to 01 to turn it on, 00 for off
 
 ; Constants for cell values
 CELL_DEAD:              equ 0
@@ -53,10 +55,11 @@ NEXT_CELL_PTR:          equ (CUR_CELL_PTR+2) ; Next cell pointer
 TEMP_SPACE:             equ (NEXT_CELL_PTR+2) ; Swap space for pointers, etc
 
 CODE
+    ; Relocatable by the assembler (so is Multiply and Divide), address specifed by -CFC00 on the assembler options
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
-    org $FC00   ; Must match ROM_START in PKG_65C02.vhd
+    ; org $FC00   ; Must match ROM_START in PKG_65C02.vhd, this is actually managed in the make file with the -C<address> option --> -CFC00 
     XREF MULT
     XREF MCAND1
     XREF MCAND2
@@ -69,6 +72,13 @@ START:
 
     cld				; Clear decimal mode
     clc             ; Clear carry
+
+    LDA	#$00
+    STA SEVEN_SEG_IO_ADDR   ; Set low and high byte to 0
+    STA SEVEN_SEG_IO_ADDR + 1
+    LDA #$01
+    STA SEVEN_SEG_ACT_ADDR ; Turn the seven segment display on
+
     ; Load the generation pointers
     LDA #BOARD1_MEM_BASE_ADDR
     STA CURRENT_GEN_PTR

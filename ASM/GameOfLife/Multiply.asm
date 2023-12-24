@@ -2,12 +2,11 @@
 ; result: returned in X - Y (hi - lo)
 ; All registers are overwritten , caller must save before call
 
-CODE
+
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
-    org $FE48   ; Must Come after main code
-
+    
     GLOBAL MULT
     GLOBAL MCAND1
     GLOBAL MCAND2
@@ -43,4 +42,4 @@ CODE
     
     DONE:
         RTS
-END ; CODE
+END ; MODULE
