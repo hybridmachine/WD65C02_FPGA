@@ -16,6 +16,7 @@ del *.obj
 del *.lst
 del *.sym
 WDC02AS -g -l -DUSING_02 SieveOfEratosthenes.asm
-WDCLN -CFC00 -g -sz -t -HZ SieveOfEratosthenes
+WDC02AS -g -l -DUSING_02 ..\lib\Bin2BCD.asm -O Bin2BCD.obj
+WDCLN -CFC00 -g -sz -t -HZ SieveOfEratosthenes Bin2BCD.obj
 WDCDB.exe
 pause
