@@ -54,6 +54,7 @@ CUR_CELL_PTR:           equ (CELL_MASK_INVERT+8) ; Current cell pointer
 NEXT_CELL_PTR:          equ (CUR_CELL_PTR+2) ; Next cell pointer
 TEMP_SPACE:             equ (NEXT_CELL_PTR+2) ; Swap space for pointers, etc
 
+    
 CODE
     ; Relocatable by the assembler (so is Multiply and Divide), address specifed by -CFC00 on the assembler options
     CHIP	65C02
@@ -66,6 +67,19 @@ CODE
     XREF DIV
     XREF DIVDND
     XREF DIVSOR
+    
+    XREF SUB_GET_CELL_VALUE
+    XREF SUB_SET_CELL_VALUE
+    XREF SUB_GET_CELL_BYTE_ADDRESS
+    XREF CELL_DEAD
+    XREF CELL_LIVE
+
+    GLOBAL CUR_CELL_PTR
+    GLOBAL BOARD_PTR
+    GLOBAL CELL_MASK_BASE
+    GLOBAL CELL_MASK_INVERT
+    GLOBAL BOARD_WIDTH
+    GLOBAL BOARD_HEIGHT
 
 START:
     sei             ; Mask maskable interrupts
@@ -350,42 +364,6 @@ CHECK_ROWS:
 CHECK_DONE:
     RTS
 
-; Subroutine to get the current cell value. Arguments are in X,Y , return value goes into A
-SUB_GET_CELL_VALUE:
-    JSR SUB_GET_CELL_BYTE_ADDRESS
-    LDX CUR_CELL_PTR+2 ; Put the bit offset into X
-    LDA (CUR_CELL_PTR)
-    AND CELL_MASK_BASE,X
-    BEQ RETURN_CELL_DEAD ; If AND returns 0, cell was dead
-    LDA #CELL_LIVE ; Otherwise cell was live
-    RTS
-RETURN_CELL_DEAD
-    LDA #CELL_DEAD
-    RTS
-
-; Subroutine to set the cell value. Arguments are in X, Y, and A (X, Y are position, A is CELL_LIVE/CELL_DEAD value)
-SUB_SET_CELL_VALUE:
-    ; We assume X and Y already have values loaded by our caller, get cell address and its offset in that byte
-    PHA  ; Save off A
-    JSR SUB_GET_CELL_BYTE_ADDRESS
-    LDX CUR_CELL_PTR+2 ; Put the bit offset into X
-    PLA
-    CMP #CELL_DEAD   ; If A is CELL_DEAD, turn cell off
-    BEQ CELL_OFF
-CELL_ON:
-    LDA (CUR_CELL_PTR)
-    ORA CELL_MASK_BASE,X
-    STA (CUR_CELL_PTR)
-    RTS
-CELL_OFF:
-    LDA CELL_MASK_BASE,X
-    EOR #$FF ; Invert mask
-    STA CELL_MASK_INVERT
-    LDA (CUR_CELL_PTR)
-    AND CELL_MASK_INVERT
-    STA (CUR_CELL_PTR)
-    RTS
-
 ; Swap the current and next gen board pointers
 SUB_SWAP_BOARD_PTRS:
     ; save current gen ptr val into swap
@@ -405,71 +383,6 @@ SUB_SWAP_BOARD_PTRS:
     STA NEXT_GEN_PTR+1
     RTS
 
-; Subroutine to get cell address given an X and Y value (passed in X and Y registers). Board pointer is pushed high, low on to 
-; stack by caller
-; Formula is (Y * (BOARD_WIDTH/8)) + (X/8), this gets you the byte that the cell is in, the remainder of X/8 gives you the 
-; bit which is the cell.
-; The byte address is in CUR_CELL_PTR,CUR_CELL_PTR+1 (low, high) and the remainder (bit location) is in CUR_CELL_PTR + 2
-SUB_GET_CELL_BYTE_ADDRESS:
-    ; Arguments X and Y are passed in via X and Y registers
-    ; Calculate (Y * (BOARD_WIDTH/8))
-    ; Zero out multiply argument locations
-    ; First set cell pointer to base of board memory
-    lda BOARD_PTR
-    sta CUR_CELL_PTR    
-    lda BOARD_PTR+1
-    sta CUR_CELL_PTR+1
-    LDA #0
-    STA MCAND1
-    STA MCAND1+1
-    STA MCAND2
-    STA MCAND2+1
-    STY MCAND1
-    LDA #(BOARD_WIDTH/8)
-    STA MCAND2
-    ; Preserve X and Y registers
-    PHX
-    PHY 
-    JSR MULT
-    ; Save off pointer calculation thus far, next up add X offset
-    CLC
-    TYA
-    ADC CUR_CELL_PTR
-    STA CUR_CELL_PTR
-    LDA #0
-    ADC CUR_CELL_PTR+1 ; Add any carry bit
-    STA CUR_CELL_PTR+1
-    TXA
-    ADC CUR_CELL_PTR+1 
-    BCS OVERFLOW_DETECTED
-    STA CUR_CELL_PTR+1
-    PLY
-    PLX
-    ; Clear out divide memory locations
-    LDA #0
-    STA DIVDND
-    STA DIVDND+1
-    STA DIVSOR
-    STA DIVSOR+1
-    ; Divide X by 8
-    STX DIVDND
-    LDA #8
-    STA DIVSOR
-    JSR DIV
-    ; Sixteen bit add of A which is low byte of result (should be one byte only value so ignore high)
-    CLC
-    ADC CUR_CELL_PTR
-    STA CUR_CELL_PTR
-    LDA #0 ; Add any carry bit
-    ADC CUR_CELL_PTR+1
-    BCS OVERFLOW_DETECTED
-    STA CUR_CELL_PTR+1
-    LDA DIVDND  ; Load the remainder, which is the bit offset
-    STA CUR_CELL_PTR+2
-    rts
-
-OVERFLOW_DETECTED:
-    BRK ; Overflow detected, bail out
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
