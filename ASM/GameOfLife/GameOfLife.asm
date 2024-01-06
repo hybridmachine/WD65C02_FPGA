@@ -40,6 +40,8 @@ LED_IO_ADDR:	        equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped
 ; Constants for cell values
 CELL_DEAD:              equ 0
 CELL_LIVE:              equ 1
+GENS_TO_LOOP:           equ 10
+
 
 ; Zero page locations
 ZERO_PAGE_BASE:         equ $10
@@ -91,11 +93,12 @@ START:
     LDA	#$00
     STA SEVEN_SEG_IO_ADDR   ; Set low and high byte to 0
     STA SEVEN_SEG_IO_ADDR+1
+    STA LOOP_CTR            ; Reset loop counter to 0
+    STA LOOP_CTR+1
+
     LDA #$01
     STA SEVEN_SEG_ACT_ADDR ; Turn the seven segment display on
 
-    STA LOOP_CTR            ; Reset loop counter to 0
-    STA LOOP_CTR+1
 
 OUTER_LOOP:
     ; Load the generation pointers
@@ -202,17 +205,18 @@ LOAD_R_PENTOMINO:
     STA LOOP_CTR
     STA SEVEN_SEG_IO_ADDR   ; Write value to seven segment low
     LDA LOOP_CTR+1
-    ADC #0 ; Add any carry flag
+    ADC #0              ; Add any carry flag
     STA LOOP_CTR+1
     STA SEVEN_SEG_IO_ADDR+1     ; Write value to seven segment high
     
-    LDX #99 ; Load 99 since we started gen one as the r-pentomino
+    LDX #GENS_TO_LOOP-1 ; Load one less since we started gen one as the r-pentomino
 
 GEN_LOOP:
-    TXA ; Load X into A then subtract 100 to display which generation we are running
-    SEC ; Set the carry flag, needed for subtraction
-    SBC #100
-    STA LED_IO_ADDR ; Dispaly the generation count
+    STX TEMP_SPACE      ; Save off for subtraction
+    LDA #GENS_TO_LOOP
+    SEC                 ; Set the carry flag, needed for subtraction
+    SBC TEMP_SPACE      ; Subtract out the value that is in X
+    STA LED_IO_ADDR     ; Dispaly the generation count
     PHX    
     JSR SUB_GOL_NEXT_GENERATION
     JSR SUB_SWAP_BOARD_PTRS
