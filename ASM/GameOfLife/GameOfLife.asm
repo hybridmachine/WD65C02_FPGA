@@ -35,6 +35,7 @@ BOARD2_MEM_BASE_ADDR:   equ BOARD1_MEM_END_ADDR+1
 BOARD2_MEM_END_ADDR:    equ BOARD2_MEM_BASE_ADDR+BOARD_MEM_SIZE
 SEVEN_SEG_IO_ADDR:      equ $0201 ; 8 bits after LED_IO_ADDR, see WD65C02_FPGA/WD6502 Computer.srcs/sources_1/new/PKG_65C02.vhd
 SEVEN_SEG_ACT_ADDR:     equ $0203 ; 16 bits after value, turn this to 01 to turn it on, 00 for off
+LED_IO_ADDR:	        equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 
 ; Constants for cell values
 CELL_DEAD:              equ 0
@@ -53,7 +54,7 @@ CELL_MASK_INVERT        equ (CELL_MASK_BASE+8) ; Temp store for when we need to 
 CUR_CELL_PTR:           equ (CELL_MASK_INVERT+8) ; Current cell pointer
 NEXT_CELL_PTR:          equ (CUR_CELL_PTR+2) ; Next cell pointer
 TEMP_SPACE:             equ (NEXT_CELL_PTR+2) ; Swap space for pointers, etc
-
+LOOP_CTR:               equ (TEMP_SPACE+2) ; LOOP_CTR and LOOP_CTR + 1 are incremented every 100 gens
     
 CODE
     ; Relocatable by the assembler (so is Multiply and Divide), address specifed by -CFC00 on the assembler options
@@ -89,10 +90,14 @@ START:
 
     LDA	#$00
     STA SEVEN_SEG_IO_ADDR   ; Set low and high byte to 0
-    STA SEVEN_SEG_IO_ADDR + 1
+    STA SEVEN_SEG_IO_ADDR+1
     LDA #$01
     STA SEVEN_SEG_ACT_ADDR ; Turn the seven segment display on
 
+    STA LOOP_CTR            ; Reset loop counter to 0
+    STA LOOP_CTR+1
+
+OUTER_LOOP:
     ; Load the generation pointers
     LDA #BOARD1_MEM_BASE_ADDR
     STA CURRENT_GEN_PTR
@@ -190,10 +195,31 @@ LOAD_R_PENTOMINO:
     LDA #CELL_LIVE
     JSR SUB_SET_CELL_VALUE
     ; Test out the NEXT GEN Subroutine, check value in A after each call
+    
+    CLC
+    LDA LOOP_CTR
+    ADC #1
+    STA LOOP_CTR
+    STA SEVEN_SEG_IO_ADDR   ; Write value to seven segment low
+    LDA LOOP_CTR+1
+    ADC #0 ; Add any carry flag
+    STA LOOP_CTR+1
+    STA SEVEN_SEG_IO_ADDR+1     ; Write value to seven segment high
+    
+    LDX #99 ; Load 99 since we started gen one as the r-pentomino
+
+GEN_LOOP:
+    TXA ; Load X into A then subtract 100 to display which generation we are running
+    SEC ; Set the carry flag, needed for subtraction
+    SBC #100
+    STA LED_IO_ADDR ; Dispaly the generation count
+    PHX    
     JSR SUB_GOL_NEXT_GENERATION
     JSR SUB_SWAP_BOARD_PTRS
-    JSR SUB_GOL_NEXT_GENERATION
-    BRK ; Stop for debugging for now
+    PLX
+    DEX
+    BNE GEN_LOOP
+    JMP OUTER_LOOP
 
 ; Subroutine to generate the next generation for the game of life
 ;   Any live cell with fewer than two live neighbours dies, as if by underpopulation.

@@ -11,3 +11,4 @@ ASM/**/ROM.vhd
 *.lst
 *.bin
 *.hex
+*.mem
