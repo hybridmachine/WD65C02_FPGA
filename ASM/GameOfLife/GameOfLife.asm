@@ -36,6 +36,7 @@ BOARD2_MEM_END_ADDR:    equ BOARD2_MEM_BASE_ADDR+BOARD_MEM_SIZE
 SEVEN_SEG_IO_ADDR:      equ $0201 ; 8 bits after LED_IO_ADDR, see WD65C02_FPGA/WD6502 Computer.srcs/sources_1/new/PKG_65C02.vhd
 SEVEN_SEG_ACT_ADDR:     equ $0203 ; 16 bits after value, turn this to 01 to turn it on, 00 for off
 LED_IO_ADDR:	        equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+ROW_POINTERS_LEN:       equ BOARD_HEIGHT*2 ; BOARD_HEIGHT count array of 16 bit pointers
 
 ; Constants for cell values
 CELL_DEAD:              equ 0
@@ -45,7 +46,9 @@ GENS_TO_LOOP:           equ 10
 
 ; Zero page locations
 ZERO_PAGE_BASE:         equ $10
-CURRENT_GEN_PTR         equ ZERO_PAGE_BASE ; Pointer to current generation board
+BRD1_ROW_POINTERS:      equ ZERO_PAGE_BASE ; Board height * 2 for 16 bit pointers to each row start
+BRD2_ROW_POINTERS:      equ BRD1_ROW_POINTERS+ROW_POINTERS_LEN;
+CURRENT_GEN_PTR         equ BRD2_ROW_POINTERS+ROW_POINTERS_LEN ; Pointer to current generation board
 NEXT_GEN_PTR            equ CURRENT_GEN_PTR+2
 BOARD_PTR:              equ NEXT_GEN_PTR+2 ; Pointer argument for get, set cell function calls
 NBR_CNT:                equ BOARD_PTR+2 ; Store count of neighbors during gen calculation
@@ -245,6 +248,8 @@ SUB_GOL_NEXT_GENERATION:
     STY CUR_Y
     
 FOR_ROWS:
+    TYA
+    STA SEVEN_SEG_IO_ADDR ; Write row (in hex) to seven segment
 FOR_COLS:
     ; Count live neighbours
     ; Start at row above

@@ -56,6 +56,10 @@ CODE
     CELL_DEAD:              equ 0
     CELL_LIVE:              equ 1
 
+; Initialize the 
+SUB_LOAD_ROW_POINTERS:
+    ; Load board pointer 1 into position 1 then calulcate row starts for each subsequent row
+    ; repeat for board pointer 2
 ; Subroutine to get the current cell value. Arguments are in X,Y , return value goes into A
 SUB_GET_CELL_VALUE:
     JSR SUB_GET_CELL_BYTE_ADDRESS

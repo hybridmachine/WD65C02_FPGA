@@ -76,7 +76,7 @@ begin
 seven_segment_statemachine: process(CLOCK)
 variable clock_ticks_var : natural := CLOCK_TICKS_PER_DIGIT;
 BEGIN
-    if (CLOCK'event and CLOCK = '1') then
+    if (rising_edge(CLOCK)) then
         if (clock_ticks_var > 0) then
             clock_ticks_var := clock_ticks_var - 1;
         end if;

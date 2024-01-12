@@ -182,7 +182,7 @@ ram_enb <= '1';
 -- Propogate the 7 SEGMENT signals 
 process(MEMORY_CLOCK)
 BEGIN
-    if (MEMORY_CLOCK'event and MEMORY_CLOCK = '1') then
+    if (rising_edge(MEMORY_CLOCK)) then
         PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_SIG;
         PIO_7SEG_COMMON <= PIO_7SEG_COMMON_SIG;
     end if;
@@ -193,7 +193,7 @@ variable MEMORY_ADDRESS : unsigned(15 downto 0);
 variable SHIFTED_ADDRESS : unsigned(15 downto 0);
 
 begin    
-    if (MEMORY_CLOCK'event and MEMORY_CLOCK = '1') then
+    if (rising_edge(MEMORY_CLOCK)) then
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
         if (unsigned(BOOT_VEC_ADDRESS_LOW) = MEMORY_ADDRESS) then

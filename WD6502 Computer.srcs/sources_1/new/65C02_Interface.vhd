@@ -175,7 +175,7 @@ begin
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
         wdc65c02_CLOCK <= '0';
         RESET_IN_PROGRESS := '1';
-    elsif (CLOCK'event and CLOCK = '1') then      
+    elsif (rising_edge(CLOCK)) then      
         WRITE_FLAG <= not RWB;
        
         BUS_ADDRESS <= ADDRESS;
@@ -197,7 +197,7 @@ wdc65c02_statemachine : process (wdc65c02_CLOCK, RESET)
 variable reset_clock_count : natural := 0;
 variable reset_in_progress : std_logic := '0';
 begin
-    if (wdc65c02_CLOCK'event and wdc65c02_CLOCK='1') then                           
+    if (rising_edge(wdc65c02_CLOCK)) then                           
         -- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
         -- Otherwise RDY is always high.
         -- Lets do this concurrently instead, TODO remove once confirmed

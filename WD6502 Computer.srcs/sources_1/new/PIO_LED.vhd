@@ -55,7 +55,7 @@ begin
     if (RESET = CPU_RESET) then
         LED_CTL <= "01010101";
     else
-        if (CLOCK'event and CLOCK='1') then
+        if (rising_edge(CLOCK)) then
             LED_CTL <= DATA; -- Just pass through
         end if;
     end if;
