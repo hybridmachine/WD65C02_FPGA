@@ -163,6 +163,9 @@ OUTER_LOOP:
     LDA #0
     STA NBR_CNT
 
+    ; Load the board row pointers
+    JSR SUB_LOAD_ROW_POINTERS
+
     ; Store off the end ptr for debugging    
     lda #BOARD1_MEM_END_ADDR
     sta CUR_CELL_PTR+3    
@@ -174,8 +177,6 @@ OUTER_LOOP:
     lda #>BOARD1_MEM_BASE_ADDR
     sta CUR_CELL_PTR+1
 INITGAMEBOARD:
-    ; Load the board row pointers
-    JSR SUB_LOAD_ROW_POINTERS
     ldx #0
     ldy #0
     lda #CELL_DEAD
