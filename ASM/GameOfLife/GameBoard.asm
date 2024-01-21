@@ -36,6 +36,7 @@ CODE
     GLOBAL SUB_GET_CELL_VALUE
     GLOBAL SUB_SET_CELL_VALUE
     GLOBAL SUB_GET_CELL_BYTE_ADDRESS
+    GLOBAL SUB_LOAD_ROW_POINTERS
     GLOBAL CELL_DEAD
     GLOBAL CELL_LIVE
 
@@ -51,6 +52,11 @@ CODE
     XREF CELL_MASK_INVERT
     XREF BOARD_WIDTH
     XREF BOARD_HEIGHT
+    XREF TEMP_SPACE
+    XREF BOARD1_MEM_BASE_ADDR
+    XREF BOARD2_MEM_BASE_ADDR
+    XREF BRD1_ROW_POINTERS
+    XREF BRD2_ROW_POINTERS
 
     ; Constants for cell values
     CELL_DEAD:              equ 0
@@ -60,6 +66,58 @@ CODE
 SUB_LOAD_ROW_POINTERS:
     ; Load board pointer 1 into position 1 then calulcate row starts for each subsequent row
     ; repeat for board pointer 2
+    LDX #0  ; Start at row 0 , we'll increment up to row BOARD_HEIGHT-1
+    LDA #BOARD1_MEM_BASE_ADDR ; Low Byte
+    STA TEMP_SPACE
+    LDA #>BOARD1_MEM_BASE_ADDR ; High Byte
+    STA TEMP_SPACE+1
+LOOP_LOAD_ROW_PTRS1:
+    LDA TEMP_SPACE
+    STA BRD1_ROW_POINTERS,X
+    LDA TEMP_SPACE+1
+    STA BRD1_ROW_POINTERS+1,X
+    TXA
+    CMP #((BOARD_HEIGHT-1)*2)
+    BEQ DONE_LOAD_ROW_PTRS1
+    INX
+    INX ; We need to go by 2 byte increments, so increment twice
+    ; Calculate the next row start
+    CLC
+    LDA #(BOARD_WIDTH/8) ; Columns are single bits, so divide by 8 to get bytes
+    ADC TEMP_SPACE
+    STA TEMP_SPACE
+    LDA #0 ; Just add carry bit
+    ADC TEMP_SPACE+1
+    STA TEMP_SPACE+1
+    JMP LOOP_LOAD_ROW_PTRS1
+DONE_LOAD_ROW_PTRS1:
+    LDX #0  ; Start at row 0 , we'll increment up to row BOARD_HEIGHT-1
+    LDA #BOARD2_MEM_BASE_ADDR ; Low Byte
+    STA TEMP_SPACE
+    LDA #>BOARD2_MEM_BASE_ADDR ; High Byte
+    STA TEMP_SPACE+1
+LOOP_LOAD_ROW_PTRS2:
+    LDA TEMP_SPACE
+    STA BRD2_ROW_POINTERS,X
+    LDA TEMP_SPACE+1
+    STA BRD2_ROW_POINTERS+1,X
+    TXA
+    CMP #((BOARD_HEIGHT-1)*2)
+    BEQ DONE_LOAD_ROW_PTRS2
+    INX
+    INX ; We need to go by 2 byte increments, so increment twice
+    ; Calculate the next row start
+    CLC
+    LDA #(BOARD_WIDTH/8)    ; Columns are single bits, so divide by 8 to get bytes
+    ADC TEMP_SPACE
+    STA TEMP_SPACE
+    LDA #0 ; Just add carry bit
+    ADC TEMP_SPACE+1
+    STA TEMP_SPACE+1
+    JMP LOOP_LOAD_ROW_PTRS2
+DONE_LOAD_ROW_PTRS2:
+    RTS
+
 ; Subroutine to get the current cell value. Arguments are in X,Y , return value goes into A
 SUB_GET_CELL_VALUE:
     JSR SUB_GET_CELL_BYTE_ADDRESS
