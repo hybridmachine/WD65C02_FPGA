@@ -22,6 +22,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.TIMER_CONTROL.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -38,12 +39,14 @@ COMPONENT PIO_ELAPSED_TIMER is
         CLOCK_DIVIDER : natural := 100000 -- Assuming 100MHZ clock, this gives 1ms resolution
     );
     Port ( CLOCK : in STD_LOGIC;
-           RESET : in STD_LOGIC_VECTOR (7 downto 0);
+           CONTROL_REG : in STD_LOGIC_VECTOR (7 downto 0);
+           STATUS_REG : out STD_LOGIC_VECTOR (7 downto 0);
            TICKS_MS : out STD_LOGIC_VECTOR (31 downto 0));
 end COMPONENT;
 
 signal T_CLOCK : STD_LOGIC := '0';
-signal T_RESET : STD_LOGIC_VECTOR(7 downto 0) := (others=>'0');
+signal T_CONTROL_REG : STD_LOGIC_VECTOR(7 downto 0) := (others=>'0');
+signal T_STATUS_REG  : STD_LOGIC_VECTOR(7 downto 0) := (others=>'0');
 signal T_TICKS_MS : STD_LOGIC_VECTOR(31 downto 0);
 
 constant CLOCK_PERIOD : time := 100 ns; -- 10 MHZ
@@ -57,19 +60,24 @@ DUT : PIO_ELAPSED_TIMER
     generic map (CLOCK_DIVIDER => 10000)
     port map (
         CLOCK => T_CLOCK,
-        RESET => T_RESET,
+        CONTROL_REG => T_CONTROL_REG,
+        STATUS_REG => T_STATUS_REG,
         TICKS_MS => T_TICKS_MS);
         
 -- Main testing procss
 process
 variable TICKS_RECORDED : STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
 begin
-    T_RESET <= "00000001";
-    wait until T_TICKS_MS = x"00000000";
+    T_CONTROL_REG(CTL_BIT_RESET) <= CTL_TIMER_RESET;
+    wait until T_STATUS_REG(STS_BIT_STATE) = STS_TIMER_RESETTING;
     TICKS_RECORDED := T_TICKS_MS;
-    T_RESET <= "00000000";
+    T_CONTROL_REG(CTL_BIT_RESET) <= CTL_TIMER_RUN;
+    wait until T_STATUS_REG(STS_BIT_STATE) = STS_TIMER_RUNNING;
     wait for 20ms;
-    assert (to_integer(unsigned(T_TICKS_MS)) - to_integer(unsigned(TICKS_RECORDED))) >= 19 report "Timer did not elapse" severity failure;
+    assert (to_integer(unsigned(T_TICKS_MS)) - to_integer(unsigned(TICKS_RECORDED))) = 0 report "Timer elapsed but read wasn't set" severity failure;
+    T_CONTROL_REG(CTL_BIT_READREQ) <= READ_REQUESTED;
+    wait until T_STATUS_REG(STS_BIT_READRDY) = READ_READY;
+    assert (to_integer(unsigned(T_TICKS_MS)) - to_integer(unsigned(TICKS_RECORDED))) >= 19 report "Timer did not elapse as expected" severity failure;
     assert (false) report "Test completed succesfully" severity failure;
 end process;
 end Behavioral;
