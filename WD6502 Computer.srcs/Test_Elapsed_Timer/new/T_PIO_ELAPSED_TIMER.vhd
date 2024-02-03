@@ -78,6 +78,14 @@ begin
     T_CONTROL_REG(CTL_BIT_READREQ) <= READ_REQUESTED;
     wait until T_STATUS_REG(STS_BIT_READRDY) = READ_READY;
     assert (to_integer(unsigned(T_TICKS_MS)) - to_integer(unsigned(TICKS_RECORDED))) >= 19 report "Timer did not elapse as expected" severity failure;
+    TICKS_RECORDED := T_TICKS_MS;
+    wait for 20ms;
+    --Verify nothing changed on the value
+    assert (to_integer(unsigned(TICKS_RECORDED)) = to_integer(unsigned(T_TICKS_MS))) report "Timer elapsed when expected to be stable" severity failure;
+    T_CONTROL_REG(CTL_BIT_READREQ) <= READ_CLEAR; -- Tell the timer we are done with the read
+    wait for 20ms;
+    -- For now when we clear the read request, the timer is expected to just leave the last read value in place
+    assert (to_integer(unsigned(TICKS_RECORDED)) = to_integer(unsigned(T_TICKS_MS))) report "Timer elapsed when expected to be stable" severity failure;
     assert (false) report "Test completed succesfully" severity failure;
 end process;
 end Behavioral;
