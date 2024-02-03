@@ -21,7 +21,8 @@ del *.lst
 del *.sym
 WDC02AS -g -l -DUSING_02 GameOfLife.asm
 WDC02AS -g -l -DUSING_02 GameBoard.asm
+WDC02AS -g -l -DUSING_02 GameBoardV2.asm
 WDC02AS -g -l -DUSING_02 ..\lib\Multiply.asm -O Multiply.obj
 WDC02AS -g -l -DUSING_02 ..\lib\Divide.asm -O Divide.obj
-WDCLN -CFC00 -g -sz -t -HZ GameOfLife Multiply.obj Divide.obj GameBoard.obj
-WDCDB.exe
+WDCLN -CFC00 -g -sz -t -HZ GameOfLife Multiply.obj Divide.obj GameBoardV2.obj
+REM WDCDB.exe
