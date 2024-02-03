@@ -44,8 +44,28 @@ CELL_LIVE:              equ 1
 GENS_TO_LOOP:           equ 10
 
 
+; Zero page memory use is 228 bytes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Object             |  Bytes
+;-----------------------------
+; Page 00 (unused)      2  
+; BRD2_ROW_POINTERS	    96
+; BRD1_ROW_POINTERS	    96
+; CURRENT_GEN_PTR	    2
+; NEXT_GEN_PTR	        2
+; BOARD_PTR	            2
+; NBR_CNT	            2
+; CUR_X	                1
+; CUR_Y             	1
+; CELL_MASK_BASE	    8
+; CELL_MASK_INVERT	    8
+; CUR_CELL_PTR	        2
+; NEXT_CELL_PTR	        2   
+; TEMP_SPACE	        2
+; LOOP_CTR	            2
+
 ; Zero page locations
-ZERO_PAGE_BASE:         equ $10
+ZERO_PAGE_BASE:         equ $02
 BRD1_ROW_POINTERS:      equ ZERO_PAGE_BASE ; Board height * 2 for 16 bit pointers to each row start
 BRD2_ROW_POINTERS:      equ BRD1_ROW_POINTERS+ROW_POINTERS_LEN;
 CURRENT_GEN_PTR         equ BRD2_ROW_POINTERS+ROW_POINTERS_LEN ; Pointer to current generation board
@@ -167,6 +187,9 @@ OUTER_LOOP:
     ; Zero out neighbor count
     LDA #0
     STA NBR_CNT
+
+    ; Load the board row pointers
+    JSR SUB_LOAD_ROW_POINTERS
 
     ; Store off the end ptr for debugging    
     lda #BOARD1_MEM_END_ADDR
