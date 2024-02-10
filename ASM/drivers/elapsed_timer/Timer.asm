@@ -31,7 +31,7 @@ CODE
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
-    
+
     ; These values align with definitions in PKG_TIMER_CONTROL.vhd
     CTL_TIMER_RESET:            equ %00000001  ; Request timer reset
     CTL_TIMER_RUN:              equ %00000000  ; Set timer to run
@@ -46,7 +46,7 @@ CODE
     TIMER_CTL_ADDR:             equ $0205      ; Control byte for timer
     TIMER_STS_ADDR:             equ $0206      ; Status byte for timer
     TIMER_DATA_ADDR:            equ $0207      ; 4 byte block for timer data. Note only valid when STS_TIMER_READ_READY & TIMER_STS_ADDR = 
-                                            ; STS_TIMER_READ_READY
+                                               ; STS_TIMER_READ_READY
 
 
     GLOBAL TIMER_START
@@ -56,12 +56,35 @@ CODE
 ; Calls TIMER_RESET then sets timer running, causes timer to always restart from 0.
 TIMER_START:
     JSR TIMER_RESET
+    LDA #CTL_TIMER_RUN
+    STA TIMER_CTL_ADDR
     RTS
 
 ; Blocking call, reads timer then clears all of the timer read states, does not reset, allows timer to progress
 TIMER_READ:
+    LDA #CTL_READ_REQUESTED
+    STA TIMER_CTL_ADDR
+    ; Wait N iterations to read timer data
+    LDX #20
+LOOP_READ_WAIT:
+    DEX
+    BNE LOOP_READ_WAIT
+    ; If ready flag is set push timer data onto stack and return
+    LDA TIMER_STS_ADDR
+    AND #STS_TIMER_READ_READY
+    CMP #STS_TIMER_READ_READY
+    BNE RETURN_NO_DATA
+    ; Get stack pointer and write low, low+1, low+2, low+3 from low to high on bytes before return address
+    RTS
+RETURN_NO_DATA:
     RTS
 
 ; Stops the timer (leaves it in resetting state, call timer start to start timer)
 TIMER_RESET:
+    LDA #CTL_TIMER_RESET
+    STA TIMER_CTL_ADDR
+    LDX #10
+LOOP_HOLD_RESET:
+    DEX
+    BNE LOOP_HOLD_RESET
     RTS
