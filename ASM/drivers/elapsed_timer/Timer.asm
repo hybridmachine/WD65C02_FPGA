@@ -27,26 +27,31 @@
 ;
 ;***************************************************************************   
 
-; These values align with definitions in PKG_TIMER_CONTROL.vhd
-CTL_TIMER_RESET:            equ b00000001  ; Request timer reset
-CTL_TIMER_RUN:              equ b00000000  ; Set timer to run
-CTL_READ_REQUESTED:         equ b00000010  ; Request read
-CTL_READ_COMPLETED:         equ b00000000  ; Read complete (note logica and this with CTL_TIMER_RESET if you intend to reset on clear)
+CODE
+    CHIP	65C02
+    LONGI	OFF
+    LONGA	OFF
+    
+    ; These values align with definitions in PKG_TIMER_CONTROL.vhd
+    CTL_TIMER_RESET:            equ %00000001  ; Request timer reset
+    CTL_TIMER_RUN:              equ %00000000  ; Set timer to run
+    CTL_READ_REQUESTED:         equ %00000010  ; Request read
+    CTL_READ_COMPLETED:         equ %00000000  ; Read complete (note logica and this with CTL_TIMER_RESET if you intend to reset on clear)
 
-STS_TIMER_RUNNING:          equ b00000001  ; Timer is running
-STS_TIMER_RESETTING:        equ b00000000  ; Timer is resetting
-STS_TIMER_READ_READY:       equ b00000011  ; Read is ready, note we also expect the running flag to be set
-STS_TIMER_READ_CLEAR:       equ b00000001  ; Timer is running but data is not on the bus yet.
+    STS_TIMER_RUNNING:          equ %00000001  ; Timer is running
+    STS_TIMER_RESETTING:        equ %00000000  ; Timer is resetting
+    STS_TIMER_READ_READY:       equ %00000011  ; Read is ready, note we also expect the running flag to be set
+    STS_TIMER_READ_CLEAR:       equ %00000001  ; Timer is running but data is not on the bus yet.
 
-TIMER_CTL_ADDR:             equ $0205      ; Control byte for timer
-TIMER_STS_ADDR:             equ $0206      ; Status byte for timer
-TIMER_DATA_ADDR:            equ $0207      ; 4 byte block for timer data. Note only valid when STS_TIMER_READ_READY & TIMER_STS_ADDR = 
-                                           ; STS_TIMER_READ_READY
+    TIMER_CTL_ADDR:             equ $0205      ; Control byte for timer
+    TIMER_STS_ADDR:             equ $0206      ; Status byte for timer
+    TIMER_DATA_ADDR:            equ $0207      ; 4 byte block for timer data. Note only valid when STS_TIMER_READ_READY & TIMER_STS_ADDR = 
+                                            ; STS_TIMER_READ_READY
 
 
-GLOBAL TIMER_START
-GLOBAL TIMER_READ
-GLOBAL TIMER_RESET
+    GLOBAL TIMER_START
+    GLOBAL TIMER_READ
+    GLOBAL TIMER_RESET
 
 ; Calls TIMER_RESET then sets timer running, causes timer to always restart from 0.
 TIMER_START:
