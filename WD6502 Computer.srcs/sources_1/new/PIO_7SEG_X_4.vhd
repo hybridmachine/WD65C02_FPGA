@@ -29,7 +29,7 @@ use work.SEVEN_SEGMENT_CA.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
---! \author Brian Tabone
+--! @author Brian Tabone
 --! @brief Seven segment x 4 LED display driver
 --! @details Supports both common anode and common cathode types, also allows
 --! specifying the active level (high or low)
