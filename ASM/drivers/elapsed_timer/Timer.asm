@@ -32,6 +32,7 @@ CODE
     LONGI	OFF
     LONGA	OFF
 
+    STACK_BASE:                 equ $0100      ; Stack base address
     ; These values align with definitions in PKG_TIMER_CONTROL.vhd
     CTL_TIMER_RESET:            equ %00000001  ; Request timer reset
     CTL_TIMER_RUN:              equ %00000000  ; Set timer to run
@@ -74,8 +75,21 @@ LOOP_READ_WAIT:
     AND #STS_TIMER_READ_READY
     CMP #STS_TIMER_READ_READY
     BNE RETURN_NO_DATA
-    ; Get stack pointer and write low, low+1, low+2, low+3 from low to high on bytes before return address
-    RTS
+    TSX ; Load stack pointer into X
+    INX ; Move pointer to return address
+    INX ; Move pointer over return address
+    ; Get stack pointer and write low, low+1, low+2, low+3 from low to high on stack bytes before return address
+    LDA TIMER_DATA_ADDR
+    STA (STACK_BASE,X) 
+    INX
+    LDA TIMER_DATA_ADDR+1
+    STA (STACK_BASE,X) 
+    INX
+    LDA TIMER_DATA_ADDR+2
+    STA (STACK_BASE,X)
+    INX
+    LDA TIMER_DATA_ADDR+3
+    STA (STACK_BASE,X)
 RETURN_NO_DATA:
     RTS
 

@@ -38,5 +38,11 @@ CODE
 START:
 
     JSR TIMER_START
+    LDA #0
+    ; Put four empty bytes on the stack, function will return counter val here
+    PHA
+    PHA
+    PHA
+    PHA
     JSR TIMER_READ
     BRK
