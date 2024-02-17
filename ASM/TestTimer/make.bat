@@ -22,4 +22,4 @@ del *.sym
 WDC02AS -g -l -DUSING_02 TestTimer.asm
 WDC02AS -g -l -DUSING_02 ..\drivers\elapsed_timer\Timer.asm -O Timer.obj
 WDCLN -CFC00 -g -sz -t -HZ TestTimer Timer.obj
-REM WDCDB.exe
+WDCDB.exe

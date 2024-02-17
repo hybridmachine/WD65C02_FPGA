@@ -26,6 +26,10 @@
 ;  
 ;
 ;***************************************************************************   
+
+; Constants
+    TIMER_READ_VALUE:   equ $10 ; 4 byte value returned by timer, low byte at $10, high byte at $13
+
 CODE
     CHIP	65C02
     LONGI	OFF
@@ -34,10 +38,22 @@ CODE
     XREF TIMER_START
     XREF TIMER_READ
     XREF TIMER_RESET
-
 START:
 
     JSR TIMER_START
+    LDY #$FF
+; Give the timer some time to run
+DELAY_OUTER_LOOP:
+    LDX #$FF
+    ; If Y == 0 read timer
+    DEY
+    BEQ READ_TIMER
+DELAY_INNER_LOOP:
+    DEX
+    ; If X > 0 repeat X--
+    BNE DELAY_INNER_LOOP
+    JMP DELAY_OUTER_LOOP
+READ_TIMER:
     LDA #0
     ; Put four empty bytes on the stack, function will return counter val here
     PHA
@@ -45,4 +61,65 @@ START:
     PHA
     PHA
     JSR TIMER_READ
+    PLA
+    STA TIMER_READ_VALUE
+    PLA
+    STA TIMER_READ_VALUE+1
+    PLA
+    STA TIMER_READ_VALUE+2
+    PLA
+    STA TIMER_READ_VALUE+3
     BRK
+
+;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
+unexpectedInt:		; $FFE0 - IRQRVD2(134)
+	php
+	pha
+	lda #$FF
+	
+	;clear Irq
+	pla
+	plp
+	rti
+
+IRQHandler:
+		pla
+		rti
+
+	bits:	db	1
+	cnt:	db	0
+	wraps:	dw	0
+	delay:	db	10
+
+;***************************************************************************
+;***************************************************************************
+; New for WDCMON V1.04
+;  Needed to move Shadow Vectors into proper area
+;***************************************************************************
+;***************************************************************************
+SH_vectors:	section
+Shadow_VECTORS	SECTION OFFSET $7EFA
+        ;65C02 Interrupt Vectors
+        ; Common 8 bit Vectors for all CPUs
+
+		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
+		dw	START				; $FFFC -  RESET (ALL)
+		dw	IRQHandler			; $FFFE -  IRQBRK (ALL)
+
+ends
+
+
+;***************************************************************************
+
+vectors	SECTION OFFSET $FFFA
+        ;65C02 Interrupt Vectors
+        ; Common 8 bit Vectors for all CPUs
+
+		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
+		dw	START		; $FFFC -  RESET (ALL)
+		dw	IRQHandler	; $FFFE -  IRQBRK (ALL)
+
+    ends
+end ; SH_vectors 
+
+END ; CODE

@@ -76,20 +76,21 @@ LOOP_READ_WAIT:
     CMP #STS_TIMER_READ_READY
     BNE RETURN_NO_DATA
     TSX ; Load stack pointer into X
-    INX ; Move pointer to return address
-    INX ; Move pointer over return address
+    INX ; Move pointer to return address Low
+    INX ; Move pointer over return address High
+    INX ; Move pointer over return address to first free space
     ; Get stack pointer and write low, low+1, low+2, low+3 from low to high on stack bytes before return address
     LDA TIMER_DATA_ADDR
-    STA (STACK_BASE,X) 
+    STA STACK_BASE,X 
     INX
     LDA TIMER_DATA_ADDR+1
-    STA (STACK_BASE,X) 
+    STA STACK_BASE,X 
     INX
     LDA TIMER_DATA_ADDR+2
-    STA (STACK_BASE,X)
+    STA STACK_BASE,X
     INX
     LDA TIMER_DATA_ADDR+3
-    STA (STACK_BASE,X)
+    STA STACK_BASE,X
 RETURN_NO_DATA:
     RTS
 
@@ -102,3 +103,4 @@ LOOP_HOLD_RESET:
     DEX
     BNE LOOP_HOLD_RESET
     RTS
+END ; CODE
