@@ -37,7 +37,7 @@ def format_as_vhd_hex(data_lines):
         vhd_formatted.append(vhd_line)
     return vhd_formatted
 
-def replace_vhd_data(vhd_template, new_data, pad_length=256):
+def replace_vhd_data(vhd_template, new_data, source_filename, pad_length=256):
     """Replace the data section in the VHD template with new data, and pad to the specified length."""
     start_tag = "-- ROM CONTENT BEGIN"
     end_tag = "-- ROM CONTENT END"
@@ -50,7 +50,7 @@ def replace_vhd_data(vhd_template, new_data, pad_length=256):
     pad_count = pad_length - len(new_data)
     padding = [f'x"00", x"00", x"00", x"00"' for _ in range(pad_count)]
     padded_data = new_data + padding
-    new_vhd_content = header + '\n' + ',\n'.join(padded_data) + '\n' + footer
+    new_vhd_content = header + '\n' + '-- Source File: ' + source_filename + '\n' + ',\n'.join(padded_data) + '\n' + footer
     return new_vhd_content
 
 
@@ -81,6 +81,6 @@ if __name__ == "__main__":
     formatted_data = format_as_vhd_hex(converted_data)
 
     # Replace the data section in the VHD template and save to output file
-    new_vhd_content = replace_vhd_data(vhd_template, formatted_data)
+    new_vhd_content = replace_vhd_data(vhd_template, formatted_data, args.hex_file)
     with open(args.output_vhd, 'w') as f:
         f.write(new_vhd_content)

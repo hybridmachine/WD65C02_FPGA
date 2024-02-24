@@ -37,7 +37,7 @@ CODE
     CTL_TIMER_RESET:            equ %00000001  ; Request timer reset
     CTL_TIMER_RUN:              equ %00000000  ; Set timer to run
     CTL_READ_REQUESTED:         equ %00000010  ; Request read
-    CTL_READ_COMPLETED:         equ %00000000  ; Read complete (note logica and this with CTL_TIMER_RESET if you intend to reset on clear)
+    CTL_READ_COMPLETED:         equ %00000000  ; Read complete (note logical and this with CTL_TIMER_RESET if you intend to reset on clear)
 
     STS_TIMER_RUNNING:          equ %00000001  ; Timer is running
     STS_TIMER_RESETTING:        equ %00000000  ; Timer is resetting
@@ -61,7 +61,8 @@ TIMER_START:
     STA TIMER_CTL_ADDR
     RTS
 
-; Blocking call, reads timer then clears all of the timer read states, does not reset, allows timer to progress
+; Reads timer then clears all of the timer read states, does not reset, allows timer to progress
+; Blocking call (for at least 20 cycles). 
 TIMER_READ:
     LDA #CTL_READ_REQUESTED
     STA TIMER_CTL_ADDR
@@ -76,7 +77,7 @@ LOOP_READ_WAIT:
     CMP #STS_TIMER_READ_READY
     BNE RETURN_NO_DATA
     TSX ; Load stack pointer into X
-    INX ; Move pointer to return address Low
+    INX ; Move pointer to return address Low        
     INX ; Move pointer over return address High
     INX ; Move pointer over return address to first free space
     ; Get stack pointer and write low, low+1, low+2, low+3 from low to high on stack bytes before return address
@@ -92,6 +93,9 @@ LOOP_READ_WAIT:
     LDA TIMER_DATA_ADDR+3
     STA STACK_BASE,X
 RETURN_NO_DATA:
+    ; Let the timer know we are done with our read
+    LDA #CTL_READ_COMPLETED
+    STA TIMER_CTL_ADDR
     RTS
 
 ; Stops the timer (leaves it in resetting state, call timer start to start timer)

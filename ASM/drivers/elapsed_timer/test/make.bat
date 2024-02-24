@@ -1,5 +1,5 @@
-REM Game Of Life for FPGA 65C02 computer
-REM 11/24/2023
+REM Elapsed Timer Test Application for FPGA 65C02 Computer
+REM 02/24/2024
 
 del *.bin
 del *.obj
@@ -20,6 +20,6 @@ del *.obj
 del *.lst
 del *.sym
 WDC02AS -g -l -DUSING_02 TestTimer.asm
-WDC02AS -g -l -DUSING_02 ..\drivers\elapsed_timer\Timer.asm -O Timer.obj
+WDC02AS -g -l -DUSING_02 ..\Timer.asm -O Timer.obj
 WDCLN -CFC00 -g -sz -t -HZ TestTimer Timer.obj
 WDCDB.exe
