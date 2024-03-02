@@ -7,7 +7,6 @@
 -- Module Name: PKG_TIMER_CONTROL - Behavioral
 -- Project Name: 
 -- Target Devices: 
-.3
 -- Tool Versions: 
 -- Description: 
 -- 
