@@ -36,9 +36,9 @@ end T_MEMORY_MANAGER;
 architecture Behavioral of T_MEMORY_MANAGER is
 
 COMPONENT MemoryManager is
-    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0); --! Read data
-           BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0); --! Data to be written
-           BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0); --! Read/Write address
+    Port ( BUS_READ_DATA : out DATA_65C02_T; --! Read data
+           BUS_WRITE_DATA : in DATA_65C02_T; --! Data to be written
+           BUS_ADDRESS : in ADDRESS_65C02_T; --! Read/Write address
            MEMORY_CLOCK : in STD_LOGIC; --! Memory clock, typically full FPGA clock speed
            WRITE_FLAG : in STD_LOGIC; --! When 1, write data to address, otherwise read address and output on data line
            PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
@@ -48,9 +48,9 @@ COMPONENT MemoryManager is
            );
 end COMPONENT;
 
-signal T_BUS_READ_DATA : STD_LOGIC_VECTOR (7 downto 0);
-signal T_BUS_WRITE_DATA : STD_LOGIC_VECTOR (7 downto 0);
-signal T_BUS_ADDRESS : STD_LOGIC_VECTOR (15 downto 0);
+signal T_BUS_READ_DATA : DATA_65C02_T;
+signal T_BUS_WRITE_DATA : DATA_65C02_T;
+signal T_BUS_ADDRESS : ADDRESS_65C02_T;
 signal T_MEMORY_CLOCK : STD_LOGIC;
 signal T_WRITE_FLAG : STD_LOGIC;
 signal T_PIO_LED_OUT : STD_LOGIC_VECTOR (7 downto 0);
@@ -156,7 +156,8 @@ begin
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     assert (T_PIO_LED_OUT = x"ED") report "LED control lines do not match requested" severity error;
 
-    assert (false) report "Test complete, test successful" severity failure;
+    report("Test completed successfully");
+    wait;
     
     
 end process;
