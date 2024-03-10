@@ -23,6 +23,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 package TIMER_CONTROL is
+    subtype TIMER_CTRL_T     is STD_LOGIC_VECTOR(7 downto 0); -- Control register width
+    subtype TIMER_VALUE_T    is STD_LOGIC_VECTOR(31 downto 0);  -- Timer data register width
     constant CTL_BIT_RESET   : natural := 0;    -- Set to high to request reset, low to start timer
     constant CTL_BIT_READREQ : natural := 1;    -- Set to high when read is requested by external CPU
     constant CTL_BIT_RESERV2 : natural := 2;    -- Reserved for future use

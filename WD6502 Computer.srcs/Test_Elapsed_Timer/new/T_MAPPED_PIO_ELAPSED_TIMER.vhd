@@ -58,7 +58,7 @@ signal T_PIO_7SEG_COMMON : STD_LOGIC_VECTOR(3 downto 0);
 signal T_PIO_7SEG_SEGMENTS : STD_LOGIC_VECTOR(7 downto 0);
 signal T_RESET : STD_LOGIC;
 
-constant CLOCK_PERIOD : time := 100ns; -- 10mhz
+constant CLOCK_PERIOD : time := 10ns; -- 100mhz
 
 begin
 
@@ -87,6 +87,7 @@ end process;
 -- The test process
 process
 variable T_TIMER_CTL_VALUE : std_logic_vector(7 downto 0);
+variable T_TIMER_LAST_READ_VALUE : TIMER_VALUE_T;
 begin
 -- Reset then start timer
 T_TIMER_CTL_VALUE := "00000000";
@@ -119,7 +120,7 @@ assert(T_BUS_READ_DATA = x"00") report "Unexpected data on timer bus" severity e
 
 -- Tell timer we want to read
 T_TIMER_CTL_VALUE := "00000000";
-T_TIMER_CTL_VALUE(CTL_BIT_READREQ) := READ_REQUESTED;
+T_TIMER_CTL_VALUE(CTL_BIT_READREQ) := CTL_TIMER_RUN or READ_REQUESTED;
 T_WRITE_FLAG <= '1';
 T_BUS_ADDRESS <= PIO_TIMER_CTL;
 T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
@@ -130,14 +131,37 @@ T_WRITE_FLAG <= '0';
 T_BUS_ADDRESS <= PIO_TIMER_VAL_MS;
 wait for 3000ns;
 assert(T_BUS_READ_DATA > x"00") report "Unexpected data on timer bus" severity error;
+T_TIMER_LAST_READ_VALUE(7 downto 0) := T_BUS_READ_DATA;
 
 -- Let timer know we are done with the read
+T_TIMER_CTL_VALUE := "00000000";
+T_TIMER_CTL_VALUE(CTL_BIT_READREQ) := CTL_TIMER_RUN or READ_CLEAR;
+T_WRITE_FLAG <= '1';
+T_BUS_ADDRESS <= PIO_TIMER_CTL;
+T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
 
 -- Verify same data on data lines
-
+wait for 3000ns;
+T_WRITE_FLAG <= '0';
+T_BUS_ADDRESS <= PIO_TIMER_VAL_MS;
+wait for 3000ns;
+assert(T_BUS_READ_DATA = T_TIMER_LAST_READ_VALUE(7 downto 0)) report "Unexpected data on timer bus" severity error;
 -- Tell timer we want to read again
+wait for 5ms;
+T_TIMER_CTL_VALUE := "00000000";
+T_TIMER_CTL_VALUE(CTL_BIT_READREQ) := CTL_TIMER_RUN or READ_REQUESTED;
+T_WRITE_FLAG <= '1';
+T_BUS_ADDRESS <= PIO_TIMER_CTL;
+T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
 
 -- Verify new data on data lines
+wait for 3000ns;
+T_WRITE_FLAG <= '0';
+T_BUS_ADDRESS <= PIO_TIMER_VAL_MS;
+wait for 5ms;
+assert(T_BUS_READ_DATA > T_TIMER_LAST_READ_VALUE(7 downto 0)) report "Unexpected data on timer bus" severity error;
+report "Test completed successfully!";
+wait;
 end process;
 
 end Behavioral;
