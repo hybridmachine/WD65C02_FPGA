@@ -20,4 +20,4 @@ REM Build the simulator exe.
 WDCLN -CFC00 -G -SZ -T -V -HZ ElapsedTimerDisplay Timer.obj
 
 REM Start the simulator
-REM WDCDB.exe
+WDCDB.exe
