@@ -67,7 +67,8 @@ CODE
 ;***************************************************************************
 ;
 		TIMER_READ_VALUE:   equ $10 ; 4 byte value returned by timer, low byte at $10, high byte at $13
-
+		WAIT_COUNT_OUTER:	equ $20 ; Number of outer loops for timer delay
+		WAIT_COUNT_INNER:	equ $20 ; Inner loop count for timer delay
 START:
 		sei             ; Ignore maskable interrupts
         clc             ; Clear carry
@@ -83,9 +84,9 @@ START:
 		jsr TIMER_START
 ; Give the timer some time to run
 WAIT_FOR_TIMER:
-		ldy #$FF
+		ldy #WAIT_COUNT_OUTER
 DELAY_OUTER_LOOP:
-		ldx #$FF
+		ldx #WAIT_COUNT_INNER
 		; If Y == 0 read timer
 		dey
 		beq READ_TIMER
