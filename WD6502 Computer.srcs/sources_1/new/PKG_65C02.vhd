@@ -23,9 +23,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 package W65C02_DEFINITIONS is
     -- Pin types
-    subtype ADDRESS_T      is STD_LOGIC_VECTOR(15 downto 0);         -- Address bus
+    subtype ADDRESS_65C02_T      is STD_LOGIC_VECTOR(15 downto 0);         -- Address bus
     subtype BE_T           is STD_LOGIC;                        -- Bus Enable
-    subtype DATA_T         is STD_LOGIC_VECTOR (7 downto 0);    -- Data bus
+    subtype DATA_65C02_T         is STD_LOGIC_VECTOR (7 downto 0);    -- Data bus
     subtype IRQB_T         is STD_LOGIC;                        -- Interrupt Request
     subtype MLB_T          is STD_LOGIC;                        -- Memory Lock
     subtype NMIB_T         is STD_LOGIC;                        -- Non-Maskable Interrupt

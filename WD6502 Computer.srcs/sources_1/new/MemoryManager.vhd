@@ -28,9 +28,9 @@ use work.W65C02_DEFINITIONS.ALL;
 --! @details Implements the memory map as specified in PKG_65C02. Also manages the boot vector
 --! Note boot vector and start address in ROM assembly must match
 entity MemoryManager is
-    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0); --! Read data
-           BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0); --! Data to be written
-           BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0); --! Read/Write address
+    Port ( BUS_READ_DATA : out DATA_65C02_T; --! Read data
+           BUS_WRITE_DATA : in DATA_65C02_T; --! Data to be written
+           BUS_ADDRESS : in ADDRESS_65C02_T; --! Read/Write address
            MEMORY_CLOCK : in STD_LOGIC; --! Memory clock, typically full FPGA clock speed
            WRITE_FLAG : in STD_LOGIC; --! When 1, write data to address, otherwise read address and output on data line
            PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
