@@ -71,8 +71,9 @@ BRD2_ROW_POINTERS:      equ BRD1_ROW_POINTERS+ROW_POINTERS_LEN;
 CURRENT_GEN_PTR         equ BRD2_ROW_POINTERS+ROW_POINTERS_LEN ; Pointer to current generation board
 NEXT_GEN_PTR            equ CURRENT_GEN_PTR+2
 BOARD_PTR:              equ NEXT_GEN_PTR+2 ; Pointer argument for get, set cell function calls
-                        ; Note the 2 bytes after BOARD_PTR will be the address for BRD#_ROW_POINTERS
-NBR_CNT:                equ BOARD_PTR+4 ; Store count of neighbors during gen calculation
+                        ; Note the 2 bytes after BOARD_PTR will be the address for BOARD_ROW_PTRS
+BOARD_ROW_PTRS_BASE:    equ BOARD_PTR+2 ; Pointer to current row in the board
+NBR_CNT:                equ BOARD_ROW_PTRS+2 ; Store count of neighbors during gen calculation
 CUR_X:                  equ NBR_CNT+1
 CUR_Y:                  equ CUR_X+1
 CELL_MASK_BASE          equ CUR_Y+1
@@ -104,6 +105,7 @@ CODE
 
     GLOBAL CUR_CELL_PTR
     GLOBAL BOARD_PTR
+    GLOBAL BOARD_ROW_PTRS
     GLOBAL CELL_MASK_BASE
     GLOBAL CELL_MASK_INVERT
     GLOBAL BOARD_WIDTH
@@ -127,35 +129,6 @@ START:
 
     LDA #$01
     STA SEVEN_SEG_ACT_ADDR ; Turn the seven segment display on
-
-INIT_ROW_PTRS:
-    LDA #BOARD1_MEM_BASE_ADDR
-    STA BOARD_PTR
-    LDA #>BOARD1_MEM_BASE_ADDR
-    STA BOARD_PTR+1
-
-    ; We know BRD#_ROW_POINTERS are in the zero page
-    LDA BRD1_ROW_POINTERS
-    STA BOARD_PTR+2
-    LDA #0
-    STA BOARD_PTR+3
-
-    JSR SUB_LOAD_ROW_POINTERS
-
-    LDA #BOARD2_MEM_BASE_ADDR
-    STA BOARD_PTR
-    LDA #>BOARD2_MEM_BASE_ADDR
-    STA BOARD_PTR+1
-
-    ; We know BRD#_ROW_POINTERS are in the zero page
-    LDA BRD2_ROW_POINTERS
-    STA BOARD_PTR+2
-    ; We already loaded zero here above, no need to do it again
-    ;LDA #0
-    ;STA BOARD_PTR+3
-
-    JSR SUB_LOAD_ROW_POINTERS
-    ; End init row pointers
     
 OUTER_LOOP:
     ; Load the generation pointers
