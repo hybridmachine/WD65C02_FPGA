@@ -35,7 +35,8 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+
+    INCLUDE "inc/PageZero.inc"    ; Page zero usage locations
 
 
 ;***************************************************************************
@@ -47,7 +48,7 @@ CODE
 ;                              External Modules
 ;***************************************************************************
 
-    ; void InitBoard(uint16 baseAddr, uint8 width, uint8 height)
+    ; void InitBoard(uint16 baseAddr, uint8 width, uint8 height, uint8 initVal)
     XREF SUB_INITBOARD
     ; void SetBit(uint16 baseAddr, uint8 x, uint8 y, uint8 bit)
     XREF SUB_SETBIT
@@ -63,8 +64,14 @@ CODE
 ;***************************************************************************
 ;                               Local Constants
 ;***************************************************************************
-;
 
+    BOARD_WIDTH:          equ    40
+    BOARD_HEIGHT:         equ    40
+    BOARD1_BASE_ADDR:     equ    $0300
+    BOARD2_BASE_ADDR:     equ    BOARD1_BASE_ADDR+(BOARD_WIDTH*BOARD_HEIGHT)
+    CELL_DEAD:            equ    0
+    CELL_LIVE:            equ    1
+    TEST_PATTERN:         equ    $CC
 START:
 		sei             ; Ignore maskable interrupts
         clc             ; Clear carry
@@ -76,9 +83,20 @@ START:
 ;***************************************************************************
 ;                               Application Code
 ;***************************************************************************
-;
 
-
+        ; baseAddr
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        lda #BOARD_WIDTH    ; width
+        sta ARG1
+        lda #BOARD_HEIGHT   ; height
+        sta ARG2
+        lda #TEST_PATTERN   ; initval
+        sta ARG3  
+        jsr SUB_INITBOARD
+        brk
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php

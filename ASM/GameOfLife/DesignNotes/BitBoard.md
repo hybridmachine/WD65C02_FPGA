@@ -3,8 +3,8 @@
 The Bit Board implements a 2D gameboard of bits. It provides get and set methods for individual bits, as well as methods for  clearing the board. 
 
 ## Methods
-### public `void InitBoard(uint16 baseAddr, uint8 width, uint8 height)`
-Constructor for the BitBoard. Initializes the board to all zeros.
+### public `void InitBoard(uint16 baseAddr, uint8 width, uint8 height, uint8 initval)`
+Constructor for the BitBoard. Initializes the board to all initval.
 ### public `void SetBit(uint16 baseAddr, uint8 x, uint8 y, uint8 bit)`
 Sets the bit at the given x and y coordinates to the given value. X argument is in X register, Y argument in Y register, bit value in the accumulator, baseAddr is pushed onto the stack before the call.
 ### public `uint8 GetBit(uint16 baseAddr, uint8 x, uint8 y)`
