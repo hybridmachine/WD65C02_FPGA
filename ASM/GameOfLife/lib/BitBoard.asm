@@ -161,22 +161,60 @@ LOOP_ROW_PTR:
     inx
     cpx HEIGHT
     bne LOOP_ROW_PTR
-    ldy WIDTH
-    ldx HEIGHT
+    ldx #0
+    ldy #0
+    ; 0 indexed to subtract one from width and height, we go from 0 to N-1 for N positions
 LOOP_ROW:
 LOOP_COL:
+    ; Save arg1 and arg2
+    lda ARG1
+    pha
+    lda ARG2
+    pha
+    ; Save off x and y
+    phx
+    phy
+ 
+    ; Setup arguments to set bit
+    txa 
+    sta ARG1
+    tya
+    sta ARG2
     lda INITVAL
-    sta (PTR1),Y   
-    dey
-    bne LOOP_COL
-    sta (PTR1),Y  ; Store pattern in last byte then reset Y
-    ldy WIDTH
-    dex
+    sta ARG3
+    ; PTR1 is already set to the board
+    jsr SUB_SETBIT
+    ; restore x,y, and args
+    ply
+    plx
+    pla
+    sta ARG2
+    pla
+    sta ARG1
+    inx
+    cpx WIDTH 
+    bne LOOP_COL ; When x == WIDTH, we are done with this row
+    ldx #0
+    iny
+    cpy HEIGHT ; when y == HEIGHT, we are done with the board
     bne LOOP_ROW
     rts
 
-; void SetBit(uint8 x, uint8 y, uint8 bit)
+; void SetBit(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2, uint8 bitval:ARG3)
 SUB_SETBIT:
+    ; Put the target row start location in scratch
+    asl ARG2 # Multiply by 2, since each pointers is two bytes
+    ldy ARG2
+    lda (PTR1),Y
+    sta SCRATCH
+    iny
+    lda (PTR1),Y
+    sta SCRATCH+1
+    ; We have the row start, now find the byte in that row (the X position)
+    ldy ARG1
+    ; Load the bit pattern we want to set in this position
+    lda ARG3
+    sta (SCRATCH),Y
     rts
 
 SUB_GETBIT:
