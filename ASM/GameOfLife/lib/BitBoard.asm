@@ -217,7 +217,19 @@ SUB_SETBIT:
     sta (SCRATCH),Y
     rts
 
+; uint8 GetBit(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2) - Returns value in accumulator
 SUB_GETBIT:
+    ; Put the target row start location in scratch
+    asl ARG2 # Multiply by 2, since each pointers is two bytes
+    ldy ARG2
+    lda (PTR1),Y
+    sta SCRATCH
+    iny
+    lda (PTR1),Y
+    sta SCRATCH+1
+    ; We have the row start, now find the byte in that row (the X position)
+    ldy ARG1
+    lda (SCRATCH),Y
     rts
 
 PRIV_GETBITADDR:

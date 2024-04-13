@@ -67,8 +67,9 @@ CODE
 
     BOARD_WIDTH:          equ    40
     BOARD_HEIGHT:         equ    40
+    ROW_PTRS_ARRAY_LEN:   equ    2*BOARD_HEIGHT
     BOARD1_BASE_ADDR:     equ    $0300
-    BOARD2_BASE_ADDR:     equ    BOARD1_BASE_ADDR+(BOARD_WIDTH*BOARD_HEIGHT)
+    BOARD2_BASE_ADDR:     equ    BOARD1_BASE_ADDR+(BOARD_WIDTH*BOARD_HEIGHT)+ROW_PTRS_ARRAY_LEN
     CELL_DEAD:            equ    0
     CELL_LIVE:            equ    1
     TEST_PATTERN:         equ    $CC
@@ -84,19 +85,67 @@ START:
 ;                               Application Code
 ;***************************************************************************
 
+        ; Initialize board 1
         ; baseAddr
         lda #BOARD1_BASE_ADDR
         sta PTR1 
         lda #>BOARD1_BASE_ADDR
         sta PTR1+1
-        lda #BOARD_WIDTH    ; width
+        lda #BOARD_WIDTH        ; width
         sta ARG1
-        lda #BOARD_HEIGHT   ; height
+        lda #BOARD_HEIGHT       ; height
         sta ARG2
-        lda #TEST_PATTERN   ; initval
+        lda #TEST_PATTERN       ; initval $CC
         sta ARG3  
         jsr SUB_INITBOARD
+
+        ; Initialize board 2
+        lda #BOARD2_BASE_ADDR
+        sta PTR1
+        lda #>BOARD2_BASE_ADDR
+        sta PTR1+1
+        lda #BOARD_WIDTH        ; width
+        sta ARG1
+        lda #BOARD_HEIGHT       ; height
+        sta ARG2
+        lda #TEST_PATTERN-$11    ; initval $BB
+        sta ARG3 
+        jsr SUB_INITBOARD
+
+        ; Set individual pixel 1,5 (0 indexed) off
+        ; Setup arguments to set bit
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        lda #1
+        sta ARG1
+        lda #5
+        sta ARG2
+        lda #CELL_DEAD
+        sta ARG3
+        jsr SUB_SETBIT
+
+        ; Get individual pixel and test its value. First check
+        ; a bit that should be at test_pattern then check a bit that should be at cell_dead
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        lda #2
+        sta ARG1
+        lda #5
+        sta ARG2
+        jsr SUB_GETBIT
+        CMP #TEST_PATTERN
+        lda #1
+        sta ARG1
+        lda #5
+        sta ARG2
+        jsr SUB_GETBIT
+        CMP #CELL_DEAD
         brk
+
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php
