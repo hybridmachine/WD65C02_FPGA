@@ -71,7 +71,10 @@ CODE
     BOARD2_BASE_ADDR:     equ    BOARD1_BASE_ADDR+(BOARD_WIDTH*BOARD_HEIGHT)+ROW_PTRS_ARRAY_LEN
     CELL_DEAD:            equ    0
     CELL_LIVE:            equ    1
-
+    ; Argument positions for BitBoard subroutines
+    COL_X:                equ    ARG1   ; x    
+    ROW_Y:                equ    ARG2   ; y
+    CELL_STATUS:          equ    ARG3   ; bit on/off
 ;***************************************************************************
 ;                               Application Code
 ;***************************************************************************
@@ -110,6 +113,53 @@ START:
         lda #CELL_DEAD          ; initval CELL_DEAD
         sta ARG3 
         jsr SUB_INITBOARD
+
+LOAD_R_PENTOMINO:
+        ; Load an R-Pentomino into gameboard
+        ;   **
+        ;  **
+        ;   *
+        ; Set the current gen board as the board we are operating on
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        lda #BOARD_WIDTH/2
+        sta COL_X
+        lda #BOARD_HEIGHT/2-1
+        sta ROW_Y
+        lda #CELL_LIVE
+        sta CELL_STATUS
+        jsr SUB_SETBIT
+        lda #BOARD_WIDTH/2+1
+        sta COL_X
+        lda #BOARD_HEIGHT/2-1
+        sta ROW_Y
+        lda #CELL_LIVE
+        sta CELL_STATUS
+        jsr SUB_SETBIT
+        lda #BOARD_WIDTH/2
+        sta COL_X
+        lda #BOARD_HEIGHT/2
+        sta ROW_Y
+        lda #CELL_LIVE
+        sta CELL_STATUS
+        jsr SUB_SETBIT
+        lda #BOARD_WIDTH/2-1
+        sta COL_X
+        lda #BOARD_HEIGHT/2
+        sta ROW_Y
+        lda #CELL_LIVE
+        sta CELL_STATUS
+        jsr SUB_SETBIT
+        lda #BOARD_WIDTH/2
+        sta COL_X
+        lda #BOARD_HEIGHT/2+1
+        sta ROW_Y
+        lda #CELL_LIVE
+        sta CELL_STATUS
+        jsr SUB_SETBIT
+
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
