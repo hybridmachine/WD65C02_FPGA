@@ -72,6 +72,9 @@ CODE
     WIDTH:          EQU     ARG1
     HEIGHT:         EQU     ARG2
     BOARD_OFFSET:   EQU     SCRATCH+2
+    NBR_CNT:        EQU     SCRATCH+2
+    ROW_PTR:        EQU     SCRATCH
+    CELL_PTR:       EQU     PTR2
 
 ;***************************************************************************
 ;                               Library Code
@@ -232,7 +235,53 @@ SUB_GETBIT:
     lda (SCRATCH),Y
     rts
 
-PRIV_GETBITADDR:
+; uint8 GetLiveNeighborCount(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2, uint8 width:ARG3))
+; Returns the number of live neighbors immediately bounding the x,y position
+; Important NOTE: This routine assumes it is not on the board boundary, that there is always a valid
+; X-1, X+1, Y-1, Y+1 position.
+SUB_GET_LIVE_NEHIHBOR_COUNT:
+    ; Zero out the neighbor count
+    lda #0
+    sta NBR_CNT
+
+    ; PT1 is already setup, ARG1 and ARG2 have the offsets already, get the cell pointer
+    jsr PRIV_GETCELLADDR
+    ; Cell address is now in CELL_PTR
+
+    ldy #-1
+    ; Check left neighbor
+    lda (CELL_PTR),Y
+    clc
+    adc NBR_CNT
+    sta NBR_CNT
+
+    ; Check right neighbor
+    ldy #1
+    lda (CELL_PTR),Y
+    clc
+    adc NBR_CNT
+    sta NBR_CNT
+
+    ; Check top neighbor
+    sec
+    ;lda 
+    rts
+
+; uint16 GetBitAddr(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2)
+; Returns the address of the bit at x,y, into ptr2
+PRIV_GETCELLADDR:
+    ; Put the target row start location in scratch
+    asl ARG2 # Multiply by 2, since each pointers is two bytes
+    ldy ARG2
+    lda (PTR1),Y
+    sta CELL_PTR
+    iny
+    lda (PTR1),Y
+    sta CELL_PTR+1
+    ; We have the row start, now find the byte in that row (the X position)
+    lda ARG1
+    clc
+    adc CELL_PTR
     rts
 
 END ; CODE

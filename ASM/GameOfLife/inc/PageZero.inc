@@ -36,6 +36,6 @@
     ; Space for two 16 bit pointers
     PTR1:       equ    ARG4+1
     PTR2:       equ    PTR1+2
-    ; Scratch space for functions to use for calculationsd
+    ; Scratch space for functions to use for calculations
     SCRATCH:    equ    PTR2+2
     PAGEZ_END:  equ    SCRATCH+4
