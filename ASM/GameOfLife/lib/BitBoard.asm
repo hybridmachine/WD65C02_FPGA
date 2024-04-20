@@ -50,6 +50,9 @@ CODE
     GLOBAL SUB_SETBIT
     ; uint8 GetBit(uint16 baseAddr:PTR1, uint8 x:ARG1, uint8 y:ARG2)
     GLOBAL SUB_GETBIT
+    ; uint8 GetLiveNeighborCount(uint16 baseAddr:PTR1, uint8 x:ARG1, uint8 y:ARG2, uint8 width:ARG3)
+    GLOBAL SUB_GET_LIVE_NEIGHBOR_COUNT
+
 ;***************************************************************************
 ;                              External Modules
 ;***************************************************************************
@@ -75,7 +78,9 @@ CODE
     NBR_CNT:        EQU     SCRATCH+2
     ROW_PTR:        EQU     SCRATCH
     CELL_PTR:       EQU     PTR2
-
+    COL_X:          EQU     ARG1   ; x    
+    ROW_Y:          EQU     ARG2   ; y
+    
 ;***************************************************************************
 ;                               Library Code
 ;***************************************************************************
@@ -235,44 +240,86 @@ SUB_GETBIT:
     lda (SCRATCH),Y
     rts
 
-; uint8 GetLiveNeighborCount(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2, uint8 width:ARG3))
-; Returns the number of live neighbors immediately bounding the x,y position
+; uint8 GetLiveNeighborCount(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2, uint8 width:ARG3)
+; Returns (in the accumulator) the number of live neighbors immediately bounding the x,y position
 ; Important NOTE: This routine assumes it is not on the board boundary, that there is always a valid
 ; X-1, X+1, Y-1, Y+1 position.
-SUB_GET_LIVE_NEHIHBOR_COUNT:
+SUB_GET_LIVE_NEIGHBOR_COUNT:
     ; Zero out the neighbor count
     lda #0
     sta NBR_CNT
+    sta SCRATCH
 
     ; PT1 is already setup, ARG1 and ARG2 have the offsets already, get the cell pointer
     jsr PRIV_GETCELLADDR
     ; Cell address is now in CELL_PTR
 
-    ldy #-1
+    ; Get our own bit state, we'll subtract this from NBR_CNT later
+    ldy #0
     ; Check left neighbor
     lda (CELL_PTR),Y
     clc
-    adc NBR_CNT
-    sta NBR_CNT
+    adc SCRATCH
+    sta SCRATCH
 
-    ; Check right neighbor
-    ldy #1
+    ; These move the cursor to the top left of the group
+    ; Move the row argument up one
+    sec
+    lda ROW_Y
+    sbc #1
+    sta ROW_Y 
+
+    ; Move the col argument back one
+    sec
+    lda COL_X
+    sbc #1
+    sta COL_X
+
+    ; Cursor is at the top left of the group, get the count
+    ldy #0
+ROW_LOOP:
+    clc
+    tya
+    adc ROW_Y
+    sta ROW_Y
+    phy ; Save off Y
+    jsr PRIV_GETCELLADDR
+    jsr PRIV_GET_COUNT_IN_ROW
+    ply ; Restore y
+    iny
+    cpy #3
+    bne ROW_LOOP
+
+    ; Return nbr_cnt in accumulator
+    lda NBR_CNT 
+    sec
+    sbc SCRATCH ; Remove our own bit from the count
+    rts
+
+; uint8 GetCountInRow(uint16 ROW_LEFT_CELL_PTR:CELL_PTR)
+; Returns the number of live cells in the array of 3 cells in the row
+; Assumes that the row end is not spanned in the 3 cells
+; Argument is left most cell in row
+; Increments NBR_CNT, assumes caller has zeroed it out if needed
+PRIV_GET_COUNT_IN_ROW:
+    ldy #0    
+COL_LOOP:
     lda (CELL_PTR),Y
     clc
     adc NBR_CNT
     sta NBR_CNT
-
-    ; Check top neighbor
-    sec
-    ;lda 
-    rts
+    iny
+    cpy #3
+    bne COL_LOOP
+    rts 
 
 ; uint16 GetBitAddr(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2)
 ; Returns the address of the bit at x,y, into ptr2
 PRIV_GETCELLADDR:
     ; Put the target row start location in scratch
-    asl ARG2 # Multiply by 2, since each pointers is two bytes
-    ldy ARG2
+    lda ARG2
+    asl
+    tay
     lda (PTR1),Y
     sta CELL_PTR
     iny
@@ -282,6 +329,10 @@ PRIV_GETCELLADDR:
     lda ARG1
     clc
     adc CELL_PTR
+    sta CELL_PTR
+    lda #0
+    adc CELL_PTR+1
+    sta CELL_PTR+1
     rts
 
 END ; CODE

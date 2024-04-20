@@ -53,6 +53,8 @@ CODE
     XREF SUB_SETBIT
     ; uint8 GetBit(uint16 baseAddr, uint8 x, uint8 y)
     XREF SUB_GETBIT
+    ; uint8 GetNeighborCount(uint16 baseAddr, uint8 x, uint8 y, uint8 width:ARG3)
+    XREF SUB_GET_LIVE_NEIGHBOR_COUNT
 
 ;***************************************************************************
 ;                              External Variables
@@ -159,6 +161,19 @@ LOAD_R_PENTOMINO:
         lda #CELL_LIVE
         sta CELL_STATUS
         jsr SUB_SETBIT
+
+        ; Test out get neighbor count
+        ; Not really needed here but for completeness incase we copy paste this later 
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        ; Lets look at the center bit of the r-pentomino. It should have 4 neighbors
+        lda #BOARD_WIDTH/2
+        sta COL_X
+        lda #BOARD_HEIGHT/2
+        sta ROW_Y
+        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
 
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
