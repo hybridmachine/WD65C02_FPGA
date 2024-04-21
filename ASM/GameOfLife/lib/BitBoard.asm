@@ -279,13 +279,19 @@ SUB_GET_LIVE_NEIGHBOR_COUNT:
     ldy #0
 ROW_LOOP:
     clc
-    tya
-    adc ROW_Y
-    sta ROW_Y
+
     phy ; Save off Y
     jsr PRIV_GETCELLADDR
     jsr PRIV_GET_COUNT_IN_ROW
     ply ; Restore y
+
+    ; ROW_Y++
+    clc
+    lda #1
+    adc ROW_Y
+    sta ROW_Y
+
+    ; if (++y < 3) goto ROW_LOOP
     iny
     cpy #3
     bne ROW_LOOP
