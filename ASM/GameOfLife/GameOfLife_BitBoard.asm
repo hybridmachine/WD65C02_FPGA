@@ -196,22 +196,9 @@ LOOP_GENS:
         bne LOOP_GENS ; if (cnt != 0) then loop
         brk ; For now just end with break will loop in real hardware later
 
-        ; Test out get neighbor count
-        ; Not really needed here but for completeness incase we copy paste this later 
-        lda #BOARD1_BASE_ADDR
-        sta PTR1 
-        lda #>BOARD1_BASE_ADDR
-        sta PTR1+1
-        ; Lets look at the center bit of the r-pentomino. It should have 4 neighbors
-        lda #BOARD_WIDTH/2
-        sta COL_X
-        lda #BOARD_HEIGHT/2
-        sta ROW_Y
-        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
-
 PRIV_CALCULATE_NEXT_GEN:
-        ldx 1
-        ldy 1
+        ldx #1
+        ldy #1
         tya
         sta ROW_Y
         phy ; Save off row position
@@ -220,17 +207,89 @@ LOOP_COL:
         txa
         sta COL_X
         ; ROW_Y is already loaded
+
+        ; Load current gen pointer and get the nbr cnt
+        lda CURRENT_GEN
+        sta PTR1
+        lda CURRENT_GEN+1
+        sta PTR1+1
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
+
         sta NBR_CNT ; Save off nbr count
+
+        ; Calculate the next generation
+        lda NEXT_GEN
+        sta PTR1
+        lda NEXT_GEN+1
+        sta PTR1+1
+        
         ; Subroutine to generate the next generation for the game of life
         ;   Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+                ; if CNT < 2 then CELL_STATUS = CELL_DEAD
         ;   Any live cell with two or three live neighbours lives on to the next generation.
+                ; if CNT == 2 then CELL_STATUS = CELL_SAME
+                ; if CNT == 3 then CELL_STATUS = CELL_LIVE
         ;   Any live cell with more than three live neighbours dies, as if by overpopulation.
+                ; if CNT > 3 then CELL_STATUS = CELL_DEAD
         ;   Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
+                ; if CNT == 3 then CELL_STATUS = CELL_LIVE (covered above so no need to re-check)
 
-        jsr SUB_GETBIT
-        ; 
+        lda NBR_CNT
+        cmp #2
+        bmi SET_CELL_DEAD       ; if CNT < 2 then CELL_STATUS = CELL_DEAD
+        beq SET_CELL_SAME       ; if CNT == 2 then CELL_STATUS = CELL_SAME
+        cmp #3
+        beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
+        bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
+
+SET_CELL_DEAD:
+        lda #CELL_DEAD
+        sta CELL_STATUS
+        jsr SUB_SETBIT
+        jmp TEST_FOR_LOOP
+
+SET_CELL_LIVE:
+        lda #CELL_LIVE
+        sta CELL_STATUS
+        jsr SUB_SETBIT
+        jmp TEST_FOR_LOOP
+
+SET_CELL_SAME:
+        ; Load current gen pointer and get current status
+        lda CURRENT_GEN
+        sta PTR1
+        lda CURRENT_GEN+1
+        sta PTR1+1
+
+        jmp SUB_GETBIT
+        sta CELL_STATUS
+
+        ; Point to next gen
+        lda NEXT_GEN
+        sta PTR1
+        lda NEXT_GEN+1
+        sta PTR1+1
+
+        jsr SUB_SETBIT
+        jmp TEST_FOR_LOOP
+
+TEST_FOR_LOOP:
+        plx
+        inx
+        cpx #BOARD_WIDTH-1
+        bne LOOP_COL
+        jmp LOOP_ROW ; Could just fall through but lets be explicit for clarity
+
 LOOP_ROW:
+        ply
+        iny
+        cpy #BOARD_HEIGHT-1
+        beq RETURN_TO_CALLER
+        ldx #1
+        phy ; Save off Y for
+        jmp LOOP_COL
+
+RETURN_TO_CALLER:
         rts
 
 PRIV_SWAP_GENERATIONS:

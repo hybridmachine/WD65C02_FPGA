@@ -38,5 +38,5 @@
     PTR2:           equ    PTR1+2
     ; Scratch space for functions to use for calculations
     SCRATCH:        equ    PTR2+2
-    GAMEBOARDS:     equ    SCRATCH+4
+    GAMEBOARDS:     equ    SCRATCH+6
     PAGEZ_FREE:     equ    GAMEBOARDS+4

@@ -70,7 +70,6 @@ CODE
 ;                               Local Constants
 ;***************************************************************************
 
-    STACK_BASE:     EQU     $0100
     INITVAL:        EQU     ARG3
     WIDTH:          EQU     ARG1
     HEIGHT:         EQU     ARG2
