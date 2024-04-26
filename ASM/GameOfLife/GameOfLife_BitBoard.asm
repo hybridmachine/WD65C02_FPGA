@@ -77,6 +77,8 @@ CODE
     COL_X:                equ    ARG1   ; x    
     ROW_Y:                equ    ARG2   ; y
     CELL_STATUS:          equ    ARG3   ; bit on/off
+    CURRENT_GEN:          equ    GAMEBOARDS ; Current gen is at the base of GAMEBOARES 4 bytes range
+    NEXT_GEN:             equ    CURRENT_GEN+2; Pointer for next gen right after current gen
 ;***************************************************************************
 ;                               Application Code
 ;***************************************************************************
@@ -162,6 +164,37 @@ LOAD_R_PENTOMINO:
         sta CELL_STATUS
         jsr SUB_SETBIT
 
+        ; Establish board pointers, CURGEN in PTR1, NEXTGEN in PTR2
+        ; Set the current gen board as the board we are reading from on
+        lda #BOARD1_BASE_ADDR
+        sta CURRENT_GEN 
+        lda #>BOARD1_BASE_ADDR
+        sta CURRENT_GEN+1
+
+        ; Set the next gen board as the board we are operating on
+        lda #BOARD2_BASE_ADDR
+        sta NEXT_GEN 
+        lda #>BOARD2_BASE_ADDR
+        sta NEXT_GEN+1
+
+        ; Loop over 10 generations
+        lda #10 ; cnt = 10
+LOOP_GENS:
+        pha ; save current value of cnt to stack
+
+        ; Calculate next gen (reads from CURRENT_GEN and writes to NEXT_GEN)
+        jsr PRIV_CALCULATE_NEXT_GEN
+
+        ; Swap generations (NEXT_GEN becomes CURRENT_GEN, and vice versa)
+        jsr PRIV_SWAP_GENERATIONS
+
+        ; Test loop condition
+        pla ; load cnt off stack
+        sec
+        sbc #1 ; cnt--
+        bne LOOP_GENS ; if (cnt != 0) then loop
+        brk ; For now just end with break will loop in real hardware later
+
         ; Test out get neighbor count
         ; Not really needed here but for completeness incase we copy paste this later 
         lda #BOARD1_BASE_ADDR
@@ -175,6 +208,30 @@ LOAD_R_PENTOMINO:
         sta ROW_Y
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
 
+PRIV_CALCULATE_NEXT_GEN:
+    rts
+
+PRIV_SWAP_GENERATIONS:
+    ; Save CURRENT_GEN to tmp
+    lda CURRENT_GEN
+    sta SCRATCH
+    lda CURRENT_GEN+1
+    sta SCRATCH+1
+
+    ; Save NEXT_GEN to CURRENT_GEN
+    lda NEXT_GEN
+    sta CURRENT_GEN
+    lda NEXT_GEN+1
+    sta CURRENT_GEN+1
+
+    ; Load previous CURRENT_GEN ptr into NEXT_GEN
+    lda SCRATCH
+    sta NEXT_GEN
+    lda SCRATCH+1
+    sta NEXT_GEN+1
+
+    ; Return to caller
+    rts
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)

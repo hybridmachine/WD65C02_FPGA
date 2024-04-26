@@ -26,16 +26,17 @@
 ;
 ;***************************************************************************   
 
-    RSVD:       equ    $00    ; Reserved
+    RSVD:           equ    $00    ; Reserved
     ; Common page zero locations for passing arguments to subroutines
     ; Space for four one byte arguments
-    ARG1:       equ    RSVD+1
-    ARG2:       equ    ARG1+1
-    ARG3:       equ    ARG2+1
-    ARG4:       equ    ARG3+1
+    ARG1:           equ    RSVD+1
+    ARG2:           equ    ARG1+1
+    ARG3:           equ    ARG2+1
+    ARG4:           equ    ARG3+1
     ; Space for two 16 bit pointers
-    PTR1:       equ    ARG4+1
-    PTR2:       equ    PTR1+2
+    PTR1:           equ    ARG4+1
+    PTR2:           equ    PTR1+2
     ; Scratch space for functions to use for calculations
-    SCRATCH:    equ    PTR2+2
-    PAGEZ_END:  equ    SCRATCH+4
+    SCRATCH:        equ    PTR2+2
+    GAMEBOARDS:     equ    SCRATCH+4
+    PAGEZ_FREE:     equ    GAMEBOARDS+4
