@@ -79,6 +79,7 @@ CODE
     CELL_STATUS:          equ    ARG3   ; bit on/off
     CURRENT_GEN:          equ    GAMEBOARDS ; Current gen is at the base of GAMEBOARES 4 bytes range
     NEXT_GEN:             equ    CURRENT_GEN+2; Pointer for next gen right after current gen
+    NBR_CNT:              equ    SCRATCH ; Use first scratch position for neihbor count
 ;***************************************************************************
 ;                               Application Code
 ;***************************************************************************
@@ -209,29 +210,50 @@ LOOP_GENS:
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
 
 PRIV_CALCULATE_NEXT_GEN:
-    rts
+        ldx 1
+        ldy 1
+        tya
+        sta ROW_Y
+        phy ; Save off row position
+LOOP_COL:
+        phx ; Save off column position
+        txa
+        sta COL_X
+        ; ROW_Y is already loaded
+        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
+        sta NBR_CNT ; Save off nbr count
+        ; Subroutine to generate the next generation for the game of life
+        ;   Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+        ;   Any live cell with two or three live neighbours lives on to the next generation.
+        ;   Any live cell with more than three live neighbours dies, as if by overpopulation.
+        ;   Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
+
+        jsr SUB_GETBIT
+        ; 
+LOOP_ROW:
+        rts
 
 PRIV_SWAP_GENERATIONS:
-    ; Save CURRENT_GEN to tmp
-    lda CURRENT_GEN
-    sta SCRATCH
-    lda CURRENT_GEN+1
-    sta SCRATCH+1
+        ; Save CURRENT_GEN to tmp
+        lda CURRENT_GEN
+        sta SCRATCH
+        lda CURRENT_GEN+1
+        sta SCRATCH+1
 
-    ; Save NEXT_GEN to CURRENT_GEN
-    lda NEXT_GEN
-    sta CURRENT_GEN
-    lda NEXT_GEN+1
-    sta CURRENT_GEN+1
+        ; Save NEXT_GEN to CURRENT_GEN
+        lda NEXT_GEN
+        sta CURRENT_GEN
+        lda NEXT_GEN+1
+        sta CURRENT_GEN+1
 
-    ; Load previous CURRENT_GEN ptr into NEXT_GEN
-    lda SCRATCH
-    sta NEXT_GEN
-    lda SCRATCH+1
-    sta NEXT_GEN+1
+        ; Load previous CURRENT_GEN ptr into NEXT_GEN
+        lda SCRATCH
+        sta NEXT_GEN
+        lda SCRATCH+1
+        sta NEXT_GEN+1
 
-    ; Return to caller
-    rts
+        ; Return to caller
+        rts
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
