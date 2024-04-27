@@ -272,7 +272,7 @@ SET_CELL_SAME:
         lda CURRENT_GEN+1
         sta PTR1+1
 
-        jmp SUB_GETBIT
+        jsr SUB_GETBIT
         sta CELL_STATUS
 
         ; Point to next gen
