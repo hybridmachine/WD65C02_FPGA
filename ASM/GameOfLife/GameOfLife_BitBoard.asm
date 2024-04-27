@@ -165,7 +165,7 @@ LOAD_R_PENTOMINO:
         sta CELL_STATUS
         jsr SUB_SETBIT
 
-        ; Establish board pointers, CURGEN in PTR1, NEXTGEN in PTR2
+        ; Establish board pointers
         ; Set the current gen board as the board we are reading from on
         lda #BOARD1_BASE_ADDR
         sta CURRENT_GEN 
@@ -213,9 +213,20 @@ LOOP_COL:
         sta PTR1
         lda CURRENT_GEN+1
         sta PTR1+1
-        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
 
+        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         sta NBR_CNT ; Save off nbr count
+
+        pla ; Restore column position
+        tax ; Will push this back on to stack
+        sta COL_X
+        pla ; Restore row position
+        tay ; Will push this back on to stack
+        sta ROW_Y
+
+        ; Restore values onto stack for looping
+        phy
+        phx
 
         ; Calculate the next generation
         lda NEXT_GEN
