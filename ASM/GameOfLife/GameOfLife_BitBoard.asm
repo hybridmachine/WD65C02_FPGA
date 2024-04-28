@@ -214,20 +214,30 @@ LOOP_COL:
         lda CURRENT_GEN+1
         sta PTR1+1
 
+        ; Save off args
+        lda COL_X
+        pha
+        lda ROW_Y
+        pha
+
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         sta NBR_CNT ; Save off nbr count
 
-        pla ; Restore column position
-        tax ; Will push this back on to stack
-        sta COL_X
         pla ; Restore row position
-        tay ; Will push this back on to stack
+        beq ROW_HAS_ZERO
         sta ROW_Y
 
-        ; Restore values onto stack for looping
-        phy
-        phx
+        pla ; Restore column position
+        beq COL_HAS_ZERO
+        sta COL_X
+        jmp GET_NEXT_GEN ; Jump over the debug breaks
 
+ROW_HAS_ZERO:
+        brk ; Debug, stop if our index is wrong
+COL_HAS_ZERO:
+        brk ; Debug, stop if our index is wrong
+
+GET_NEXT_GEN:
         ; Calculate the next generation
         lda NEXT_GEN
         sta PTR1
@@ -252,17 +262,25 @@ LOOP_COL:
         cmp #3
         beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
         bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
-
+        brk ; Shouldn't ever get here
 SET_CELL_DEAD:
         lda #CELL_DEAD
         sta CELL_STATUS
-        jsr SUB_SETBIT
-        jmp TEST_FOR_LOOP
 
+        jsr DBG_TEST_CURGEN
+        jsr SUB_SETBIT
+        jsr DBG_TEST_CURGEN
+        
+        jmp TEST_FOR_LOOP
+        
 SET_CELL_LIVE:
         lda #CELL_LIVE
         sta CELL_STATUS
+        
+        jsr DBG_TEST_CURGEN
         jsr SUB_SETBIT
+        jsr DBG_TEST_CURGEN
+        
         jmp TEST_FOR_LOOP
 
 SET_CELL_SAME:
@@ -281,16 +299,20 @@ SET_CELL_SAME:
         lda NEXT_GEN+1
         sta PTR1+1
 
+        jsr DBG_TEST_CURGEN
         jsr SUB_SETBIT
+        jsr DBG_TEST_CURGEN
+        
         jmp TEST_FOR_LOOP
 
 TEST_FOR_LOOP:
         plx
         inx
         cpx #BOARD_WIDTH-1
-        bne LOOP_COL
+        bne LOOP_COL_BRA
         jmp LOOP_ROW ; Could just fall through but lets be explicit for clarity
-
+LOOP_COL_BRA:
+        jmp LOOP_COL
 LOOP_ROW:
         ply
         iny
@@ -298,9 +320,25 @@ LOOP_ROW:
         beq RETURN_TO_CALLER
         ldx #1
         phy ; Save off Y for
+        tya 
+        sta ROW_Y ; Upload row argument
         jmp LOOP_COL
 
 RETURN_TO_CALLER:
+        rts
+
+; Something is clobbering the low byte of curgen after a swap, catch it in the act here
+DBG_TEST_CURGEN
+        ; DEBUG
+        lda CURRENT_GEN+1
+        cmp #$09
+        bne ENDDBG
+        lda CURRENT_GEN
+        cmp #$90
+        beq ENDDBG
+        brk ; Something messed up the address
+        ; END DEBUG
+ENDDBG:
         rts
 
 PRIV_SWAP_GENERATIONS:

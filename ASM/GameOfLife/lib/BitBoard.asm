@@ -221,6 +221,11 @@ SUB_SETBIT:
     ; We have the row start, now find the byte in that row (the X position)
     ldy ARG1
     ; Load the bit pattern we want to set in this position
+    clc
+    lda SCRATCH+1
+    bne NOTZERO
+    brk ; Something is wrong, scrach high byte has zero
+NOTZERO
     lda ARG3
     sta (SCRATCH),Y
     rts
