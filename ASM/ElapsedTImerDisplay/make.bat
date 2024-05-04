@@ -8,7 +8,7 @@ del *.lst
 del *.sym
 
 REM Compile asm to object files
-WDC02AS -G -L -DUSING_02 ElapsedTimerDisplay.asm
+WDC02AS -G -L -DUSING_02 -I ..\drivers\elapsed_timer ElapsedTimerDisplay.asm
 WDC02AS -G -L -DUSING_02 ..\drivers\elapsed_timer\Timer.asm -O Timer.obj
 WDC02AS -G -L -DUSING_02 ..\drivers\seven_segment_display\SevenSegmentDisplay.asm -O SevenSegmentDisplay.obj
 

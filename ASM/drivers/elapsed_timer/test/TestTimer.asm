@@ -26,18 +26,24 @@
 ;  
 ;
 ;***************************************************************************   
-
-; Constants
-    TIMER_READ_VALUE:   equ $10 ; 4 byte value returned by timer, low byte at $10, high byte at $13
-
 CODE
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
+
+;***************************************************************************
+;                             Include Files
+;***************************************************************************
+    INCLUDE "Timer.inc"    ; Macro definitions
+
+;***************************************************************************
+;                              External Modules
+;***************************************************************************
+
+; Constants
+    TIMER_READ_VALUE:   equ $10 ; 4 byte value returned by timer, low byte at $10, high byte at $13
+
    
-    XREF TIMER_START
-    XREF TIMER_READ
-    XREF TIMER_RESET
 START:
 
     JSR TIMER_START
@@ -54,21 +60,7 @@ DELAY_INNER_LOOP:
     BNE DELAY_INNER_LOOP
     JMP DELAY_OUTER_LOOP
 READ_TIMER:
-    LDA #0
-    ; Put four empty bytes on the stack, function will return counter val here
-    PHA
-    PHA
-    PHA
-    PHA
-    JSR TIMER_READ
-    PLA
-    STA TIMER_READ_VALUE
-    PLA
-    STA TIMER_READ_VALUE+1
-    PLA
-    STA TIMER_READ_VALUE+2
-    PLA
-    STA TIMER_READ_VALUE+3
+    TIMER_READ TIMER_READ_VALUE
     BRK
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.

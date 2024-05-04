@@ -51,7 +51,7 @@ CODE
 
 
     GLOBAL TIMER_START
-    GLOBAL TIMER_READ
+    GLOBAL SUB_TIMER_READ
     GLOBAL TIMER_RESET
 
 ; Calls TIMER_RESET then sets timer running, causes timer to always restart from 0.
@@ -63,7 +63,7 @@ TIMER_START:
 
 ; Reads timer then clears all of the timer read states, does not reset, allows timer to progress
 ; Blocking call (for at least 20 cycles). 
-TIMER_READ:
+SUB_TIMER_READ:
     LDA #CTL_READ_REQUESTED
     STA TIMER_CTL_ADDR
     ; Wait N iterations to read timer data

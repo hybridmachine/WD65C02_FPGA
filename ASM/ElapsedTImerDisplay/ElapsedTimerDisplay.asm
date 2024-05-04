@@ -35,7 +35,7 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+		INCLUDE "Timer.inc"
 
 
 ;***************************************************************************
@@ -47,11 +47,6 @@ CODE
 ;                             External Modules
 ;***************************************************************************
 ;
-		; Timer functions
-		XREF TIMER_START
-		XREF TIMER_READ
-		XREF TIMER_RESET
-
 		; Seven Segment Display Functions
 		XREF SEVENSEG_DISPLAY_VALUE
     	XREF SEVENSEG_DISABLE
@@ -96,22 +91,8 @@ DELAY_INNER_LOOP:
 		bne DELAY_INNER_LOOP
 		jmp DELAY_OUTER_LOOP
 READ_TIMER:
-		lda #0
-		; Put four empty bytes on the stack, function will return counter val here
-		pha
-		pha
-		pha
-		pha
-		jsr TIMER_READ
-		pla
-		sta TIMER_READ_VALUE
-		pla
-		sta TIMER_READ_VALUE+1
-		pla
-		sta TIMER_READ_VALUE+2
-		pla
-		sta TIMER_READ_VALUE+3
-
+		TIMER_READ TIMER_READ_VALUE
+		
 		; Put lower 16 timer bits (hi byte first) onto stack then call display code
 		lda TIMER_READ_VALUE+1
 		pha

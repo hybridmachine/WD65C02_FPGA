@@ -56,6 +56,13 @@ CODE
     ; uint8 GetNeighborCount(uint16 baseAddr, uint8 x, uint8 y, uint8 width:ARG3)
     XREF SUB_GET_LIVE_NEIGHBOR_COUNT
 
+    ; void TimerStart(void)
+    XREF TIMER_START
+    ; uint32 TimerRead(void); Note timer will return four bytes on stack, caller must push four empty bytes before call
+    XREF TIMER_READ
+    ; void TimerReset(void)
+    XREF TIMER_RESET
+
 ;***************************************************************************
 ;                              External Variables
 ;***************************************************************************
