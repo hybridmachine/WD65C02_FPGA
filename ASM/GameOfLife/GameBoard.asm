@@ -48,6 +48,7 @@ CODE
     XREF DIVSOR
     XREF CUR_CELL_PTR
     XREF BOARD_PTR
+    XREF BOARD_ROW_PTRS
     XREF CELL_MASK_BASE
     XREF CELL_MASK_INVERT
     XREF BOARD_WIDTH
@@ -156,7 +157,7 @@ CELL_OFF:
 
 ; Subroutine to get cell address given an X and Y value (passed in X and Y registers). Board pointer is pushed high, low on to 
 ; stack by caller
-; Formula is (Y * (BOARD_WIDTH/8)) + (X/8), this gets you the byte that the cell is in, the remainder of X/8 gives you the 
+; Formula is RowStartAddressVector[Y] + (X/8), this gets you the byte that the cell is in, the remainder of X/8 gives you the 
 ; bit which is the cell.
 ; The byte address is in CUR_CELL_PTR,CUR_CELL_PTR+1 (low, high) and the remainder (bit location) is in CUR_CELL_PTR + 2
 SUB_GET_CELL_BYTE_ADDRESS:

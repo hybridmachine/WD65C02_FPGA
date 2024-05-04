@@ -9,13 +9,13 @@ def read_bits(file_path, width):
             bit_count = 0
 
             while byte:
-                bits = f'{int.from_bytes(byte, "big"):08b}'
-                for bit in bits:
-                    print(bit, end='')
-                    bit_count += 1
-                    if bit_count == width:
-                        print('\n', end='')
-                        bit_count = 0
+                # Convert byte to integer
+                byte = ord(byte)
+                print(byte, end='')
+                bit_count += 1
+                if bit_count == width:
+                    print('\n', end='')
+                    bit_count = 0
                 byte = file.read(1)
 
             # Add a final newline for formatting, if needed

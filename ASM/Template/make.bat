@@ -17,7 +17,7 @@ REM in VHDL pkg_6502.vhd
 WDCLN -CFC00 -HI <NameOfExe> <Included>.obj <Included>.obj -O .\<NameOfExe>.hex
 python ..\HexToVHDLTools\ConvertHexToVHD_ROM.py --hex_file .\<NameOfExe>.hex --vhd_template "..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd" --start_address 0xFC00 --end_address 0xFFF9 --output_vhd ROM.vhd
 
-REM Build the simulator exe. 
+REM Build for the simulator. 
 WDCLN -CFC00 -G -SZ -T -V -HZ <NameOfExe> <Included>.obj <Included>.obj
 
 REM Start the simulator

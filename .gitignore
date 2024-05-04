@@ -12,3 +12,4 @@ ASM/**/ROM.vhd
 *.bin
 *.hex
 *.mem
+ASM/GameOfLife/GameOfLife
