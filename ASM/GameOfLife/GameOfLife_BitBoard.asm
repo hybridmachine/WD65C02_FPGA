@@ -36,6 +36,7 @@ CODE
 ;                             Include Files
 ;***************************************************************************
     INCLUDE "inc/PageZero.inc"    ; Page zero usage locations
+    INCLUDE "inc/Trace.inc"
     INCLUDE "elapsed_timer/Timer.inc"
     INCLUDE "seven_segment_display/SevenSegmentDisplay.inc" 
 
@@ -286,6 +287,7 @@ SET_CELL_DEAD:
         jmp TEST_FOR_LOOP
         
 SET_CELL_LIVE:
+        TRACELOC #01
         lda #CELL_LIVE
         sta CELL_STATUS
         
@@ -296,6 +298,7 @@ SET_CELL_LIVE:
         jmp TEST_FOR_LOOP
 
 SET_CELL_SAME:
+        TRACELOC #02
         ; Load current gen pointer and get current status
         lda CURRENT_GEN
         sta PTR1

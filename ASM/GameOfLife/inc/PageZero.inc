@@ -39,4 +39,5 @@
     ; Scratch space for functions to use for calculations
     SCRATCH:        equ    PTR2+2 ; 09
     GAMEBOARDS:     equ    SCRATCH+6 ; 0F
-    PAGEZ_FREE:     equ    GAMEBOARDS+4
+    TRACEID:        equ    GAMEBOARDS+4 ; 13
+    PAGEZ_FREE:     equ    TRACEID+2

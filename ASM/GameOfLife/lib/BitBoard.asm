@@ -37,7 +37,8 @@ CODE
 ;                             Include Files
 ;***************************************************************************
 
-    INCLUDE "inc/PageZero.inc" ; Page zero usage locations
+    INCLUDE "inc/PageZero.inc"  ; Page zero usage locations
+    INCLUDE "inc/Trace.inc"     ; Debugging trace macros
 
 
 ;***************************************************************************

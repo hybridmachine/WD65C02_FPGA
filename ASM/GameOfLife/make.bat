@@ -6,7 +6,7 @@ del *.obj
 del *.lst
 del *.sym
 REM build the Intel HEX file then output to VHD ROM file
-WDC02AS -G -L -I ..\drivers -DUSING_02 GameOfLife_BitBoard.asm
+WDC02AS -G -L -I ..\drivers -DUSING_02 -DTRACE GameOfLife_BitBoard.asm
 WDC02AS -G -L -K BitBoard.lst -DUSING_02 lib\BitBoard.asm -O BitBoard.obj
 WDC02AS -G -L -K Multiply.lst -DUSING_02 ..\lib\Multiply.asm -O Multiply.obj
 WDC02AS -G -L -K Divide.lst -DUSING_02 ..\lib\Divide.asm -O Divide.obj
