@@ -39,12 +39,12 @@ CODE
     SEVEN_SEG_CTL_ADDR:     equ $0203 ; Turn this to 01 to turn it on, 00 for off
 
     ; Public functions
-    GLOBAL SEVENSEG_DISPLAY_VALUE
-    GLOBAL SEVENSEG_DISABLE
+    GLOBAL SUB_SEVENSEG_DISPLAY_VALUE
+    GLOBAL SUB_SEVENSEG_DISABLE
 
 ; Enables the display and takes the 2 bytes on the call stack and displays them on the display
 ; Calling convention is stack push high byte, low byte then call this function
-SEVENSEG_DISPLAY_VALUE:
+SUB_SEVENSEG_DISPLAY_VALUE:
     ; Turn on display (functional noop if already one)
     LDA #SEVEN_SEG_ON
     STA SEVEN_SEG_CTL_ADDR
@@ -62,7 +62,7 @@ SEVENSEG_DISPLAY_VALUE:
     RTS
 
 ; Turns seven segment display off
-SEVENSEG_DISABLE:
+SUB_SEVENSEG_DISABLE:
     LDA #SEVEN_SEG_OFF
     STA SEVEN_SEG_CTL_ADDR
     RTS

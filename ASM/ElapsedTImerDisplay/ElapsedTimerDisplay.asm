@@ -35,8 +35,8 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-		INCLUDE "Timer.inc"
-
+		INCLUDE "elapsed_timer/Timer.inc"
+		INCLUDE "seven_segment_display/SevenSegmentDisplay.inc"
 
 ;***************************************************************************
 ;                             Global Modules
@@ -61,7 +61,7 @@ CODE
 ;                              Local Constants
 ;***************************************************************************
 ;
-		TIMER_READ_VALUE:   equ $10 ; 4 byte value returned by timer, low byte at $10, high byte at $13
+		TIMER_VALUE:   		equ $10 ; 4 byte value returned by timer, low byte at $10, high byte at $13
 		WAIT_COUNT_OUTER:	equ $20 ; Number of outer loops for timer delay
 		WAIT_COUNT_INNER:	equ $20 ; Inner loop count for timer delay
 START:
@@ -76,7 +76,7 @@ START:
 ;                               Application Code
 ;***************************************************************************
 ;
-		jsr TIMER_START
+		jsr SUB_TIMER_START
 ; Give the timer some time to run
 WAIT_FOR_TIMER:
 		ldy #WAIT_COUNT_OUTER
@@ -91,17 +91,9 @@ DELAY_INNER_LOOP:
 		bne DELAY_INNER_LOOP
 		jmp DELAY_OUTER_LOOP
 READ_TIMER:
-		TIMER_READ TIMER_READ_VALUE
-		
-		; Put lower 16 timer bits (hi byte first) onto stack then call display code
-		lda TIMER_READ_VALUE+1
-		pha
-		lda TIMER_READ_VALUE
-		pha
-		jsr SEVENSEG_DISPLAY_VALUE
-		; Cleanup stack
-		pla 
-		pla
+		TIMER_READ TIMER_VALUE
+		SEVENSEG_DISPLAY_VALUE TIMER_VALUE
+
 		jmp WAIT_FOR_TIMER ; Loop forever
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.

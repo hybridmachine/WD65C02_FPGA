@@ -36,7 +36,8 @@ CODE
 ;                             Include Files
 ;***************************************************************************
     INCLUDE "inc/PageZero.inc"    ; Page zero usage locations
-
+    INCLUDE "elapsed_timer/Timer.inc"
+    INCLUDE "seven_segment_display/SevenSegmentDisplay.inc" 
 
 ;***************************************************************************
 ;                              Global Modules
@@ -92,12 +93,12 @@ CODE
 ;***************************************************************************
 
 START:
-		sei             ; Ignore maskable interrupts
+	sei             ; Ignore maskable interrupts
         clc             ; Clear carry
     	cld             ; Clear decimal mode
 
-		ldx	#$ff		; Initialize the stack pointer
-		txs
+	ldx	#$ff		; Initialize the stack pointer
+	txs
 
         ; Initialize board 1
         ; baseAddr
@@ -184,9 +185,10 @@ LOAD_R_PENTOMINO:
         sta NEXT_GEN 
         lda #>BOARD2_BASE_ADDR
         sta NEXT_GEN+1
-
-        ; Loop over 10 generations
-        lda #10 ; cnt = 10
+LOOP_TIMER:
+        jsr SUB_TIMER_START ; Reset the timer
+        ; Loop over 100 generations
+        lda #100 ; cnt = 100
 LOOP_GENS:
         pha ; save current value of cnt to stack
 
@@ -201,7 +203,10 @@ LOOP_GENS:
         sec
         sbc #1 ; cnt--
         bne LOOP_GENS ; if (cnt != 0) then loop
-        brk ; For now just end with break will loop in real hardware later
+        
+        TIMER_READ SCRATCH
+        SEVENSEG_DISPLAY_VALUE SCRATCH
+        jmp LOOP_TIMER ; Loop forever
 
 PRIV_CALCULATE_NEXT_GEN:
         ldx #1

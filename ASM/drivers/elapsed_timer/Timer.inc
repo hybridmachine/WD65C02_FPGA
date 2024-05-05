@@ -1,9 +1,9 @@
 ;***************************************************************************
 ;                              Global Modules
 ;***************************************************************************
-        XREF TIMER_START
+        XREF SUB_TIMER_START
         XREF SUB_TIMER_READ
-        XREF TIMER_RESET
+        XREF SUB_TIMER_RESET
 
 ; Macro definitions for calling the elapsed timer driver methods
 TIMER_READ MACRO DEST
