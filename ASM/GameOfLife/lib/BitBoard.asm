@@ -39,6 +39,7 @@ CODE
 
     INCLUDE "inc/PageZero.inc"  ; Page zero usage locations
     INCLUDE "inc/Trace.inc"     ; Debugging trace macros
+    INCLUDE "seven_segment_display/SevenSegmentDisplay.inc" 
 
 
 ;***************************************************************************
@@ -210,6 +211,7 @@ LOOP_COL:
 
 ; void SetBit(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2, uint8 bitval:ARG3)
 SUB_SETBIT:
+    ; TRACELOC #07
     lda ARG2
     ; Put the target row start location in scratch
     asl ; Multiply by 2, since each pointers is two bytes
@@ -225,8 +227,10 @@ SUB_SETBIT:
     clc
     lda SCRATCH+1
     bne NOTZERO
+    TRACELOC #08
     brk ; Something is wrong, scrach high byte has zero
 NOTZERO
+    ; TRACELOC #09
     lda ARG3
     sta (SCRATCH),Y
     rts

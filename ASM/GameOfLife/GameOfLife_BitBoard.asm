@@ -246,11 +246,14 @@ LOOP_COL:
         jmp GET_NEXT_GEN ; Jump over the debug breaks
 
 ROW_HAS_ZERO:
+        TRACELOC #02
         brk ; Debug, stop if our index is wrong
 COL_HAS_ZERO:
+        ; TRACELOC #03
         brk ; Debug, stop if our index is wrong
 
 GET_NEXT_GEN:
+        ; TRACELOC #04
         ; Calculate the next generation
         lda NEXT_GEN
         sta PTR1
@@ -275,30 +278,28 @@ GET_NEXT_GEN:
         cmp #3
         beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
         bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
+        ; TRACELOC #05
         brk ; Shouldn't ever get here
 SET_CELL_DEAD:
+        ; TRACELOC #05
         lda #CELL_DEAD
         sta CELL_STATUS
 
-        jsr DBG_TEST_CURGEN
         jsr SUB_SETBIT
-        jsr DBG_TEST_CURGEN
         
         jmp TEST_FOR_LOOP
         
 SET_CELL_LIVE:
-        TRACELOC #01
+        ; TRACELOC #06
         lda #CELL_LIVE
         sta CELL_STATUS
         
-        jsr DBG_TEST_CURGEN
         jsr SUB_SETBIT
-        jsr DBG_TEST_CURGEN
         
         jmp TEST_FOR_LOOP
 
 SET_CELL_SAME:
-        TRACELOC #02
+        ; TRACELOC #07
         ; Load current gen pointer and get current status
         lda CURRENT_GEN
         sta PTR1
@@ -314,9 +315,7 @@ SET_CELL_SAME:
         lda NEXT_GEN+1
         sta PTR1+1
 
-        jsr DBG_TEST_CURGEN
         jsr SUB_SETBIT
-        jsr DBG_TEST_CURGEN
         
         jmp TEST_FOR_LOOP
 
@@ -325,6 +324,7 @@ TEST_FOR_LOOP:
         inx
         cpx #BOARD_WIDTH-1
         bne LOOP_COL_BRA
+        ; TRACELOC #10
         jmp LOOP_ROW ; Could just fall through but lets be explicit for clarity
 LOOP_COL_BRA:
         jmp LOOP_COL
@@ -340,20 +340,6 @@ LOOP_ROW:
         jmp LOOP_COL
 
 RETURN_TO_CALLER:
-        rts
-
-; Something is clobbering the low byte of curgen after a swap, catch it in the act here
-DBG_TEST_CURGEN
-        ; DEBUG
-        lda CURRENT_GEN+1
-        cmp #$09
-        bne ENDDBG
-        lda CURRENT_GEN
-        cmp #$90
-        beq ENDDBG
-        brk ; Something messed up the address
-        ; END DEBUG
-ENDDBG:
         rts
 
 PRIV_SWAP_GENERATIONS:
@@ -390,7 +376,7 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	rti
 
 IRQHandler:
-		pla
+		TRACELOC #11
 		rti
 
 	bits:	db	1
