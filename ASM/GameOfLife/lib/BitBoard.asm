@@ -79,8 +79,8 @@ CODE
     NBR_CNT:        EQU     SCRATCH+2
     ROW_PTR:        EQU     SCRATCH
     CELL_PTR:       EQU     PTR2
-    COL_X:          EQU     ARG1   ; x    
-    ROW_Y:          EQU     ARG2   ; y
+    ARG_COL_X:      EQU     ARG1   ; x    
+    ARG_ROW_Y:      EQU     ARG2   ; y
     
 ;***************************************************************************
 ;                               Library Code
@@ -228,7 +228,7 @@ SUB_SETBIT:
     lda SCRATCH+1
     bne NOTZERO
     TRACELOC #08
-    brk ; Something is wrong, scrach high byte has zero
+    ;brk ; Something is wrong, scrach high byte has zero
 NOTZERO
     ; TRACELOC #09
     lda ARG3
@@ -276,15 +276,15 @@ SUB_GET_LIVE_NEIGHBOR_COUNT:
     ; These move the cursor to the top left of the group
     ; Move the row argument up one
     sec
-    lda ROW_Y
+    lda ARG_ROW_Y
     sbc #1
-    sta ROW_Y 
+    sta ARG_ROW_Y 
 
     ; Move the col argument back one
     sec
-    lda COL_X
+    lda ARG_COL_X
     sbc #1
-    sta COL_X
+    sta ARG_COL_X
 
     ; Cursor is at the top left of the group, get the count
     ldy #0
@@ -296,11 +296,11 @@ ROW_LOOP:
     jsr PRIV_GET_COUNT_IN_ROW
     ply ; Restore y
 
-    ; ROW_Y++
+    ; ARG_ROW_Y++
     clc
     lda #1
-    adc ROW_Y
-    sta ROW_Y
+    adc ARG_ROW_Y
+    sta ARG_ROW_Y
 
     ; if (++y < 3) goto ROW_LOOP
     iny

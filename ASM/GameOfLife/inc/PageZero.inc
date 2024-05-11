@@ -26,18 +26,28 @@
 ;
 ;***************************************************************************   
 
+    BYTESIZE:       equ    1 ; The size of a byte in bytes
+    PTRSIZE:        equ    2 ; The size of a ptr in bytes
+    SCRATCHSIZE:    equ    6 ; The size of the scratch space in bytes
+
+    ; Page zero locations. Note the sizes are of the previously defined location
     RSVD:           equ    $00    ; Reserved
     ; Common page zero locations for passing arguments to subroutines
     ; Space for four one byte arguments
-    ARG1:           equ    RSVD+1 ; 01 
-    ARG2:           equ    ARG1+1 ; 02
-    ARG3:           equ    ARG2+1 ; 03
-    ARG4:           equ    ARG3+1 ; 04
+    STARTOFARGS:    equ    RSVD+BYTESIZE ; 00
+    ARG1:           equ    STARTOFARGS ; 01 
+    ARG2:           equ    ARG1+BYTESIZE ; 02
+    ARG3:           equ    ARG2+BYTESIZE ; 03
+    ARG4:           equ    ARG3+BYTESIZE ; 04
+
     ; Space for two 16 bit pointers
-    PTR1:           equ    ARG4+1 ; 05
-    PTR2:           equ    PTR1+2 ; 07
-    ; Scratch space for functions to use for calculations
-    SCRATCH:        equ    PTR2+2 ; 09
-    GAMEBOARDS:     equ    SCRATCH+6 ; 0F
-    TRACEID:        equ    GAMEBOARDS+4 ; 13
-    PAGEZ_FREE:     equ    TRACEID+2
+    STARTOFPTRS:    equ    ARG4+BYTESIZE ; 05
+    PTR1:           equ    STARTOFPTRS ; 05
+    PTR2:           equ    PTR1+PTRSIZE ; 07
+    ; Scratch space for functions to use for calculations, 6 bytes long
+    SCRATCH:        equ    PTR2+PTRSIZE ; 09
+    GAMEBOARDS:     equ    SCRATCH+SCRATCHSIZE ; 0F, Two gameboard pointers
+    TRACEID:        equ    GAMEBOARDS+(2*PTRSIZE) ; 13
+    COL_X:          equ    TRACEID+PTRSIZE ; 15
+    ROW_Y:          equ    COL_X+BYTESIZE ; 16
+    PAGEZERO_FREE:  equ    ROW_Y+BYTESIZE ; 17

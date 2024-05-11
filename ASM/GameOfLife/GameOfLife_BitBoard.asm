@@ -83,8 +83,6 @@ CODE
     CELL_DEAD:            equ    0
     CELL_LIVE:            equ    1
     ; Argument positions for BitBoard subroutines
-    COL_X:                equ    ARG1   ; x    
-    ROW_Y:                equ    ARG2   ; y
     CELL_STATUS:          equ    ARG3   ; bit on/off
     CURRENT_GEN:          equ    GAMEBOARDS ; Current gen is at the base of GAMEBOARES 4 bytes range
     NEXT_GEN:             equ    CURRENT_GEN+2; Pointer for next gen right after current gen
@@ -212,45 +210,18 @@ LOOP_GENS:
 PRIV_CALCULATE_NEXT_GEN:
         ldx #1
         ldy #1
-        tya
-        sta ROW_Y
-        phy ; Save off row position
-LOOP_COL:
-        phx ; Save off column position
-        txa
-        sta COL_X
-        ; ROW_Y is already loaded
+        stx COL_X
+        sty ROW_Y
 
+LOOP_COL:
         ; Load current gen pointer and get the nbr cnt
         lda CURRENT_GEN
         sta PTR1
         lda CURRENT_GEN+1
         sta PTR1+1
 
-        ; Save off args
-        lda COL_X
-        pha
-        lda ROW_Y
-        pha
-
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         sta NBR_CNT ; Save off nbr count
-
-        pla ; Restore row position
-        beq ROW_HAS_ZERO
-        sta ROW_Y
-
-        pla ; Restore column position
-        beq COL_HAS_ZERO
-        sta COL_X
-        jmp GET_NEXT_GEN ; Jump over the debug breaks
-
-ROW_HAS_ZERO:
-        TRACELOC #02
-        brk ; Debug, stop if our index is wrong
-COL_HAS_ZERO:
-        ; TRACELOC #03
-        brk ; Debug, stop if our index is wrong
 
 GET_NEXT_GEN:
         ; TRACELOC #04
@@ -279,7 +250,7 @@ GET_NEXT_GEN:
         beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
         bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
         ; TRACELOC #05
-        brk ; Shouldn't ever get here
+        ; brk ; Shouldn't ever get here
 SET_CELL_DEAD:
         ; TRACELOC #05
         lda #CELL_DEAD
@@ -320,23 +291,21 @@ SET_CELL_SAME:
         jmp TEST_FOR_LOOP
 
 TEST_FOR_LOOP:
-        plx
+        ldx COL_X
         inx
+        stx COL_X
         cpx #BOARD_WIDTH-1
-        bne LOOP_COL_BRA
+        bne LOOP_COL
         ; TRACELOC #10
-        jmp LOOP_ROW ; Could just fall through but lets be explicit for clarity
-LOOP_COL_BRA:
-        jmp LOOP_COL
+
 LOOP_ROW:
-        ply
+        ldy ROW_Y
         iny
+        sty ROW_Y
         cpy #BOARD_HEIGHT-1
         beq RETURN_TO_CALLER
         ldx #1
-        phy ; Save off Y for
-        tya 
-        sta ROW_Y ; Upload row argument
+        stx COL_X 
         jmp LOOP_COL
 
 RETURN_TO_CALLER:
