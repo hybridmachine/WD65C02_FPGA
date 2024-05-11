@@ -84,12 +84,21 @@ CODE
     CELL_LIVE:            equ    1
     ; Argument positions for BitBoard subroutines
     CELL_STATUS:          equ    ARG3   ; bit on/off
-    CURRENT_GEN:          equ    GAMEBOARDS ; Current gen is at the base of GAMEBOARES 4 bytes range
+    CURRENT_GEN:          equ    GAMEBOARDS ; Current gen is at the base of GAMEBOARDS 4 bytes range
     NEXT_GEN:             equ    CURRENT_GEN+2; Pointer for next gen right after current gen
     NBR_CNT:              equ    SCRATCH ; Use first scratch position for neihbor count
+    ARG_COL_X:            equ    ARG1
+    ARG_ROW_Y:            equ    ARG2
 ;***************************************************************************
 ;                               Application Code
 ;***************************************************************************
+
+LOAD_POINT_COORD_ARGS MACRO
+        lda COL_X
+        sta ARG1
+        lda ROW_Y
+        sta ARG2
+        ENDM
 
 START:
 	sei             ; Ignore maskable interrupts
@@ -137,37 +146,37 @@ LOAD_R_PENTOMINO:
         lda #>BOARD1_BASE_ADDR
         sta PTR1+1
         lda #BOARD_WIDTH/2
-        sta COL_X
+        sta ARG_COL_X
         lda #BOARD_HEIGHT/2-1
-        sta ROW_Y
+        sta ARG_ROW_Y
         lda #CELL_LIVE
         sta CELL_STATUS
         jsr SUB_SETBIT
         lda #BOARD_WIDTH/2+1
-        sta COL_X
+        sta ARG_COL_X
         lda #BOARD_HEIGHT/2-1
-        sta ROW_Y
+        sta ARG_ROW_Y
         lda #CELL_LIVE
         sta CELL_STATUS
         jsr SUB_SETBIT
         lda #BOARD_WIDTH/2
-        sta COL_X
+        sta ARG_COL_X
         lda #BOARD_HEIGHT/2
-        sta ROW_Y
+        sta ARG_ROW_Y
         lda #CELL_LIVE
         sta CELL_STATUS
         jsr SUB_SETBIT
         lda #BOARD_WIDTH/2-1
-        sta COL_X
+        sta ARG_COL_X
         lda #BOARD_HEIGHT/2
-        sta ROW_Y
+        sta ARG_ROW_Y
         lda #CELL_LIVE
         sta CELL_STATUS
         jsr SUB_SETBIT
         lda #BOARD_WIDTH/2
-        sta COL_X
+        sta ARG_COL_X
         lda #BOARD_HEIGHT/2+1
-        sta ROW_Y
+        sta ARG_ROW_Y
         lda #CELL_LIVE
         sta CELL_STATUS
         jsr SUB_SETBIT
@@ -202,7 +211,6 @@ LOOP_GENS:
         sec
         sbc #1 ; cnt--
         bne LOOP_GENS ; if (cnt != 0) then loop
-        
         TIMER_READ SCRATCH
         SEVENSEG_DISPLAY_VALUE SCRATCH
         jmp LOOP_TIMER ; Loop forever
@@ -220,6 +228,7 @@ LOOP_COL:
         lda CURRENT_GEN+1
         sta PTR1+1
 
+        LOAD_POINT_COORD_ARGS
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         sta NBR_CNT ; Save off nbr count
 
@@ -241,6 +250,8 @@ GET_NEXT_GEN:
                 ; if CNT > 3 then CELL_STATUS = CELL_DEAD
         ;   Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
                 ; if CNT == 3 then CELL_STATUS = CELL_LIVE (covered above so no need to re-check)
+
+        LOAD_POINT_COORD_ARGS
 
         lda NBR_CNT
         cmp #2
@@ -345,24 +356,43 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	rti
 
 IRQHandler:
-		TRACELOC #11
-		rti
+	pla
+	rti
 
 	bits:	db	1
 	cnt:	db	0
 	wraps:	dw	0
 	delay:	db	10
 
-
 ;***************************************************************************
-vectors	SECTION OFFSET $FFFA
-					;65C02 Interrupt Vectors
-					; Common 8 bit Vectors for all CPUs
+;***************************************************************************
+; New for WDCMON V1.04
+;  Needed to move Shadow Vectors into proper area
+;***************************************************************************
+;***************************************************************************
+SH_vectors:	section
+Shadow_VECTORS	SECTION OFFSET $7EFA
+        ;65C02 Interrupt Vectors
+        ; Common 8 bit Vectors for all CPUs
 
 		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
-		dw	START		        ; $FFFC -  RESET (ALL)
-		dw	IRQHandler      	; $FFFE -  IRQBRK (ALL)
+		dw	START				; $FFFC -  RESET (ALL)
+		dw	IRQHandler			; $FFFE -  IRQBRK (ALL)
+
+ends
+
+
+;***************************************************************************
+
+vectors	SECTION OFFSET $FFFA
+        ;65C02 Interrupt Vectors
+        ; Common 8 bit Vectors for all CPUs
+
+		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
+		dw	START		; $FFFC -  RESET (ALL)
+		dw	IRQHandler	; $FFFE -  IRQBRK (ALL)
 
     ends
+end ; SH_vectors 
 
 END ; CODE
