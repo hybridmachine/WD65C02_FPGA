@@ -39,6 +39,7 @@ CODE
     INCLUDE "inc/Trace.inc"
     INCLUDE "elapsed_timer/Timer.inc"
     INCLUDE "seven_segment_display/SevenSegmentDisplay.inc" 
+    INCLUDE "inc/GameOfLifeConstants.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -64,6 +65,8 @@ CODE
     XREF TIMER_READ
     ; void TimerReset(void)
     XREF TIMER_RESET
+    ; void LoadRPentomino(uint16 boardAddr)
+    XREF SUB_LOAD_R_PENTOMINO
 
 ;***************************************************************************
 ;                              External Variables
@@ -75,22 +78,9 @@ CODE
 ;                               Local Constants
 ;***************************************************************************
 
-    BOARD_WIDTH:          equ    40
-    BOARD_HEIGHT:         equ    40
-    ROW_PTRS_ARRAY_LEN:   equ    2*BOARD_HEIGHT
-    BOARD1_BASE_ADDR:     equ    $0300
-    BOARD2_BASE_ADDR:     equ    BOARD1_BASE_ADDR+(BOARD_WIDTH*BOARD_HEIGHT)+ROW_PTRS_ARRAY_LEN
-    CELL_DEAD:            equ    0
-    CELL_LIVE:            equ    1
-    ; Argument positions for BitBoard subroutines
-    CELL_STATUS:          equ    ARG3   ; bit on/off
-    CURRENT_GEN:          equ    GAMEBOARDS ; Current gen is at the base of GAMEBOARDS 4 bytes range
-    NEXT_GEN:             equ    CURRENT_GEN+2; Pointer for next gen right after current gen
-    NBR_CNT:              equ    SCRATCH ; Use first scratch position for neihbor count
-    ARG_COL_X:            equ    ARG1
-    ARG_ROW_Y:            equ    ARG2
+
 ;***************************************************************************
-;                               Application Code
+;                               Local Macros
 ;***************************************************************************
 
 LOAD_POINT_COORD_ARGS MACRO
@@ -99,6 +89,32 @@ LOAD_POINT_COORD_ARGS MACRO
         lda ROW_Y
         sta ARG2
         ENDM
+
+INIT_BOARD MACRO BOARD_ADDR
+        lda #BOARD_ADDR
+        sta PTR1 
+        lda #>BOARD_ADDR
+        sta PTR1+1
+        lda #BOARD_WIDTH        ; width
+        sta ARG1
+        lda #BOARD_HEIGHT       ; height
+        sta ARG2
+        lda #CELL_DEAD          ; initval CELL_DEAD
+        sta ARG3  
+        jsr SUB_INITBOARD
+        ENDM
+
+LOAD_R_PENTOMINO MACRO
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        jsr SUB_LOAD_R_PENTOMINO
+        ENDM
+
+;***************************************************************************
+;                               Application Code
+;***************************************************************************
 
 START:
 	sei             ; Ignore maskable interrupts
@@ -109,77 +125,13 @@ START:
 	txs
 
         ; Initialize board 1
-        ; baseAddr
-        lda #BOARD1_BASE_ADDR
-        sta PTR1 
-        lda #>BOARD1_BASE_ADDR
-        sta PTR1+1
-        lda #BOARD_WIDTH        ; width
-        sta ARG1
-        lda #BOARD_HEIGHT       ; height
-        sta ARG2
-        lda #CELL_DEAD          ; initval CELL_DEAD
-        sta ARG3  
-        jsr SUB_INITBOARD
+        INIT_BOARD BOARD1_BASE_ADDR
 
         ; Initialize board 2
-        lda #BOARD2_BASE_ADDR
-        sta PTR1
-        lda #>BOARD2_BASE_ADDR
-        sta PTR1+1
-        lda #BOARD_WIDTH        ; width
-        sta ARG1
-        lda #BOARD_HEIGHT       ; height
-        sta ARG2
-        lda #CELL_DEAD          ; initval CELL_DEAD
-        sta ARG3 
-        jsr SUB_INITBOARD
+        INIT_BOARD BOARD2_BASE_ADDR
 
-LOAD_R_PENTOMINO:
-        ; Load an R-Pentomino into gameboard
-        ;   **
-        ;  **
-        ;   *
-        ; Set the current gen board as the board we are operating on
-        lda #BOARD1_BASE_ADDR
-        sta PTR1 
-        lda #>BOARD1_BASE_ADDR
-        sta PTR1+1
-        lda #BOARD_WIDTH/2
-        sta ARG_COL_X
-        lda #BOARD_HEIGHT/2-1
-        sta ARG_ROW_Y
-        lda #CELL_LIVE
-        sta CELL_STATUS
-        jsr SUB_SETBIT
-        lda #BOARD_WIDTH/2+1
-        sta ARG_COL_X
-        lda #BOARD_HEIGHT/2-1
-        sta ARG_ROW_Y
-        lda #CELL_LIVE
-        sta CELL_STATUS
-        jsr SUB_SETBIT
-        lda #BOARD_WIDTH/2
-        sta ARG_COL_X
-        lda #BOARD_HEIGHT/2
-        sta ARG_ROW_Y
-        lda #CELL_LIVE
-        sta CELL_STATUS
-        jsr SUB_SETBIT
-        lda #BOARD_WIDTH/2-1
-        sta ARG_COL_X
-        lda #BOARD_HEIGHT/2
-        sta ARG_ROW_Y
-        lda #CELL_LIVE
-        sta CELL_STATUS
-        jsr SUB_SETBIT
-        lda #BOARD_WIDTH/2
-        sta ARG_COL_X
-        lda #BOARD_HEIGHT/2+1
-        sta ARG_ROW_Y
-        lda #CELL_LIVE
-        sta CELL_STATUS
-        jsr SUB_SETBIT
+        ; Load initial pattern
+        LOAD_R_PENTOMINO
 
         ; Establish board pointers
         ; Set the current gen board as the board we are reading from on
@@ -193,6 +145,7 @@ LOAD_R_PENTOMINO:
         sta NEXT_GEN 
         lda #>BOARD2_BASE_ADDR
         sta NEXT_GEN+1
+
 LOOP_TIMER:
         jsr SUB_TIMER_START ; Reset the timer
         ; Loop over 100 generations
@@ -222,6 +175,8 @@ PRIV_CALCULATE_NEXT_GEN:
         sty ROW_Y
 
 LOOP_COL:
+        TRACELOC COL_X,ROW_Y
+        DELAY_LOOP #$AA
         ; Load current gen pointer and get the nbr cnt
         lda CURRENT_GEN
         sta PTR1
@@ -233,7 +188,6 @@ LOOP_COL:
         sta NBR_CNT ; Save off nbr count
 
 GET_NEXT_GEN:
-        ; TRACELOC #04
         ; Calculate the next generation
         lda NEXT_GEN
         sta PTR1
@@ -260,10 +214,9 @@ GET_NEXT_GEN:
         cmp #3
         beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
         bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
-        ; TRACELOC #05
         ; brk ; Shouldn't ever get here
+
 SET_CELL_DEAD:
-        ; TRACELOC #05
         lda #CELL_DEAD
         sta CELL_STATUS
 
@@ -272,7 +225,6 @@ SET_CELL_DEAD:
         jmp TEST_FOR_LOOP
         
 SET_CELL_LIVE:
-        ; TRACELOC #06
         lda #CELL_LIVE
         sta CELL_STATUS
         
@@ -281,7 +233,6 @@ SET_CELL_LIVE:
         jmp TEST_FOR_LOOP
 
 SET_CELL_SAME:
-        ; TRACELOC #07
         ; Load current gen pointer and get current status
         lda CURRENT_GEN
         sta PTR1
@@ -306,8 +257,8 @@ TEST_FOR_LOOP:
         inx
         stx COL_X
         cpx #BOARD_WIDTH-1
-        bne LOOP_COL
-        ; TRACELOC #10
+        beq LOOP_ROW
+        jmp LOOP_COL
 
 LOOP_ROW:
         ldy ROW_Y
