@@ -39,6 +39,7 @@ CODE
     INCLUDE "inc/PageZero.inc"    ; Page zero usage locations
 
 
+
 ;***************************************************************************
 ;                              Global Modules
 ;***************************************************************************
@@ -54,6 +55,10 @@ CODE
     XREF SUB_SETBIT
     ; uint8 GetBit(uint16 baseAddr, uint8 x, uint8 y)
     XREF SUB_GETBIT
+    ; void LoadRPentomino(uint16 baseAddr)
+    XREF SUB_LOAD_R_PENTOMINO
+    ; uint8 GetLiveNeighborCount(uint16 baseAddr, uint8 x, uint8 y)
+    XREF SUB_GET_LIVE_NEIGHBOR_COUNT
 
 ;***************************************************************************
 ;                              External Variables
@@ -138,12 +143,65 @@ START:
         sta ARG2
         jsr SUB_GETBIT
         CMP #TEST_PATTERN
+        bne FAIL_TEST
+
         lda #1
         sta ARG1
         lda #5
         sta ARG2
         jsr SUB_GETBIT
         CMP #CELL_DEAD
+        bne FAIL_TEST
+
+        ; Initialize board 1
+        ; baseAddr
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        lda #BOARD_WIDTH        ; width
+        sta ARG1
+        lda #BOARD_HEIGHT       ; height
+        sta ARG2
+        lda #CELL_DEAD       ; initval $00
+        sta ARG3  
+        jsr SUB_INITBOARD
+
+        ; Load a test pattern into the board and check the neighbor count subroutines
+        lda #BOARD1_BASE_ADDR
+        sta PTR1 
+        lda #>BOARD1_BASE_ADDR
+        sta PTR1+1
+        jsr SUB_LOAD_R_PENTOMINO
+
+        lda #20
+        sta ARG1
+        lda #19
+        sta ARG2
+        jsr SUB_GETBIT
+        cmp #CELL_LIVE ; Expect cell to be active
+        bne FAIL_TEST
+
+        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
+        cmp #3 ; Expect 3 neighbors
+        bne FAIL_TEST
+        
+        lda #20
+        sta ARG1
+        lda #20
+        sta ARG2
+        jsr SUB_GETBIT
+        cmp #CELL_LIVE ; Expect cell to be active
+        bne FAIL_TEST
+
+        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
+        cmp #4 ; Expect 4 neighbors
+        bne FAIL_TEST
+        
+        brk
+
+
+FAIL_TEST:
         brk
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.

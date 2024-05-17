@@ -124,6 +124,9 @@ START:
 	ldx	#$ff		; Initialize the stack pointer
 	txs
 
+        ; Initialize page zero locations, used also to verify locations in debugger
+        INIT_PAGE_ZERO
+
         ; Initialize board 1
         INIT_BOARD BOARD1_BASE_ADDR
 

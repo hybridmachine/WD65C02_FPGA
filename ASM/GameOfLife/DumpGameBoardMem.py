@@ -11,7 +11,7 @@ def read_bits(file_path, width):
             while byte:
                 # Convert byte to integer
                 byte = ord(byte)
-                print(byte, end='')
+                print(hex(byte)[2:], end='')
                 bit_count += 1
                 if bit_count == width:
                     print('\n', end='')

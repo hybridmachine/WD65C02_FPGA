@@ -211,41 +211,15 @@ LOOP_COL:
 
 ; void SetBit(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2, uint8 bitval:ARG3)
 SUB_SETBIT:
-    lda ARG2
-    ; Put the target row start location in scratch
-    asl ; Multiply by 2, since each pointers is two bytes
-    tay
-    lda (PTR1),Y
-    sta SCRATCH
-    iny
-    lda (PTR1),Y
-    sta SCRATCH+1
-    ; We have the row start, now find the byte in that row (the X position)
-    ldy ARG1
-    ; Load the bit pattern we want to set in this position
-    clc
-    lda SCRATCH+1
-    bne NOTZERO
-    ;brk ; Something is wrong, scrach high byte has zero
-NOTZERO
+    jsr PRIV_GETCELLADDR
     lda ARG3
-    sta (SCRATCH),Y
+    sta (CELL_PTR)
     rts
 
 ; uint8 GetBit(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2) - Returns value in accumulator
 SUB_GETBIT:
-    lda ARG2
-    ; Put the target row start location in scratch
-    asl ; Multiply by 2, since each pointers is two bytes
-    tay
-    lda (PTR1),Y
-    sta SCRATCH
-    iny
-    lda (PTR1),Y
-    sta SCRATCH+1
-    ; We have the row start, now find the byte in that row (the X position)
-    ldy ARG1
-    lda (SCRATCH),Y
+    jsr PRIV_GETCELLADDR
+    lda (CELL_PTR)
     rts
 
 ; uint8 GetLiveNeighborCount(boardAddr ptr1, uint8 x:ARG1, uint8 y:ARG2, uint8 width:ARG3)
@@ -254,9 +228,9 @@ SUB_GETBIT:
 ; X-1, X+1, Y-1, Y+1 position.
 SUB_GET_LIVE_NEIGHBOR_COUNT:
     ; Zero out the neighbor count
-    lda #0
-    sta NBR_CNT
-    sta SCRATCH
+    
+    stz NBR_CNT
+    CLEAR_SCRATCH
 
     ; PT1 is already setup, ARG1 and ARG2 have the offsets already, get the cell pointer
     jsr PRIV_GETCELLADDR
@@ -272,16 +246,10 @@ SUB_GET_LIVE_NEIGHBOR_COUNT:
 
     ; These move the cursor to the top left of the group
     ; Move the row argument up one
-    sec
-    lda ARG_ROW_Y
-    sbc #1
-    sta ARG_ROW_Y 
+    dec ARG_ROW_Y
 
     ; Move the col argument back one
-    sec
-    lda ARG_COL_X
-    sbc #1
-    sta ARG_COL_X
+    dec ARG_COL_X
 
     ; Cursor is at the top left of the group, get the count
     ldy #0
@@ -294,10 +262,7 @@ ROW_LOOP:
     ply ; Restore y
 
     ; ARG_ROW_Y++
-    clc
-    lda #1
-    adc ARG_ROW_Y
-    sta ARG_ROW_Y
+    inc ARG_ROW_Y
 
     ; if (++y < 3) goto ROW_LOOP
     iny
