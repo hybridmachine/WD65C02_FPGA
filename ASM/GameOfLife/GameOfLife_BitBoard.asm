@@ -179,7 +179,7 @@ PRIV_CALCULATE_NEXT_GEN:
 
 LOOP_COL:
         TRACELOC COL_X,ROW_Y
-        ; DELAY_LOOP #$AA
+        DELAY_LOOP #$AA
         ; Load current gen pointer and get the nbr cnt
         lda CURRENT_GEN
         sta PTR1
@@ -211,14 +211,14 @@ GET_NEXT_GEN:
         LOAD_POINT_COORD_ARGS
 
         lda NBR_CNT
-        ;cmp #2
-        ;bmi SET_CELL_DEAD       ; if CNT < 2 then CELL_STATUS = CELL_DEAD
-        ;beq SET_CELL_SAME       ; if CNT == 2 then CELL_STATUS = CELL_SAME
-        ;cmp #3
-        ;beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
-        ;bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
+        cmp #2
+        bmi SET_CELL_DEAD       ; if CNT < 2 then CELL_STATUS = CELL_DEAD
+        beq SET_CELL_SAME       ; if CNT == 2 then CELL_STATUS = CELL_SAME
+        cmp #3
+        beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
+        bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
         ; brk ; Shouldn't ever get here
-        jmp TEST_FOR_LOOP
+        ; jmp TEST_FOR_LOOP
 
 SET_CELL_DEAD:
         lda #CELL_DEAD
