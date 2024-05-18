@@ -48,7 +48,8 @@
     ; Scratch space for functions to use for calculations, 6 bytes long
     SCRATCH:        equ    PTR2+PTRSIZE
     GAMEBOARDS:     equ    SCRATCH+SCRATCHSIZE ; Two gameboard pointers
-    TRACEID:        equ    GAMEBOARDS+(2*PTRSIZE) 
+    BOARDSWAP:      equ    GAMEBOARDS+(2*PTRSIZE)
+    TRACEID:        equ    BOARDSWAP+PTRSIZE 
     COL_X:          equ    TRACEID+PTRSIZE 
     ROW_Y:          equ    COL_X+BYTESIZE 
     PAGEZERO_FREE:  equ    ROW_Y+BYTESIZE 

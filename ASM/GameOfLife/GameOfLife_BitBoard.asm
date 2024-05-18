@@ -157,7 +157,7 @@ LOOP_GENS:
         pha ; save current value of cnt to stack
 
         ; Calculate next gen (reads from CURRENT_GEN and writes to NEXT_GEN)
-        jsr PRIV_CALCULATE_NEXT_GEN
+        ;jsr PRIV_CALCULATE_NEXT_GEN
 
         ; Swap generations (NEXT_GEN becomes CURRENT_GEN, and vice versa)
         jsr PRIV_SWAP_GENERATIONS
@@ -179,7 +179,7 @@ PRIV_CALCULATE_NEXT_GEN:
 
 LOOP_COL:
         TRACELOC COL_X,ROW_Y
-        DELAY_LOOP #$AA
+        ; DELAY_LOOP #$AA
         ; Load current gen pointer and get the nbr cnt
         lda CURRENT_GEN
         sta PTR1
@@ -211,13 +211,14 @@ GET_NEXT_GEN:
         LOAD_POINT_COORD_ARGS
 
         lda NBR_CNT
-        cmp #2
-        bmi SET_CELL_DEAD       ; if CNT < 2 then CELL_STATUS = CELL_DEAD
-        beq SET_CELL_SAME       ; if CNT == 2 then CELL_STATUS = CELL_SAME
-        cmp #3
-        beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
-        bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
+        ;cmp #2
+        ;bmi SET_CELL_DEAD       ; if CNT < 2 then CELL_STATUS = CELL_DEAD
+        ;beq SET_CELL_SAME       ; if CNT == 2 then CELL_STATUS = CELL_SAME
+        ;cmp #3
+        ;beq SET_CELL_LIVE       ; if CNT == 3 then CELL_STATUS = CELL_LIVE
+        ;bpl SET_CELL_DEAD       ; if CNT > 3 then CELL_STATUS = CELL_DEAD
         ; brk ; Shouldn't ever get here
+        jmp TEST_FOR_LOOP
 
 SET_CELL_DEAD:
         lda #CELL_DEAD
@@ -277,24 +278,30 @@ RETURN_TO_CALLER:
         rts
 
 PRIV_SWAP_GENERATIONS:
+        phx
+        ldx #$AB
+        stx BOARDSWAP
+        stx BOARDSWAP+1
+
         ; Save CURRENT_GEN to tmp
-        lda CURRENT_GEN
-        sta SCRATCH
-        lda CURRENT_GEN+1
-        sta SCRATCH+1
+        ldx CURRENT_GEN
+        stx BOARDSWAP
+        ldx CURRENT_GEN+1
+        stx BOARDSWAP+1
 
         ; Save NEXT_GEN to CURRENT_GEN
-        lda NEXT_GEN
-        sta CURRENT_GEN
-        lda NEXT_GEN+1
-        sta CURRENT_GEN+1
+        ldx NEXT_GEN
+        stx CURRENT_GEN
+        ldx NEXT_GEN+1
+        stx CURRENT_GEN+1
 
         ; Load previous CURRENT_GEN ptr into NEXT_GEN
-        lda SCRATCH
-        sta NEXT_GEN
-        lda SCRATCH+1
-        sta NEXT_GEN+1
+        ldx BOARDSWAP
+        stx NEXT_GEN
+        ldx BOARDSWAP+1
+        stx NEXT_GEN+1
 
+        plx
         ; Return to caller
         rts
 
