@@ -167,6 +167,8 @@ LOOP_GENS:
         sec
         sbc #1 ; cnt--
         bne LOOP_GENS ; if (cnt != 0) then loop
+        ; For debug
+        brk;
         TIMER_READ SCRATCH
         SEVENSEG_DISPLAY_VALUE SCRATCH
         DELAY_LOOP #$2A
@@ -188,6 +190,8 @@ LOOP_COL:
         sta PTR1+1
 
         LOAD_POINT_COORD_ARGS
+        lda #BOARD_WIDTH
+        sta ARG3
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         sta NBR_CNT ; Save off nbr count
 

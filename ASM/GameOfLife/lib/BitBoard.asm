@@ -237,19 +237,22 @@ SUB_GET_LIVE_NEIGHBOR_COUNT:
     ; Cell address is now in CELL_PTR
 
     ; Get our own bit state, we'll subtract this from NBR_CNT later
-    ldy #0
-    ; Check left neighbor
-    lda (CELL_PTR),Y
-    clc
-    adc SCRATCH
-    sta SCRATCH
+    lda (CELL_PTR)
+    beq LOAD_TOP_LEFT ; If we are zero, we don't need to add one to scratch
+    inc SCRATCH
 
+LOAD_TOP_LEFT:
     ; These move the cursor to the top left of the group
     ; Move the row argument up one
-    dec ARG_ROW_Y
-
-    ; Move the col argument back one
-    dec ARG_COL_X
+    inc ARG3
+    lda CELL_PTR
+    sec
+    sbc ARG3 ; This will point to the cell directly above and one to the left
+    sta CELL_PTR
+    lda CELL_PTR+1
+    sbc #0 ; In case there is a borrow
+    sta CELL_PTR+1
+    dec ARG3 ; Restore the width argument
 
     ; Cursor is at the top left of the group, get the count
     ldy #0
@@ -257,12 +260,17 @@ ROW_LOOP:
     clc
 
     phy ; Save off Y
-    jsr PRIV_GETCELLADDR
     jsr PRIV_GET_COUNT_IN_ROW
     ply ; Restore y
 
-    ; ARG_ROW_Y++
-    inc ARG_ROW_Y
+    ; Point to the next row
+    lda CELL_PTR
+    clc
+    adc ARG3
+    sta CELL_PTR
+    lda CELL_PTR+1
+    adc #0
+    sta CELL_PTR+1
 
     ; if (++y < 3) goto ROW_LOOP
     iny
