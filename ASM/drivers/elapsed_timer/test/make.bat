@@ -19,7 +19,7 @@ del *.bin
 del *.obj
 del *.lst
 del *.sym
-WDC02AS -g -l -DUSING_02 TestTimer.asm
-WDC02AS -g -l -DUSING_02 ..\Timer.asm -O Timer.obj
+WDC02AS -G -L -I ..\ -DUSING_02 TestTimer.asm
+WDC02AS -G -L -DUSING_02 ..\Timer.asm -O Timer.obj
 WDCLN -CFC00 -g -sz -t -HZ TestTimer Timer.obj
-WDCDB.exe
+REM WDCDB.exe

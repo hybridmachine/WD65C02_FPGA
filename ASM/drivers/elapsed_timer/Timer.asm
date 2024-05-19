@@ -21,9 +21,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 ;
-;  DESCRIPTION: Driver for FPGA hosted millisecond resolution timer
-;
-;  
+;  DESCRIPTION: Driver for FPGA hosted millisecond resolution timer. 
 ;
 ;***************************************************************************   
 
@@ -50,20 +48,20 @@ CODE
                                                ; STS_TIMER_READ_READY
 
 
-    GLOBAL TIMER_START
-    GLOBAL TIMER_READ
-    GLOBAL TIMER_RESET
+    GLOBAL SUB_TIMER_START
+    GLOBAL SUB_TIMER_READ
+    GLOBAL SUB_TIMER_RESET
 
 ; Calls TIMER_RESET then sets timer running, causes timer to always restart from 0.
-TIMER_START:
-    JSR TIMER_RESET
+SUB_TIMER_START:
+    JSR SUB_TIMER_RESET
     LDA #CTL_TIMER_RUN
     STA TIMER_CTL_ADDR
     RTS
 
 ; Reads timer then clears all of the timer read states, does not reset, allows timer to progress
 ; Blocking call (for at least 20 cycles). 
-TIMER_READ:
+SUB_TIMER_READ:
     LDA #CTL_READ_REQUESTED
     STA TIMER_CTL_ADDR
     ; Wait N iterations to read timer data
@@ -99,7 +97,7 @@ RETURN_NO_DATA:
     RTS
 
 ; Stops the timer (leaves it in resetting state, call timer start to start timer)
-TIMER_RESET:
+SUB_TIMER_RESET:
     LDA #CTL_TIMER_RESET
     STA TIMER_CTL_ADDR
     LDX #10
