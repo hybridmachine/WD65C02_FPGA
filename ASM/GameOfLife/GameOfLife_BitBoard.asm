@@ -157,7 +157,7 @@ LOOP_GENS:
         pha ; save current value of cnt to stack
 
         ; Calculate next gen (reads from CURRENT_GEN and writes to NEXT_GEN)
-        ;jsr PRIV_CALCULATE_NEXT_GEN
+        jsr PRIV_CALCULATE_NEXT_GEN
 
         ; Swap generations (NEXT_GEN becomes CURRENT_GEN, and vice versa)
         jsr PRIV_SWAP_GENERATIONS
@@ -178,8 +178,8 @@ PRIV_CALCULATE_NEXT_GEN:
         sty ROW_Y
 
 LOOP_COL:
-        TRACELOC COL_X,ROW_Y
-        DELAY_LOOP #$AA
+        ;TRACELOC COL_X,ROW_Y
+        ;DELAY_LOOP #$2A
         ; Load current gen pointer and get the nbr cnt
         lda CURRENT_GEN
         sta PTR1
@@ -208,7 +208,7 @@ GET_NEXT_GEN:
         ;   Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction
                 ; if CNT == 3 then CELL_STATUS = CELL_LIVE (covered above so no need to re-check)
 
-        LOAD_POINT_COORD_ARGS
+        
 
         lda NBR_CNT
         cmp #2
@@ -223,7 +223,7 @@ GET_NEXT_GEN:
 SET_CELL_DEAD:
         lda #CELL_DEAD
         sta CELL_STATUS
-
+        LOAD_POINT_COORD_ARGS
         jsr SUB_SETBIT
         
         jmp TEST_FOR_LOOP
@@ -231,7 +231,7 @@ SET_CELL_DEAD:
 SET_CELL_LIVE:
         lda #CELL_LIVE
         sta CELL_STATUS
-        
+        LOAD_POINT_COORD_ARGS
         jsr SUB_SETBIT
         
         jmp TEST_FOR_LOOP
@@ -242,7 +242,7 @@ SET_CELL_SAME:
         sta PTR1
         lda CURRENT_GEN+1
         sta PTR1+1
-
+        LOAD_POINT_COORD_ARGS
         jsr SUB_GETBIT
         sta CELL_STATUS
 
@@ -251,7 +251,7 @@ SET_CELL_SAME:
         sta PTR1
         lda NEXT_GEN+1
         sta PTR1+1
-
+        LOAD_POINT_COORD_ARGS
         jsr SUB_SETBIT
         
         jmp TEST_FOR_LOOP
