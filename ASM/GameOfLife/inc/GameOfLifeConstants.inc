@@ -25,8 +25,8 @@
 ;
 ;***************************************************************************   
 
-    BOARD_WIDTH:          equ    40
-    BOARD_HEIGHT:         equ    40
+    BOARD_WIDTH:          equ    34
+    BOARD_HEIGHT:         equ    34
     ROW_PTRS_ARRAY_LEN:   equ    2*BOARD_HEIGHT
     BOARD1_BASE_ADDR:     equ    $0400
     BOARD2_BASE_ADDR:     equ    BOARD1_BASE_ADDR+(BOARD_WIDTH*BOARD_HEIGHT)+ROW_PTRS_ARRAY_LEN
