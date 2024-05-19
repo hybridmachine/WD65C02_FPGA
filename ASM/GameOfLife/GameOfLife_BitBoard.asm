@@ -151,8 +151,8 @@ START:
 
 LOOP_TIMER:
         jsr SUB_TIMER_START ; Reset the timer
-        ; Loop over 100 generations
-        lda #100 ; cnt = 100
+        ; Loop over n generations
+        lda #10
 LOOP_GENS:
         pha ; save current value of cnt to stack
 
@@ -169,6 +169,7 @@ LOOP_GENS:
         bne LOOP_GENS ; if (cnt != 0) then loop
         TIMER_READ SCRATCH
         SEVENSEG_DISPLAY_VALUE SCRATCH
+        DELAY_LOOP #$2A
         jmp LOOP_TIMER ; Loop forever
 
 PRIV_CALCULATE_NEXT_GEN:
