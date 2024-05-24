@@ -37,7 +37,7 @@ CODE
 ;***************************************************************************
 
     INCLUDE "inc/PageZero.inc"    ; Page zero usage locations
-
+    INCLUDE "inc/GameOfLifeConstants.inc"
 
 
 ;***************************************************************************
@@ -70,13 +70,7 @@ CODE
 ;                               Local Constants
 ;***************************************************************************
 
-    BOARD_WIDTH:          equ    40
-    BOARD_HEIGHT:         equ    40
-    ROW_PTRS_ARRAY_LEN:   equ    2*BOARD_HEIGHT
-    BOARD1_BASE_ADDR:     equ    $0300
-    BOARD2_BASE_ADDR:     equ    BOARD1_BASE_ADDR+(BOARD_WIDTH*BOARD_HEIGHT)+ROW_PTRS_ARRAY_LEN
-    CELL_DEAD:            equ    0
-    CELL_LIVE:            equ    1
+    
     TEST_PATTERN:         equ    $CC
 START:
 		sei             ; Ignore maskable interrupts
@@ -143,16 +137,20 @@ START:
         sta ARG2
         jsr SUB_GETBIT
         CMP #TEST_PATTERN
-        bne FAIL_TEST
+        beq TEST2
+        jmp FAIL_TEST
 
+TEST2:
         lda #1
         sta ARG1
         lda #5
         sta ARG2
         jsr SUB_GETBIT
         CMP #CELL_DEAD
-        bne FAIL_TEST
+        beq TEST3
+        jmp FAIL_TEST
 
+TEST3:
         ; Initialize board 1
         ; baseAddr
         lda #BOARD1_BASE_ADDR
@@ -174,25 +172,56 @@ START:
         sta PTR1+1
         jsr SUB_LOAD_R_PENTOMINO
 
-        lda #20
+TEST_TOP_LEFT_EMPTY:
+        lda #1
         sta ARG1
-        lda #19
+        lda #1
+        sta ARG2
+        jsr SUB_GETBIT
+        cmp #CELL_DEAD ; Expect cell to be active
+        bne FAIL_TEST
+        lda #BOARD_WIDTH
+        sta ARG3
+        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
+        cmp #0 ; Expect 0 neighbors
+        bne FAIL_TEST
+
+TEST_BOTTOM_RIGHT_EMPTY:
+        lda #BOARD_WIDTH-2
+        sta ARG1
+        lda #BOARD_HEIGHT-2
+        sta ARG2
+        jsr SUB_GETBIT
+        cmp #CELL_DEAD ; Expect cell to be active
+        bne FAIL_TEST
+        lda #BOARD_WIDTH
+        sta ARG3
+        jsr SUB_GET_LIVE_NEIGHBOR_COUNT
+        cmp #0 ; Expect 0 neighbors
+        bne FAIL_TEST
+
+        lda #BOARD_WIDTH/2
+        sta ARG1
+        lda #BOARD_HEIGHT/2-1
         sta ARG2
         jsr SUB_GETBIT
         cmp #CELL_LIVE ; Expect cell to be active
         bne FAIL_TEST
-
+        lda #BOARD_WIDTH
+        sta ARG3
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         cmp #3 ; Expect 3 neighbors
         bne FAIL_TEST
         
-        lda #20
+        lda #BOARD_WIDTH/2
         sta ARG1
-        lda #20
+        lda #BOARD_HEIGHT/2
         sta ARG2
         jsr SUB_GETBIT
         cmp #CELL_LIVE ; Expect cell to be active
         bne FAIL_TEST
+        lda #BOARD_WIDTH
+        sta ARG3
 
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         cmp #4 ; Expect 4 neighbors

@@ -265,7 +265,7 @@ TEST_FOR_LOOP:
         ldx COL_X
         inx
         stx COL_X
-        cpx #BOARD_WIDTH-1
+        cpx #BOARD_WIDTH-2 ; We go out to 1 away from the edge, remember we are 0 indexed
         beq LOOP_ROW
         jmp LOOP_COL
 
@@ -273,7 +273,7 @@ LOOP_ROW:
         ldy ROW_Y
         iny
         sty ROW_Y
-        cpy #BOARD_HEIGHT-1
+        cpy #BOARD_HEIGHT-2 ; ; We go out to 1 away from the edge, remember we are 0 indexed
         beq RETURN_TO_CALLER
         ldx #1
         stx COL_X 
