@@ -76,7 +76,7 @@ ADD16 MACRO AMOUNT, ADDRESS
         MEM_MAPPED_IO_END:  EQU     $03FF
         STARTING_ADDRESS:   EQU     MEM_MAPPED_IO_END+1
         MEM_PTR:            EQU     $02
-        TEST_PATTERN:       EQU     $CAFE
+        TEST_PATTERN:       EQU     $FE
 
 START:
 		sei             ; Ignore maskable interrupts
@@ -92,16 +92,43 @@ START:
 ;
 
 LOAD_START_ADDRESS:
+        
+        stz MEM_PTR+1
+        stz MEM_PTR
+        ;SEVENSEG_DISPLAY_VALUE MEM_PTR
+        ;DELAY_LOOP $FF
+
+        lda #$FE
+        sta MEM_PTR+1
+        lda #$ED
+        sta MEM_PTR
+        ;SEVENSEG_DISPLAY_VALUE MEM_PTR
+        ;DELAY_LOOP $FF
+  
         lda #STARTING_ADDRESS
         sta MEM_PTR
         lda #>STARTING_ADDRESS
         sta MEM_PTR+1
 
-WRITE_TEST_PATTERN:
-        lda #TEST_PATTERN
-        sta (MEM_PTR)
+        ;SEVENSEG_DISPLAY_VALUE MEM_PTR
+        ;DELAY_LOOP $FF
+  
+        ;SEVENSEG_DISPLAY_VALUE MEM_PTR
+        ;DELAY_LOOP $FF
+
+        ;lda #STARTING_ADDRESS
+        ;sta MEM_PTR
+        ;lda #>STARTING_ADDRESS
+        ;sta MEM_PTR+1
         
-        lda (MEM_PTR)
+WRITE_TEST_PATTERN:
+        ldy #0
+        lda #TEST_PATTERN
+        sta (MEM_PTR),Y
+  
+        ldy #0
+        lda (MEM_PTR),Y
+        pha
         cmp #TEST_PATTERN
         bne FAIL
 
@@ -113,16 +140,26 @@ WRITE_TEST_PATTERN:
         ; Here we test the high byte, if it is FC, we've hit the end
         lda MEM_PTR+1
         cmp #$FC
-        beq LOAD_START_ADDRESS
+        beq LOAD_START_ADDRESS_JMP
 
         jmp WRITE_TEST_PATTERN
+
+LOAD_START_ADDRESS_JMP:
+        jmp LOAD_START_ADDRESS
         
 FAIL:
+        pla
+        sta $10
+        stz $11
+        pha       
+        SEVENSEG_DISPLAY_VALUE $10
+        DELAY_LOOP $DD
+
         ; Write err status to 7-segment display
         SEVENSEG_DISPLAY_VALUE MEM_PTR
-        DELAY_LOOP $d6
+        DELAY_LOOP $DD
         SEVENSEG_DISPLAY_VALUE $05
-        DELAY_LOOP $d6
+        DELAY_LOOP $DD
         jmp FAIL
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)

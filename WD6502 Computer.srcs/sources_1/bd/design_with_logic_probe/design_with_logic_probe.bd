@@ -334,6 +334,18 @@
           "RESB"
         ]
       },
+      "WDC65C02_Interface_DATA_FROM_CPU_TAP": {
+        "ports": [
+          "WDC65C02_Interface/DATA_FROM_CPU_TAP",
+          "ila_0/probe7"
+        ]
+      },
+      "WDC65C02_Interface_DATA_TO_CPU_TAP": {
+        "ports": [
+          "WDC65C02_Interface/DATA_TO_CPU_TAP",
+          "ila_0/probe6"
+        ]
+      },
       "clk_wiz_0_clk_out1": {
         "ports": [
           "CLOCK",

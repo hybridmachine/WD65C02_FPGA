@@ -62,31 +62,31 @@ package W65C02_DEFINITIONS is
     -- Memory Map
     
     -- ROM ends at FFF9, FFFA - FFFF are managed directly by the memory manager
-    constant ROM_END                    : std_logic_vector(15 downto 0) := x"FFF9";
-    constant ROM_BASE                   : std_logic_vector(15 downto 0) := x"FC00";
+    constant ROM_END                    : ADDRESS_65C02_T := x"FFF9";
+    constant ROM_BASE                   : ADDRESS_65C02_T := x"FC00";
     
-    constant BOOT_VEC                   : std_logic_vector(15 downto 0) := ROM_BASE; -- Jump to the start of ROM
-    constant BOOT_VEC_ADDRESS_LOW       : std_logic_vector(15 downto 0) := x"FFFC";
-    constant BOOT_VEC_ADDRESS_HIGH      : std_logic_vector(15 downto 0) := x"FFFD";
+    constant BOOT_VEC                   : ADDRESS_65C02_T := ROM_BASE; -- Jump to the start of ROM
+    constant BOOT_VEC_ADDRESS_LOW       : ADDRESS_65C02_T := x"FFFC";
+    constant BOOT_VEC_ADDRESS_HIGH      : ADDRESS_65C02_T := x"FFFD";
 
-    constant RAM_END                    : std_logic_vector(15 downto 0) := x"FBFF";
-    constant RAM_BASE                   : std_logic_vector(15 downto 0) := x"0000";
+    constant RAM_END                    : ADDRESS_65C02_T := x"FBFF";
+    constant RAM_BASE                   : ADDRESS_65C02_T := x"0000";
     
-    constant MEM_MAPPED_IO_END          : std_logic_vector(15 downto 0) := x"03FF";
-    constant MEM_MAPPED_IO_BASE         : std_logic_vector(15 downto 0) := x"0200";
-    constant PIO_LED_ADDR               : std_logic_vector(15 downto 0) := MEM_MAPPED_IO_BASE; -- 1 byte
-    constant PIO_7SEG_VAL               : std_logic_vector(15 downto 0) := x"0201"; -- 2 bytes
-    constant PIO_7SEG_ACTIVE            : std_logic_vector(15 downto 0) := x"0203"; -- 2 byte
-    constant PIO_TIMER_CTL              : std_logic_vector(15 downto 0) := x"0205"; -- 1 byte
-    constant PIO_TIMER_STATUS           : std_logic_vector(15 downto 0) := x"0206"; -- 1 byte
-    constant PIO_TIMER_VAL_MS           : std_logic_vector(15 downto 0) := x"0207"; -- 4 bytes
+    constant MEM_MAPPED_IO_END          : ADDRESS_65C02_T := x"03FF";
+    constant MEM_MAPPED_IO_BASE         : ADDRESS_65C02_T := x"0200";
+    constant PIO_LED_ADDR               : ADDRESS_65C02_T := MEM_MAPPED_IO_BASE; -- 1 byte
+    constant PIO_7SEG_VAL               : ADDRESS_65C02_T := x"0201"; -- 2 bytes
+    constant PIO_7SEG_ACTIVE            : ADDRESS_65C02_T := x"0203"; -- 2 byte
+    constant PIO_TIMER_CTL              : ADDRESS_65C02_T := x"0205"; -- 1 byte
+    constant PIO_TIMER_STATUS           : ADDRESS_65C02_T := x"0206"; -- 1 byte
+    constant PIO_TIMER_VAL_MS           : ADDRESS_65C02_T := x"0207"; -- 4 bytes
     
-    constant STACK_END                  : std_logic_vector(15 downto 0) := x"01FF";
-    constant STACK_BASE                 : std_logic_vector(15 downto 0) := x"0100";
+    constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
+    constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     
-    constant SYS_RESERVED_END           : std_logic_vector(15 downto 0) := x"00FF";
-    constant SYS_RESERVED_BASE          : std_logic_vector(15 downto 0) := x"0001";
+    constant SYS_RESERVED_END           : ADDRESS_65C02_T := x"00FF";
+    constant SYS_RESERVED_BASE          : ADDRESS_65C02_T := x"0001";
     
-    constant MEM_MANAGER_STATUS         : std_logic_vector(15 downto 0) := x"0000";
+    constant MEM_MANAGER_STATUS         : ADDRESS_65C02_T := x"0000";
 
 end package;

@@ -1,7 +1,7 @@
 {
    "ActiveEmotionalView":"Default View",
    "Default View_ScaleFactor":"1.18774",
-   "Default View_TopLeft":"-166,-57",
+   "Default View_TopLeft":"284,31",
    "ExpandedHierarchyInLayout":"",
    "PinnedBlocks":"",
    "PinnedPorts":"",
@@ -22,7 +22,7 @@ preplace portBus LED_OUT -pg 1 -lvl 4 -x 950 -y 460 -defaultsOSRD
 preplace portBus DATA -pg 1 -lvl 4 -x 950 -y 280 -defaultsOSRD
 preplace portBus PIO_7SEG_COMMON -pg 1 -lvl 4 -x 950 -y 490 -defaultsOSRD
 preplace portBus PIO_7SEG_SEGMENTS -pg 1 -lvl 4 -x 950 -y 520 -defaultsOSRD
-preplace inst ila_0 -pg 1 -lvl 3 -x 820 -y 140 -defaultsOSRD
+preplace inst ila_0 -pg 1 -lvl 3 -x 840 -y 140 -defaultsOSRD
 preplace inst invert_reset_signal -pg 1 -lvl 1 -x 160 -y 350 -defaultsOSRD
 preplace inst WDC65C02_Interface -pg 1 -lvl 2 -x 520 -y 380 -defaultsOSRD
 preplace netloc Net 1 0 3 10J 290 330 80 NJ
@@ -31,17 +31,19 @@ preplace netloc RWB_PIN_1 1 0 3 NJ 470 310 140 NJ
 preplace netloc Reset_1 1 0 1 NJ 350
 preplace netloc SYNC_1 1 0 3 NJ 500 340 160 NJ
 preplace netloc SingleStep_1 1 0 3 NJ 410 300 180 NJ
-preplace netloc WD6502_Interface_0_PHI2 1 2 2 700 370 NJ
-preplace netloc WD6502_Interface_0_PIO_LED_OUT 1 2 2 730 460 NJ
-preplace netloc WDC65C02_Interface_0_IRQB 1 2 2 710J 310 NJ
-preplace netloc WDC65C02_Interface_0_NMIB 1 2 2 720J 340 NJ
+preplace netloc WD6502_Interface_0_PHI2 1 2 2 710 370 NJ
+preplace netloc WD6502_Interface_0_PIO_LED_OUT 1 2 2 740 460 NJ
+preplace netloc WDC65C02_Interface_0_IRQB 1 2 2 730J 310 NJ
+preplace netloc WDC65C02_Interface_0_NMIB 1 2 2 750J 340 NJ
 preplace netloc WDC65C02_Interface_0_PIO_7SEG_COMMON 1 2 2 720J 490 NJ
 preplace netloc WDC65C02_Interface_0_PIO_7SEG_SEGMENTS 1 2 2 700J 520 NJ
 preplace netloc WDC65C02_Interface_0_RDY 1 2 2 NJ 400 NJ
-preplace netloc WDC65C02_Interface_0_RESB 1 2 2 NJ 420 910J
+preplace netloc WDC65C02_Interface_0_RESB 1 2 2 NJ 420 930J
 preplace netloc clk_wiz_0_clk_out1 1 0 3 NJ 60 320 60 NJ
 preplace netloc invert_reset_signal_Res 1 1 1 NJ 350
-levelinfo -pg 1 -10 160 520 820 950
+preplace netloc WDC65C02_Interface_DATA_TO_CPU_TAP 1 2 1 700 200n
+preplace netloc WDC65C02_Interface_DATA_FROM_CPU_TAP 1 2 1 720 220n
+levelinfo -pg 1 -10 160 520 840 950
 pagesize -pg 1 -db -bbox -sgen -180 0 1170 540
 "
 }

@@ -168,7 +168,7 @@ LOOP_GENS:
         sbc #1 ; cnt--
         bne LOOP_GENS ; if (cnt != 0) then loop
         ; For debug
-        brk;
+        ; brk;
         TIMER_READ SCRATCH
         SEVENSEG_DISPLAY_VALUE SCRATCH
         DELAY_LOOP #$2A
@@ -181,8 +181,8 @@ PRIV_CALCULATE_NEXT_GEN:
         sty ROW_Y
 
 LOOP_COL:
-        ;TRACELOC COL_X,ROW_Y
-        ;DELAY_LOOP #$2A
+        TRACELOC COL_X,ROW_Y
+        DELAY_LOOP #$6A
         ; Load current gen pointer and get the nbr cnt
         lda CURRENT_GEN
         sta PTR1
@@ -194,6 +194,9 @@ LOOP_COL:
         sta ARG3
         jsr SUB_GET_LIVE_NEIGHBOR_COUNT
         sta NBR_CNT ; Save off nbr count
+
+        ;SEVENSEG_DISPLAY_VALUE PTR2
+        ;DELAY_LOOP #$2A
 
 GET_NEXT_GEN:
         ; Calculate the next generation
