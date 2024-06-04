@@ -34,9 +34,9 @@ entity MemoryManager is
            BUS_ADDRESS : in ADDRESS_65C02_T; --! Read/Write address
            MEMORY_CLOCK : in STD_LOGIC; --! Memory clock, typically full FPGA clock speed
            WRITE_FLAG : in STD_LOGIC; --! When 1, write data to address, otherwise read address and output on data line
-           PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
-           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0); --! Common drivers for seven segment displays
-           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0); --! Segment drivers for selected seven segment display
+           PIO_LED_OUT : out std_logic_vector (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
+           PIO_7SEG_COMMON : out std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
+           PIO_7SEG_SEGMENTS : out std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
            RESET : in STD_LOGIC --! Reset 
            );
 end MemoryManager;
@@ -48,20 +48,20 @@ constant ADDRESS_WIDTH: natural := 16;
 
 
 -- RAM signals
-signal ram_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
-signal ram_addrb: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
+signal ram_addra: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
+signal ram_addrb: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
 signal ram_clka: std_logic;
 signal ram_clkb: std_logic;
-signal ram_dina: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-signal ram_dinb: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-signal ram_douta: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-signal ram_doutb: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
+signal ram_dina: std_logic_vector((DATA_WIDTH - 1) downto 0);
+signal ram_dinb: std_logic_vector((DATA_WIDTH - 1) downto 0);
+signal ram_douta: std_logic_vector((DATA_WIDTH - 1) downto 0);
+signal ram_doutb: std_logic_vector((DATA_WIDTH - 1) downto 0);
 signal ram_wea: std_logic;
 signal ram_web: std_logic;
 signal ram_ena: std_logic;
 signal ram_enb: std_logic;
 
-signal rom_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
+signal rom_addra: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
 signal rom_douta: std_logic_vector((DATA_WIDTH - 1) downto 0);
 signal rom_clka: std_logic;
 	
@@ -77,6 +77,7 @@ signal PIO_ELAPSED_TIMER_STATUS_REG_SIG : std_logic_vector (7 downto 0);
 signal PIO_ELAPSED_TIMER_TICKS_MS_SIG : std_logic_vector (31 downto 0);
 
 signal DATA_TRANSFER_READY : boolean := false;
+signal DATA_DIRECTION : READ_WRITE_MODE;
 
 constant WRITE_MODE : std_logic := '1';
 constant READ_MODE : std_logic := '0';
@@ -204,6 +205,8 @@ ram_web <= '0';
 ram_ena <= '1';
 ram_enb <= '1';
 
+DATA_DIRECTION <= WRITE_TO_MEMORY when (WRITE_FLAG = '1') else READ_FROM_MEMORY;
+
 -- Propogate the 7 SEGMENT signals 
 process(MEMORY_CLOCK)
 BEGIN
@@ -250,8 +253,12 @@ begin
             
             if (MemoryRegion(BUS_ADDRESS) = BOOT_VECTOR_REGION) then
                 ReadBootVector(BUS_READ_DATA, BUS_ADDRESS);
-            elsif((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (WRITE_FLAG = '0')) then
+            elsif((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
                 ReadROM(BUS_READ_DATA, BUS_ADDRESS, rom_addra, rom_douta);
+            elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
+                ReadRAM(BUS_READ_DATA, BUS_ADDRESS, ram_addrb, ram_doutb);
+            elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = WRITE_TO_MEMORY)) then
+                WriteRAM(BUS_WRITE_DATA, BUS_ADDRESS, ram_addra, ram_dina);
             elsif(unsigned(RAM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(RAM_END)) then
                 if(unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(MEM_MAPPED_IO_END)) then
                     if (unsigned(PIO_LED_ADDR) = MEMORY_ADDRESS) then
@@ -289,17 +296,6 @@ begin
                     elsif (MEMORY_ADDRESS = (unsigned(PIO_TIMER_VAL_MS)+3) AND WRITE_FLAG = '0') then
                         -- Read the timer status
                         BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
-                    end if;
-                else
-                    SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(RAM_BASE);
-                    -- Write on port A, read on port B
-                    if (WRITE_FLAG = '1') then
-                        ram_addra <= std_logic_vector(SHIFTED_ADDRESS);
-                        ram_dina <= BUS_WRITE_DATA; 
-                    else
-                        -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
-                        ram_addrb <= std_logic_vector(SHIFTED_ADDRESS);
-                        BUS_READ_DATA <= ram_doutb;
                     end if;
                 end if;
             else

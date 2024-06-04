@@ -26,7 +26,8 @@ use work.W65C02_DEFINITIONS.ALL;
 
 package MEMORY_MANAGER is
     type MEMORY_REGION is (BOOT_VECTOR_REGION, ROM_REGION, RAM_REGION, MEMORY_MAPPED_IO_REGION, OUT_OF_RANGE);
-    
+    type READ_WRITE_MODE is (READ_FROM_MEMORY, WRITE_TO_MEMORY);
+
     function MemoryRegion(signal address : ADDRESS_65C02_T) return MEMORY_REGION;
     
     procedure ReadBootVector(signal data_out : out DATA_65C02_T; 
@@ -35,6 +36,16 @@ package MEMORY_MANAGER is
                       signal memory_address : in ADDRESS_65C02_T;
                       signal rom_address : out ADDRESS_65C02_T;
                       signal rom_data : in DATA_65C02_T);
+                      
+    procedure ReadRAM(signal memory_data_out : out DATA_65C02_T; 
+                      signal memory_address : in ADDRESS_65C02_T;
+                      signal ram_address : out ADDRESS_65C02_T;
+                      signal ram_data : in DATA_65C02_T);
+    
+    procedure WriteRAM(signal memory_data_in : in DATA_65C02_T; 
+                      signal memory_address : in ADDRESS_65C02_T;
+                      signal ram_address : out ADDRESS_65C02_T;
+                      signal ram_data : out DATA_65C02_T);
     
 end package MEMORY_MANAGER;
 
@@ -83,5 +94,30 @@ package body MEMORY_MANAGER is
         
         -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
         memory_data_out <= rom_data; 
+    end procedure;
+    
+    procedure ReadRAM(signal memory_data_out : out DATA_65C02_T; 
+                      signal memory_address : in ADDRESS_65C02_T;
+                      signal ram_address : out ADDRESS_65C02_T;
+                      signal ram_data : in DATA_65C02_T) is
+    variable shifted_address : ADDRESS_65C02_T;
+    begin
+        shifted_address := ADDRESS_65C02_T(unsigned(memory_address) - unsigned(RAM_BASE));
+        ram_address <= shifted_address;
+        
+        -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
+        memory_data_out <= ram_data; 
+    end procedure;
+
+    procedure WriteRAM(signal memory_data_in : in DATA_65C02_T; 
+                      signal memory_address : in ADDRESS_65C02_T;
+                      signal ram_address : out ADDRESS_65C02_T;
+                      signal ram_data : out DATA_65C02_T) is
+    variable shifted_address : ADDRESS_65C02_T;
+    begin
+        shifted_address := ADDRESS_65C02_T(unsigned(memory_address) - unsigned(RAM_BASE));
+        ram_address <= shifted_address;
+        
+        ram_data <= memory_data_in; 
     end procedure;
 end package body MEMORY_MANAGER;
