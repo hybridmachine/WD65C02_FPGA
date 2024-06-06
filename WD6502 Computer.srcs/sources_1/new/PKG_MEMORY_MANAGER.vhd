@@ -47,6 +47,10 @@ package MEMORY_MANAGER is
                       signal ram_address : out ADDRESS_65C02_T;
                       signal ram_data : out DATA_65C02_T);
     
+    procedure WritePIO(signal memory_data_in : in DATA_65C02_T; 
+                      signal memory_address : in ADDRESS_65C02_T;
+                      signal ram_address : out ADDRESS_65C02_T;
+                      signal ram_data : out DATA_65C02_T);
 end package MEMORY_MANAGER;
 
 package body MEMORY_MANAGER is
@@ -119,5 +123,13 @@ package body MEMORY_MANAGER is
         ram_address <= shifted_address;
         
         ram_data <= memory_data_in; 
+    end procedure;
+    
+    procedure WritePIO(signal memory_data_in : in DATA_65C02_T; 
+                  signal memory_address : in ADDRESS_65C02_T;
+                  signal ram_address : out ADDRESS_65C02_T;
+                  signal ram_data : out DATA_65C02_T) is
+    begin
+        --TBD
     end procedure;
 end package body MEMORY_MANAGER;

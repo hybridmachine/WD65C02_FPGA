@@ -75,11 +75,16 @@ package W65C02_DEFINITIONS is
     constant MEM_MAPPED_IO_END          : ADDRESS_65C02_T := x"03FF";
     constant MEM_MAPPED_IO_BASE         : ADDRESS_65C02_T := x"0200";
     constant PIO_LED_ADDR               : ADDRESS_65C02_T := MEM_MAPPED_IO_BASE; -- 1 byte
-    constant PIO_7SEG_VAL               : ADDRESS_65C02_T := x"0201"; -- 2 bytes
+    constant PIO_7SEG_VAL_1             : ADDRESS_65C02_T := x"0201"; -- 2 bytes
+    constant PIO_7SEG_VAL_2             : ADDRESS_65C02_T := x"0202";
     constant PIO_7SEG_ACTIVE            : ADDRESS_65C02_T := x"0203"; -- 2 byte
     constant PIO_TIMER_CTL              : ADDRESS_65C02_T := x"0205"; -- 1 byte
     constant PIO_TIMER_STATUS           : ADDRESS_65C02_T := x"0206"; -- 1 byte
-    constant PIO_TIMER_VAL_MS           : ADDRESS_65C02_T := x"0207"; -- 4 bytes
+
+    constant PIO_TIMER_VAL_MS_1         : ADDRESS_65C02_T := x"0207"; -- 4 bytes
+    constant PIO_TIMER_VAL_MS_2         : ADDRESS_65C02_T := x"0208";
+    constant PIO_TIMER_VAL_MS_3         : ADDRESS_65C02_T := x"0209";
+    constant PIO_TIMER_VAL_MS_4         : ADDRESS_65C02_T := x"020A";
     
     constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
     constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
