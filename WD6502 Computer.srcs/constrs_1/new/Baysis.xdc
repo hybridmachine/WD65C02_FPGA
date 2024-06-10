@@ -3,6 +3,8 @@
 set_property PACKAGE_PIN W5 [get_ports CLOCK]
 set_property IOSTANDARD LVCMOS33 [get_ports CLOCK]
 
+create_clock -period 10 [get_ports CLOCK]
+
 # Address ports on the right of the board (when VGA port to the top of board)
 set_property PACKAGE_PIN A14 [get_ports {ADDRESS_IN[0]}]
 set_property PACKAGE_PIN A15 [get_ports {ADDRESS_IN[1]}]
@@ -37,6 +39,15 @@ set_property IOSTANDARD LVCMOS33 [get_ports {ADDRESS_IN[13]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {ADDRESS_IN[14]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {ADDRESS_IN[15]}]
 
+set_input_delay -clock [get_clocks CLOCK] -max 30 [get_ports ADDRESS_IN]
+set_input_delay -clock [get_clocks CLOCK] -min 10 [get_ports ADDRESS_IN]
+
+set_input_delay -clock [get_clocks CLOCK] -max 30 [get_ports DATA]
+set_input_delay -clock [get_clocks CLOCK] -min 10 [get_ports DATA]
+
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports DATA]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports DATA]
+
 # Data port on top left of Basys board
 set_property PACKAGE_PIN G3 [get_ports {DATA[0]}]
 set_property PACKAGE_PIN G2 [get_ports {DATA[1]}]
@@ -62,11 +73,13 @@ set_property PULLDOWN true [get_ports {DATA[6]}]
 set_property PULLDOWN true [get_ports {DATA[5]}]
 set_property PULLDOWN true [get_ports {DATA[4]}]
 set_property PULLDOWN true [get_ports {DATA[3]}]
-set_property SLEW SLOW [get_ports {DATA[7]}]
+# set_property SLEW SLOW [get_ports {DATA[7]}]
 
 # 65C02 clock
 set_property PACKAGE_PIN N1 [get_ports PHI2]
 set_property IOSTANDARD LVCMOS33 [get_ports PHI2]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports PHI2]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports PHI2]
 
 # 65C02 Control Pins
 # BE is tied manually to high for now, not used in design at this time
@@ -74,30 +87,46 @@ set_property IOSTANDARD LVCMOS33 [get_ports PHI2]
 # set_property IOSTANDARD LVCMOS33 [get_ports BE]
 set_property PACKAGE_PIN N2 [get_ports RESB]
 set_property IOSTANDARD LVCMOS33 [get_ports RESB]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports RESB]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports RESB]
 
 set_property PACKAGE_PIN M1 [get_ports SYNC]
 set_property IOSTANDARD LVCMOS33 [get_ports SYNC]
+set_input_delay -clock [get_clocks CLOCK] -max 30 [get_ports SYNC]
+set_input_delay -clock [get_clocks CLOCK] -min 10 [get_ports SYNC]
 
 set_property PACKAGE_PIN M2 [get_ports RWB]
 set_property IOSTANDARD LVCMOS33 [get_ports RWB]
+set_input_delay -clock [get_clocks CLOCK] -max 30 [get_ports RWB]
+set_input_delay -clock [get_clocks CLOCK] -min 10 [get_ports RWB]
 
 set_property PACKAGE_PIN M3 [get_ports RDY]
 set_property IOSTANDARD LVCMOS33 [get_ports RDY]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports RDY]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports RDY]
 
 # Processor interrupt controls
 set_property PACKAGE_PIN L3 [get_ports IRQB]
 set_property IOSTANDARD LVCMOS33 [get_ports IRQB]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports IRQB]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports IRQB]
 
 set_property PACKAGE_PIN K3 [get_ports NMIB]
 set_property IOSTANDARD LVCMOS33 [get_ports NMIB]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports NMIB]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports NMIB]
 
 # Set to center directional button on board
 set_property PACKAGE_PIN U18 [get_ports Reset]
 set_property IOSTANDARD LVCMOS33 [get_ports Reset]
+set_input_delay -clock [get_clocks CLOCK] -max 30 [get_ports Reset]
+set_input_delay -clock [get_clocks CLOCK] -min 10 [get_ports Reset]
 
 # Connected to SW15 (Bottom left of board when VGA port is facing top)
 set_property PACKAGE_PIN R2 [get_ports SingleStep]
 set_property IOSTANDARD LVCMOS33 [get_ports SingleStep]
+set_input_delay -clock [get_clocks CLOCK] -max 30 [get_ports SingleStep]
+set_input_delay -clock [get_clocks CLOCK] -min 10 [get_ports SingleStep]
 
 # Status LEDs on FPGA board
 set_property PACKAGE_PIN U16 [get_ports {LED_OUT[0]}]
@@ -116,6 +145,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports {LED_OUT[4]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {LED_OUT[5]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {LED_OUT[6]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {LED_OUT[7]}]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports LED_OUT]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports LED_OUT]
 
 # 7 segment display common anodes
 set_property PACKAGE_PIN U2 [get_ports {PIO_7SEG_COMMON[0]}]
@@ -126,6 +157,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_COMMON[0]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_COMMON[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_COMMON[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_COMMON[3]}]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports PIO_7SEG_COMMON]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports PIO_7SEG_COMMON]
 
 # 7 segment display segment cathondes
 # CA - Top
@@ -145,6 +178,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_SEGMENTS[4]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_SEGMENTS[5]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_SEGMENTS[6]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_SEGMENTS[7]}]
+set_output_delay -clock [get_clocks CLOCK] -max 30 [get_ports PIO_7SEG_SEGMENTS]
+set_output_delay -clock [get_clocks CLOCK] -min 10 [get_ports PIO_7SEG_SEGMENTS]
 
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]

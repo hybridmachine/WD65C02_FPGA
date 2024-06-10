@@ -47,6 +47,18 @@ constant DATA_WIDTH: natural := 8;
 constant ADDRESS_WIDTH: natural := 16;
 
 
+-- Internal registers
+signal BUS_READ_DATA_REG : DATA_65C02_T;
+signal BUS_WRITE_DATA_REG : DATA_65C02_T;
+signal BUS_ADDRESS_REG : ADDRESS_65C02_T;
+signal PIO_7SEG_ACTIVE_REG: std_logic;
+signal PIO_7SEG_SEGMENTS_REG:std_logic_vector(7 downto 0);
+signal PIO_7SEG_COMMON_REG:std_logic_vector(3 downto 0);
+signal PIO_ELAPSED_TIMER_CONTROL_REG : std_logic_vector (7 downto 0);
+signal PIO_ELAPSED_TIMER_STATUS_REG : std_logic_vector (7 downto 0);
+signal PIO_ELAPSED_TIMER_TICKS_MS_REG : std_logic_vector (31 downto 0);
+
+
 -- RAM signals
 signal ram_addra: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
 signal ram_addrb: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
@@ -68,16 +80,10 @@ signal rom_clka: std_logic;
 signal pio_led_data: std_logic_vector(7 downto 0);
 
 signal PIO_7SEG_DISPLAY_VAL :std_logic_vector(15 downto 0);
-signal PIO_7SEG_ACTIVE_SIG: std_logic;
-signal PIO_7SEG_SEGMENTS_SIG:std_logic_vector(7 downto 0);
-signal PIO_7SEG_COMMON_SIG:std_logic_vector(3 downto 0);
 
-signal PIO_ELAPSED_TIMER_CONTROL_REG_SIG : std_logic_vector (7 downto 0);
-signal PIO_ELAPSED_TIMER_STATUS_REG_SIG : std_logic_vector (7 downto 0);
-signal PIO_ELAPSED_TIMER_TICKS_MS_SIG : std_logic_vector (31 downto 0);
 
 signal DATA_TRANSFER_READY : boolean := false;
-signal DATA_DIRECTION : READ_WRITE_MODE;
+signal DATA_DIRECTION : READ_WRITE_MODE_TYPE;
 
 constant WRITE_MODE : std_logic := '1';
 constant READ_MODE : std_logic := '0';
@@ -180,17 +186,17 @@ PIO_7SEG_X_4_DEVICE: PIO_7SEG_X_4 generic map (
 )
 port map (
     CLOCK => MEMORY_CLOCK,
-    DISPLAY_ON => PIO_7SEG_ACTIVE_SIG,
+    DISPLAY_ON => PIO_7SEG_ACTIVE_REG,
     VALUE => PIO_7SEG_DISPLAY_VAL,
-    SEGMENT_DRIVERS => PIO_7SEG_SEGMENTS_SIG,
-    COMMON_DRIVERS => PIO_7SEG_COMMON_SIG
+    SEGMENT_DRIVERS => PIO_7SEG_SEGMENTS_REG,
+    COMMON_DRIVERS => PIO_7SEG_COMMON_REG
     );
 
 PIO_ELAPSED_TIMER_DEVICE: PIO_ELAPSED_TIMER port map (
     CLOCK => MEMORY_CLOCK,
-    CONTROL_REG => PIO_ELAPSED_TIMER_CONTROL_REG_SIG,
-    STATUS_REG => PIO_ELAPSED_TIMER_STATUS_REG_SIG,
-    TICKS_MS => PIO_ELAPSED_TIMER_TICKS_MS_SIG
+    CONTROL_REG => PIO_ELAPSED_TIMER_CONTROL_REG,
+    STATUS_REG => PIO_ELAPSED_TIMER_STATUS_REG,
+    TICKS_MS => PIO_ELAPSED_TIMER_TICKS_MS_REG
 );
  
 -- Concurrent processes to distribute clock signals to RAM and ROM
@@ -208,18 +214,9 @@ ram_enb <= '1';
 DATA_DIRECTION <= WRITE_TO_MEMORY when (WRITE_FLAG = '1') else READ_FROM_MEMORY;
 
 
--- Propogate the 7 SEGMENT signals 
-process(MEMORY_CLOCK)
-BEGIN
-    if (rising_edge(MEMORY_CLOCK)) then
-        PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_SIG;
-        PIO_7SEG_COMMON <= PIO_7SEG_COMMON_SIG;
-    end if;
-END PROCESS;
-
 -- Delay writes to memory by 10 clocks to give the processor data and address bus
 -- time to stabilize
-process(MEMORY_CLOCK,WRITE_FLAG)
+process(all)
 variable TICKS_SINCE_CHANGE : natural;
 variable PREVIOUS_WRITE_FLAG_STATE : STD_LOGIC := READ_MODE;
 begin   
@@ -243,49 +240,64 @@ begin
     end if;
 end process;
 
-process(MEMORY_CLOCK,BUS_ADDRESS,BUS_WRITE_DATA,DATA_TRANSFER_READY,WRITE_FLAG)
+-- Transmit data in and out of internal registers
+process(all)
+begin
+    if (rising_edge(MEMORY_CLOCK)) then
+        -- Outbound
+        BUS_READ_DATA <= BUS_READ_DATA_REG;
+        PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_REG;
+        PIO_7SEG_COMMON <= PIO_7SEG_COMMON_REG;
+        
+        -- Inbound
+        BUS_WRITE_DATA_REG <= BUS_WRITE_DATA;
+        BUS_ADDRESS_REG <= BUS_ADDRESS;
+    end if;
+end process;
+
+process(all)
 begin
     if (rising_edge(MEMORY_CLOCK)) then
         if (DATA_TRANSFER_READY = true) then
             
-            if (MemoryRegion(BUS_ADDRESS) = BOOT_VECTOR_REGION) then
-                ReadBootVector(BUS_READ_DATA, BUS_ADDRESS);
+            if (MemoryRegion(BUS_ADDRESS_REG) = BOOT_VECTOR_REGION) then
+                ReadBootVector(BUS_READ_DATA_REG, BUS_ADDRESS_REG);
             elsif((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
-                ReadROM(BUS_READ_DATA, BUS_ADDRESS, rom_addra, rom_douta);
+                ReadROM(BUS_READ_DATA_REG, BUS_ADDRESS_REG, rom_addra, rom_douta);
             elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
-                ReadRAM(BUS_READ_DATA, BUS_ADDRESS, ram_addrb, ram_doutb);
-            elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = WRITE_TO_MEMORY)) then
-                WriteRAM(BUS_WRITE_DATA, BUS_ADDRESS, ram_addra, ram_dina);
-            elsif((MemoryRegion(BUS_ADDRESS) = MEMORY_MAPPED_IO_REGION)) then
+                ReadRAM(BUS_READ_DATA_REG, BUS_ADDRESS_REG, ram_addrb, ram_doutb);
+            elsif((MemoryRegion(BUS_ADDRESS_REG) = RAM_REGION) and (DATA_DIRECTION = WRITE_TO_MEMORY)) then
+                WriteRAM(BUS_WRITE_DATA_REG, BUS_ADDRESS_REG, ram_addra, ram_dina);
+            elsif((MemoryRegion(BUS_ADDRESS_REG) = MEMORY_MAPPED_IO_REGION)) then
                 if (DATA_DIRECTION = WRITE_TO_MEMORY) then
-                    if (PIO_LED_ADDR = BUS_ADDRESS) then
-                        pio_led_data <= BUS_WRITE_DATA;
-                    elsif (PIO_7SEG_ACTIVE = BUS_ADDRESS) then
-                        if (BUS_WRITE_DATA /= x"00") then -- Any non zero value will activate the displays
-                            PIO_7SEG_ACTIVE_SIG <= '1';
+                    if (PIO_LED_ADDR = BUS_ADDRESS_REG) then
+                        pio_led_data <= BUS_WRITE_DATA_REG;
+                    elsif (PIO_7SEG_ACTIVE = BUS_ADDRESS_REG) then
+                        if (BUS_WRITE_DATA_REG /= x"00") then -- Any non zero value will activate the displays
+                            PIO_7SEG_ACTIVE_REG <= '1';
                         else
-                            PIO_7SEG_ACTIVE_SIG <= '0';
+                            PIO_7SEG_ACTIVE_REG <= '0';
                         end if;
-                    elsif (BUS_ADDRESS = PIO_7SEG_VAL_1) then
-                        PIO_7SEG_DISPLAY_VAL(7 downto 0) <= BUS_WRITE_DATA;
+                    elsif (BUS_ADDRESS_REG = PIO_7SEG_VAL_1) then
+                        PIO_7SEG_DISPLAY_VAL(7 downto 0) <= BUS_WRITE_DATA_REG;
                     elsif (BUS_ADDRESS = PIO_7SEG_VAL_2) then
-                        PIO_7SEG_DISPLAY_VAL(15 downto 8) <= BUS_WRITE_DATA;
+                        PIO_7SEG_DISPLAY_VAL(15 downto 8) <= BUS_WRITE_DATA_REG;
                     -- Timer control and status
-                    elsif (BUS_ADDRESS = PIO_TIMER_CTL) then
+                    elsif (BUS_ADDRESS_REG = PIO_TIMER_CTL) then
                         -- Set the timer control flags
-                        PIO_ELAPSED_TIMER_CONTROL_REG_SIG <= BUS_WRITE_DATA;
+                        PIO_ELAPSED_TIMER_CONTROL_REG <= BUS_WRITE_DATA_REG;
                     end if;
                 else
-                    if (BUS_ADDRESS = PIO_TIMER_STATUS) then
-                        BUS_READ_DATA <= PIO_ELAPSED_TIMER_STATUS_REG_SIG;
-                    elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_1) then
-                        BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(7 downto 0);
-                    elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_2) then
-                        BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(15 downto 8);
-                    elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_3) then
-                        BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(23 downto 16);
-                    elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_4) then
-                        BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
+                    if (BUS_ADDRESS_REG = PIO_TIMER_STATUS) then
+                        BUS_READ_DATA_REG <= PIO_ELAPSED_TIMER_STATUS_REG;
+                    elsif (BUS_ADDRESS_REG = PIO_TIMER_VAL_MS_1) then
+                        BUS_READ_DATA_REG <= PIO_ELAPSED_TIMER_TICKS_MS_REG(7 downto 0);
+                    elsif (BUS_ADDRESS_REG = PIO_TIMER_VAL_MS_2) then
+                        BUS_READ_DATA_REG <= PIO_ELAPSED_TIMER_TICKS_MS_REG(15 downto 8);
+                    elsif (BUS_ADDRESS_REG = PIO_TIMER_VAL_MS_3) then
+                        BUS_READ_DATA_REG <= PIO_ELAPSED_TIMER_TICKS_MS_REG(23 downto 16);
+                    elsif (BUS_ADDRESS_REG = PIO_TIMER_VAL_MS_4) then
+                        BUS_READ_DATA_REG <= PIO_ELAPSED_TIMER_TICKS_MS_REG(31 downto 24);
                     end if;
                 end if;
             else

@@ -69,6 +69,22 @@ end WDC65C02_Interface;
 
 architecture Behavioral of WDC65C02_Interface is
 
+-- Internal registers
+signal RESET_REG                : STD_LOGIC;
+signal SINGLESTEP_REG           : STD_LOGIC; 
+signal ADDRESS_REG              : ADDRESS_65C02_T;
+signal DATA_TO_CPU_TAP_REG      : DATA_65C02_T;
+signal DATA_FROM_CPU_TAP_REG    : DATA_65C02_T;
+signal IRQB_REG                 : std_logic; 
+signal NMIB_REG                 : std_logic; 
+signal RDY_REG                  : std_logic;
+signal RESB_REG                 : std_logic;
+signal RWB_REG                  : std_logic;
+signal SYNC_REG                 : std_logic;
+signal PIO_LED_OUT_REG          : STD_LOGIC_VECTOR(7 downto 0);
+signal PIO_7SEG_COMMON_REG      : STD_LOGIC_VECTOR(3 downto 0);
+signal PIO_7SEG_SEGMENTS_REG    : STD_LOGIC_VECTOR(7 downto 0);
+
 COMPONENT MemoryManager is
     Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0);
            BUS_WRITE_DATA: in STD_LOGIC_VECTOR (7 downto 0);
@@ -88,10 +104,6 @@ constant FPGA_CLOCK_MHZ : integer := 100;
 -- Remember that we want 50% duty cycle so if we want a 1mhz clock, we divide by 50mhz to get half of our duty cycle
 constant CPU_CLOCK_DIVIDER : integer := 2;   
 
--- From the WD65C02 spec 
--- When a positive edge (on RESB) is detected, there will be a reset sequence lasting seven clock cycles.
-constant CPU_RESET_HOLDOFF_CLOCKTICKS : integer := 7; 
-
 type PROCESSOR_STATE_T is ( RESET_START,
                     RESET_COMPLETE,
                     READY,
@@ -107,26 +119,26 @@ signal wdc65c02_CLOCK : std_logic;
 signal DATA_FROM_6502 :  STD_LOGIC_VECTOR (7 downto 0);
 signal DATA_TO_6502:  STD_LOGIC_VECTOR (7 downto 0);
 signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
-signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
+signal MEMORY_CLOCK :  STD_LOGIC; 
 signal WRITE_FLAG :  STD_LOGIC := '0';
 
 begin -- Begin architecture definition
 
 --SOB <= '1'; -- Not really used, spec says to keep it high
-IRQB <= '1'; -- Not using interrupts just yet, will connect this later
+IRQB_REG <= '1'; -- Not using interrupts just yet, will connect this later
 --BE <= '1'; -- For now bus is always on
-NMIB <= '1'; -- Not currently using, keep high for now.
+NMIB_REG <= '1'; -- Not currently using, keep high for now.
 
 MemoryManagement : MemoryManager port map (
-    BUS_READ_DATA => DATA_FROM_6502,
-    BUS_WRITE_DATA => DATA_TO_6502,
-    BUS_ADDRESS => BUS_ADDRESS,
+    BUS_READ_DATA => DATA_FROM_6502_REG,
+    BUS_WRITE_DATA => DATA_TO_6502_REG,
+    BUS_ADDRESS => BUS_ADDRESS_REG,
     MEMORY_CLOCK => MEMORY_CLOCK,
     WRITE_FLAG => WRITE_FLAG,
-    PIO_LED_OUT => PIO_LED_OUT,
-    PIO_7SEG_COMMON => PIO_7SEG_COMMON,
-    PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
-    RESET => RESET
+    PIO_LED_OUT => PIO_LED_OUT_REG,
+    PIO_7SEG_COMMON => PIO_7SEG_COMMON_REG,
+    PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS_REG,
+    RESET => RESET_REG
 );
 
 GEN1: for i in 0 to 7 generate     
@@ -144,42 +156,55 @@ GEN1: for i in 0 to 7 generate
 
 
 end generate GEN1;
-
--- End of IOBUF_inst instantiation
-
----- Concurrent signal propogation
---WRITE_FLAG <= not RWB;
---MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
---                       -- For now just pulse FPGA clock straight to memory clock
-
---DATA <= BUS_READ_DATA when RWB = PROCESSOR_READING_FROM_MEMORY;
---BUS_WRITE_DATA <= DATA when RWB = PROCESSOR_WRITING_TO_MEMORY;
---BUS_ADDRESS <= ADDRESS;
                        
 ---- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
 ---- Otherwise RDY is always high.
-RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
+RDY_REG <= SYNC WHEN SINGLESTEP = '1' else '1';
 ---- Push the internal signal out to the CPU clock PIN
-PHI2 <= wdc65c02_CLOCK;
 MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
                        -- For now just pulse FPGA clock straight to memory clock
 
-DATA_TO_CPU_TAP <= DATA_TO_6502;
-DATA_FROM_CPU_TAP <= DATA_FROM_6502;
+DATA_TO_CPU_TAP_REG <= DATA_TO_6502;
+DATA_FROM_CPU_TAP_REG <= DATA_FROM_6502;
 
-wdc65c02_clockmachine : process (CLOCK, RESET)
+-- Interface registers to external ports
+process(all)
+begin
+    if (rising_edge(CLOCK)) then
+        -- Inbound
+        RESET_REG <= RESET;              
+        SINGLESTEP_REG <= SINGLESTEP;         
+        ADDRESS_REG <= ADDRESS;
+        RWB_REG <= RWB;                 
+        SYNC_REG <= SYNC;               
+
+        -- Outbound
+        DATA_TO_CPU_TAP <= DATA_TO_CPU_TAP_REG;    
+        DATA_FROM_CPU_TAP <= DATA_FROM_CPU_TAP_REG;
+        IRQB <= IRQB_REG;                
+        NMIB <= NMIB_REG;                
+        PHI2 <= wdc65c02_CLOCK;                
+        RDY <= RDY_REG;                 
+        RESB <= RESB_REG;                
+        PIO_LED_OUT <= PIO_LED_OUT_REG;         
+        PIO_7SEG_COMMON <= PIO_7SEG_COMMON_REG;     
+        PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_REG;   
+    end if;
+end process;
+
+wdc65c02_clockmachine : process (all)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
 begin 
-    if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
+    if (RESET_REG = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
         wdc65c02_CLOCK <= '0';
         RESET_IN_PROGRESS := '1';
     elsif (rising_edge(CLOCK)) then      
-        WRITE_FLAG <= not RWB;
+        WRITE_FLAG <= not RWB_REG;
        
-        BUS_ADDRESS <= ADDRESS;
-        if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
+        BUS_ADDRESS <= ADDRESS_REG;
+        if (RESET_REG = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
             RESET_IN_PROGRESS := '0';
         end if;
         
@@ -193,25 +218,15 @@ begin
     end if;
 end process wdc65c02_clockmachine;
 
-wdc65c02_statemachine : process (wdc65c02_CLOCK, RESET)
+wdc65c02_statemachine : process (all)
 variable reset_clock_count : natural := 0;
 variable reset_in_progress : std_logic := '0';
 begin
-    if (rising_edge(wdc65c02_CLOCK)) then                           
-        -- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
-        -- Otherwise RDY is always high.
-        -- Lets do this concurrently instead, TODO remove once confirmed
---        if (SINGLESTEP = '1') then
---            RDY <= SYNC;
---        else
---            RDY <= '1';
---        end if;
-        -- Push the internal signal out to the CPU clock PIN
-
-        if (RESET = CPU_RESET and reset_in_progress = '0') then
+    if (rising_edge(CLOCK)) then
+        if (RESET_REG = CPU_RESET and reset_in_progress = '0') then
             PROCESSOR_STATE <= RESET_START;
-            reset_clock_count := RESET_MIN_CLOCKS;
-            RESB <= CPU_RESET;
+            reset_clock_count := (RESET_MIN_CLOCKS * (FPGA_CLOCK_MHZ / CPU_CLOCK_DIVIDER));
+            RESB_REG <= CPU_RESET;
             reset_in_progress := '1';
         else
             case PROCESSOR_STATE is
@@ -222,13 +237,13 @@ begin
                         reset_clock_count := reset_clock_count - 1;
                     end if;
                 when RESET_COMPLETE =>
-                    RESB <= CPU_RUNNING;
+                    RESB_REG <= CPU_RUNNING;
                     PROCESSOR_STATE <= READY;
                     reset_in_progress := '0';
                 when READY =>
                     -- RDY pin is managed by concurrent process 
                     -- and is '1' unless single step is enabled
-                    if (SYNC = SYNC_READING_OPCODE) then
+                    if (SYNC_REG = SYNC_READING_OPCODE) then
                         PROCESSOR_STATE <= OPCODE_FETCH;
                     else
                         PROCESSOR_STATE <= READY;
@@ -238,7 +253,7 @@ begin
                 when WRITE_DATA =>
                 when OPCODE_FETCH =>
                 
-                    IF (SYNC = SYNC_READING_OPCODE) then
+                    IF (SYNC_REG = SYNC_READING_OPCODE) then
                         PROCESSOR_STATE <= OPCODE_FETCH;
                     ELSE
                         PROCESSOR_STATE <= READY;

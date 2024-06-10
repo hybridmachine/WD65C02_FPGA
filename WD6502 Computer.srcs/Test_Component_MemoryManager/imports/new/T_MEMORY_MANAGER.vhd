@@ -170,6 +170,8 @@ process
 
         T_BUS_ADDRESS <= std_logic_vector(unsigned(RAM_BASE));
         wait for READ_DELAY;
+        report "BUS read data is 0x" & to_hstring(T_BUS_READ_DATA);
+        
         assert (T_BUS_READ_DATA = x"BE") report "RAM base pattern does not match" severity error;
         
         T_BUS_ADDRESS <= std_logic_vector(unsigned(RAM_BASE)+1);
