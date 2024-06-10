@@ -130,9 +130,9 @@ IRQB_REG <= '1'; -- Not using interrupts just yet, will connect this later
 NMIB_REG <= '1'; -- Not currently using, keep high for now.
 
 MemoryManagement : MemoryManager port map (
-    BUS_READ_DATA => DATA_FROM_6502_REG,
-    BUS_WRITE_DATA => DATA_TO_6502_REG,
-    BUS_ADDRESS => BUS_ADDRESS_REG,
+    BUS_READ_DATA => DATA_FROM_6502,
+    BUS_WRITE_DATA => DATA_TO_6502,
+    BUS_ADDRESS => BUS_ADDRESS,
     MEMORY_CLOCK => MEMORY_CLOCK,
     WRITE_FLAG => WRITE_FLAG,
     PIO_LED_OUT => PIO_LED_OUT_REG,
