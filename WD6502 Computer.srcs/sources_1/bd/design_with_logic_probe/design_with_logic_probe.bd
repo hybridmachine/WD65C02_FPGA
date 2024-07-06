@@ -7,7 +7,7 @@
       "name": "design_with_logic_probe",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "None",
-      "tool_version": "2023.2",
+      "tool_version": "2024.1",
       "validated": "true"
     },
     "design_tree": {
@@ -107,7 +107,7 @@
     "components": {
       "ila_0": {
         "vlnv": "xilinx.com:ip:ila:6.2",
-        "ip_revision": "14",
+        "ip_revision": "15",
         "xci_name": "design_with_logic_probe_ila_0_0",
         "xci_path": "ip\\design_with_logic_probe_ila_0_0\\design_with_logic_probe_ila_0_0.xci",
         "inst_hier_path": "ila_0",
@@ -134,7 +134,7 @@
       },
       "invert_reset_signal": {
         "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
-        "ip_revision": "3",
+        "ip_revision": "4",
         "xci_name": "design_with_logic_probe_util_vector_logic_1_0",
         "xci_path": "ip\\design_with_logic_probe_util_vector_logic_1_0\\design_with_logic_probe_util_vector_logic_1_0.xci",
         "inst_hier_path": "invert_reset_signal",
@@ -247,8 +247,8 @@
       "Net": {
         "ports": [
           "ADDRESS_IN",
-          "ila_0/probe0",
-          "WDC65C02_Interface/ADDRESS"
+          "WDC65C02_Interface/ADDRESS",
+          "ila_0/probe0"
         ]
       },
       "Net1": {
@@ -260,8 +260,8 @@
       "RWB_PIN_1": {
         "ports": [
           "RWB",
-          "ila_0/probe3",
-          "WDC65C02_Interface/RWB"
+          "WDC65C02_Interface/RWB",
+          "ila_0/probe3"
         ]
       },
       "Reset_1": {
@@ -273,15 +273,15 @@
       "SYNC_1": {
         "ports": [
           "SYNC",
-          "ila_0/probe4",
-          "WDC65C02_Interface/SYNC"
+          "WDC65C02_Interface/SYNC",
+          "ila_0/probe4"
         ]
       },
       "SingleStep_1": {
         "ports": [
           "SingleStep",
-          "ila_0/probe5",
-          "WDC65C02_Interface/SINGLESTEP"
+          "WDC65C02_Interface/SINGLESTEP",
+          "ila_0/probe5"
         ]
       },
       "WD6502_Interface_0_PHI2": {
@@ -337,8 +337,8 @@
       "clk_wiz_0_clk_out1": {
         "ports": [
           "CLOCK",
-          "ila_0/clk",
-          "WDC65C02_Interface/CLOCK"
+          "WDC65C02_Interface/CLOCK",
+          "ila_0/clk"
         ]
       },
       "invert_reset_signal_Res": {

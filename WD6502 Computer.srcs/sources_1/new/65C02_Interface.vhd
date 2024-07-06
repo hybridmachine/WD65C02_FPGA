@@ -167,33 +167,35 @@ MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw c
 DATA_TO_CPU_TAP <= DATA_TO_6502;
 DATA_FROM_CPU_TAP <= DATA_FROM_6502;
 
-wdc65c02_clockmachine : process (CLOCK, RESET)
+wdc65c02_clockmachine : process (CLOCK)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
 begin 
-    if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
-        FPGA_CLOCK_COUNTER_FOR_CPU := 1;
-        wdc65c02_CLOCK <= '0';
-        RESET_IN_PROGRESS := '1';
-    elsif (rising_edge(CLOCK)) then      
-        WRITE_FLAG <= not RWB;
-       
-        BUS_ADDRESS <= ADDRESS;
-        if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
-            RESET_IN_PROGRESS := '0';
-        end if;
-        
-        if (FPGA_CLOCK_COUNTER_FOR_CPU = FPGA_CLOCK_MHZ / CPU_CLOCK_DIVIDER) then
+    if (rising_edge(CLOCK)) then
+        if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
             FPGA_CLOCK_COUNTER_FOR_CPU := 1;
-            wdc65c02_CLOCK <= not wdc65c02_CLOCK;
+            wdc65c02_CLOCK <= '0';
+            RESET_IN_PROGRESS := '1';      
         else
-            FPGA_CLOCK_COUNTER_FOR_CPU := FPGA_CLOCK_COUNTER_FOR_CPU + 1;
-            wdc65c02_CLOCK <= wdc65c02_CLOCK; -- Is this needed?
+            WRITE_FLAG <= not RWB;
+           
+            BUS_ADDRESS <= ADDRESS;
+            if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
+                RESET_IN_PROGRESS := '0';
+            end if;
+            
+            if (FPGA_CLOCK_COUNTER_FOR_CPU = FPGA_CLOCK_MHZ / CPU_CLOCK_DIVIDER) then
+                FPGA_CLOCK_COUNTER_FOR_CPU := 1;
+                wdc65c02_CLOCK <= not wdc65c02_CLOCK;
+            else
+                FPGA_CLOCK_COUNTER_FOR_CPU := FPGA_CLOCK_COUNTER_FOR_CPU + 1;
+                wdc65c02_CLOCK <= wdc65c02_CLOCK; -- Is this needed?
+            end if;
         end if;
     end if;
 end process wdc65c02_clockmachine;
 
-wdc65c02_statemachine : process (wdc65c02_CLOCK, RESET)
+wdc65c02_statemachine : process (wdc65c02_CLOCK)
 variable reset_clock_count : natural := 0;
 variable reset_in_progress : std_logic := '0';
 begin

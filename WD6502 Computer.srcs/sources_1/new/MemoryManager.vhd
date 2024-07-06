@@ -79,7 +79,7 @@ COMPONENT RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
     DATA_WIDTH: natural := 8;
-    RAM_DEPTH: natural := 2**15
+    RAM_DEPTH: natural := 2**16
   );
     PORT (
 	addra: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
