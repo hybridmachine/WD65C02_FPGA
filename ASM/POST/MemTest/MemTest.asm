@@ -133,18 +133,24 @@ SKIP_MEMMAPPEDIO_HIGH:
 
 IF_AT_END_OF_RAM:
 		lda ADDRESS_PTR+1
-		cmp RAM_END
-		beq IF_AT_END_OF_RAM_2
+		cmp #(RAM_END>>8)
+ 		beq IF_AT_END_OF_RAM_2
 		jmp WRITE_LOOP ; Not at end of RAM
 
 IF_AT_END_OF_RAM_2:
 		; High byte matches, check low byte
 		lda ADDRESS_PTR
-		cmp RAM_END
+		cmp #RAM_END ; Gets low byte
 		beq RESET_ADDRESS_PTR
 		jmp WRITE_LOOP ; Not at end of RAM
 
 RESET_ADDRESS_PTR:
+		; Write last byte
+		txa
+		sta (ADDRESS_PTR)
+		cpa (ADDRESS_PTR)
+		bne ERROR_FAIL
+
 		; Load starting address
 		lda #$04
 		sta ADDRESS_PTR
