@@ -65,6 +65,7 @@ CODE
 	MEM_MAPPED_IO_END: 		equ $03FF
     MEM_MAPPED_IO_BASE: 	equ $0200
 	RAM_END:				equ $FBFF
+	LED_IO_ADDR:	    	equ	$0200
 
 START:
 		sei             ; Ignore maskable interrupts
@@ -79,7 +80,8 @@ START:
 ;***************************************************************************
 ;
 
-		; Load a test patterin on 00 and 01, make sure nothing changes this pattern, if it does,
+		
+		; Load a test pattern on 00 and 01, make sure nothing changes this pattern, if it does,
 		; the FPGA memory manager is accidentally writing to the 0 address when it wasn't requested
 		lda #$ED
 		sta $00
@@ -94,6 +96,8 @@ START:
 
 
 		ldx #$00
+		ldy #$00
+		sty LED_IO_ADDR
 
 WRITE_LOOP:
 		inx
@@ -151,6 +155,12 @@ RESET_ADDRESS_PTR:
 		cpa (ADDRESS_PTR)
 		bne ERROR_FAIL
 
+		; Make sure page zero remains untouched
+		jsr SUB_TEST_PAGE_ZERO
+
+		iny
+		sty LED_IO_ADDR
+
 		; Load starting address
 		lda #$04
 		sta ADDRESS_PTR
@@ -159,6 +169,7 @@ RESET_ADDRESS_PTR:
 		jmp WRITE_LOOP
 
 ERROR_FAIL:
+		; Display the address
 		; Load hi then low on to stack, call display function
 		lda ADDRESS_PTR+1
 		pha
@@ -168,6 +179,56 @@ ERROR_FAIL:
 		; Cleanup stack
 		pla
 		pla
+		jsr SUB_DELAY
+
+		; Display AA<VALUE>
+		lda #$AA
+		pha
+		lda (ADDRESS_PTR)
+		pha
+		jsr SUB_SEVENSEG_DISPLAY_VALUE
+		; Cleanup stack
+		pla
+		pla
+		jsr SUB_DELAY
+
+		jmp ERROR_FAIL
+		brk
+
+SUB_DELAY:
+DELAY_OUTER_LOOP:
+		ldx #$FF
+		; If Y == 0 read timer
+		dey
+		beq RETURN_DELAY
+DELAY_INNER_LOOP:
+		dex
+		; If X > 0 repeat X--
+		bne DELAY_INNER_LOOP
+		jmp DELAY_OUTER_LOOP
+RETURN_DELAY:
+		rts
+
+SUB_TEST_PAGE_ZERO:
+		; Expectation is caller will set ADDRESS_PTR if we return successfully
+		lda #$00
+		sta ADDRESS_PTR
+		lda #$00
+		sta ADDRESS_PTR+1
+
+		lda #$ED
+		cmp (ADDRESS_PTR)
+		bne ERROR_FAIL
+		
+		clc
+		lda #$01
+		sta ADDRESS_PTR
+
+		lda #$FE
+		cmp (ADDRESS_PTR) 
+		bne ERROR_FAIL
+
+		rts
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php
