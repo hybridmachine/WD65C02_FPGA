@@ -110,6 +110,8 @@ signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
 signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
 signal WRITE_FLAG :  STD_LOGIC := '0';
 
+constant FPGA_CLOCK_PERIOD_NS : natural := 10;
+constant WRITE_RAM_DELAY_PERIOD : natural := tMDS-FPGA_CLOCK_PERIOD_NS;
 begin -- Begin architecture definition
 
 --SOB <= '1'; -- Not really used, spec says to keep it high
@@ -170,6 +172,8 @@ DATA_FROM_CPU_TAP <= DATA_FROM_6502;
 wdc65c02_clockmachine : process (CLOCK)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
+variable WRITE_RAM_DELAY : natural range 0 to 1000 := tMDS-FPGA_CLOCK_PERIOD_NS; -- When this is counted down to 0, we set the write signal for hold period.
+
 begin 
     if (rising_edge(CLOCK)) then
         if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
@@ -177,8 +181,21 @@ begin
             wdc65c02_CLOCK <= '0';
             RESET_IN_PROGRESS := '1';      
         else
-            WRITE_FLAG <= not RWB;
-           
+            WRITE_FLAG <= '0';
+            
+            if (PROCESSOR_STATE = WRITE_DATA) then
+                if (WRITE_RAM_DELAY > 0) then
+                    WRITE_RAM_DELAY := WRITE_RAM_DELAY - FPGA_CLOCK_PERIOD_NS; -- 
+                else
+                    WRITE_FLAG <= '1'; -- Address should already be setup, set this as write to send the data to ram
+                end if;
+            end if;
+            
+            if (wdc65c02_CLOCK = '0') then
+                -- Reset for next write phase
+                WRITE_RAM_DELAY := WRITE_RAM_DELAY_PERIOD;
+            end if;
+            
             BUS_ADDRESS <= ADDRESS;
             if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
                 RESET_IN_PROGRESS := '0';
@@ -232,6 +249,8 @@ begin
                     -- and is '1' unless single step is enabled
                     if (SYNC = SYNC_READING_OPCODE) then
                         PROCESSOR_STATE <= OPCODE_FETCH;
+                    elsif (RWB = '0') then
+                        PROCESSOR_STATE <= WRITE_DATA;
                     else
                         PROCESSOR_STATE <= READY;
                     end if;
