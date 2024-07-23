@@ -109,9 +109,12 @@ signal DATA_TO_6502:  STD_LOGIC_VECTOR (7 downto 0);
 signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
 signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
 signal WRITE_FLAG :  STD_LOGIC := '0';
+signal RWB_INVERTED : STD_LOGIC := '0';
 
 constant FPGA_CLOCK_PERIOD_NS : natural := 10;
-constant WRITE_RAM_DELAY_PERIOD : natural := tMDS-FPGA_CLOCK_PERIOD_NS;
+constant WRITE_RAM_SETUP_PERIOD : natural := tMDS-FPGA_CLOCK_PERIOD_NS;
+constant WRITE_RAM_HOLD_PERIOD : natural := tPWH-FPGA_CLOCK_PERIOD_NS-WRITE_RAM_SETUP_PERIOD;
+
 begin -- Begin architecture definition
 
 --SOB <= '1'; -- Not really used, spec says to keep it high
@@ -169,34 +172,56 @@ MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw c
 DATA_TO_CPU_TAP <= DATA_TO_6502;
 DATA_FROM_CPU_TAP <= DATA_FROM_6502;
 
-wdc65c02_clockmachine : process (CLOCK)
-variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
-variable RESET_IN_PROGRESS : std_logic := '0';
-variable WRITE_RAM_DELAY : natural range 0 to 1000 := tMDS-FPGA_CLOCK_PERIOD_NS; -- When this is counted down to 0, we set the write signal for hold period.
-
-begin 
+wdc65c02_writeRamFlag : process (CLOCK)
+variable WRITE_RAM_SETUP : natural range 0 to 1000 := WRITE_RAM_SETUP_PERIOD; -- When this is counted down to 0, we set the write signal for hold period.
+variable WRITE_RAM_HOLD : natural range 0 to 1000 := WRITE_RAM_HOLD_PERIOD; -- How long to leave the write flag high after its triggered
+begin
     if (rising_edge(CLOCK)) then
-        if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
-            FPGA_CLOCK_COUNTER_FOR_CPU := 1;
-            wdc65c02_CLOCK <= '0';
-            RESET_IN_PROGRESS := '1';      
+        if (RESET = CPU_RESET) then
+            WRITE_FLAG <= '0'; 
+            RWB_INVERTED <= not RWB;   
         else
             WRITE_FLAG <= '0';
             
+            -- The processor signal feeds directly into the IOBUFFER. However,
+            -- We manage the write to RAM flag based on the timing requirements, don't 
+            -- set the flag to write unless we are in the data valid period.
+            RWB_INVERTED <= not RWB;   
+            
             if (PROCESSOR_STATE = WRITE_DATA) then
-                if (WRITE_RAM_DELAY > 0) then
-                    WRITE_RAM_DELAY := WRITE_RAM_DELAY - FPGA_CLOCK_PERIOD_NS; -- 
+                if (WRITE_RAM_SETUP > 0) then
+                    WRITE_RAM_SETUP := WRITE_RAM_SETUP - FPGA_CLOCK_PERIOD_NS; -- 
                 else
-                    WRITE_FLAG <= '1'; -- Address should already be setup, set this as write to send the data to ram
+                    if (WRITE_RAM_HOLD > 0) then
+                        WRITE_FLAG <= '1'; -- Address should already be setup, set this as write to send the data to ram
+                        WRITE_RAM_HOLD := WRITE_RAM_HOLD - FPGA_CLOCK_PERIOD_NS;
+                    else
+                        WRITE_FLAG <= '0'; -- Write should be done by now, turn the write mode of on RAM before the cpu clock goes low
+                    end if;
                 end if;
             end if;
             
             if (wdc65c02_CLOCK = '0') then
                 -- Reset for next write phase
-                WRITE_RAM_DELAY := WRITE_RAM_DELAY_PERIOD;
+                WRITE_RAM_SETUP := WRITE_RAM_SETUP_PERIOD;
+                WRITE_RAM_HOLD := WRITE_RAM_HOLD_PERIOD;
             end if;
             
             BUS_ADDRESS <= ADDRESS;
+        end if;
+    end if;
+end process wdc65c02_writeRamFlag;
+
+wdc65c02_clockmachine : process (CLOCK)
+variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
+variable RESET_IN_PROGRESS : std_logic := '0';
+begin 
+    if (rising_edge(CLOCK)) then
+        if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
+            FPGA_CLOCK_COUNTER_FOR_CPU := 1;
+            wdc65c02_CLOCK <= '0';
+            RESET_IN_PROGRESS := '1';  
+        else                   
             if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
                 RESET_IN_PROGRESS := '0';
             end if;
@@ -253,8 +278,7 @@ begin
                         PROCESSOR_STATE <= WRITE_DATA;
                     else
                         PROCESSOR_STATE <= READY;
-                    end if;
-                    
+                    end if;                   
                 when READ_DATA =>
                 when WRITE_DATA =>
                 when OPCODE_FETCH =>
