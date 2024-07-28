@@ -91,6 +91,11 @@ constant CPU_CLOCK_DIVIDER : integer := 2;
 -- From the WD65C02 spec 
 -- When a positive edge (on RESB) is detected, there will be a reset sequence lasting seven clock cycles.
 constant CPU_RESET_HOLDOFF_CLOCKTICKS : integer := 7; 
+constant FPGA_CLOCK_PERIOD_NS : natural := 10;
+constant WRITE_RAM_SETUP_PERIOD : natural := tMDS-FPGA_CLOCK_PERIOD_NS;
+constant WRITE_RAM_HOLD_PERIOD : natural := FPGA_CLOCK_PERIOD_NS * 5; -- Hold for 50ns after the launch edge
+constant READ_MODE : std_logic := '0';
+constant WRITE_MODE : std_logic := '1';
 
 type PROCESSOR_STATE_T is ( RESET_START,
                     RESET_COMPLETE,
@@ -108,7 +113,9 @@ signal DATA_FROM_6502 :  STD_LOGIC_VECTOR (7 downto 0);
 signal DATA_TO_6502:  STD_LOGIC_VECTOR (7 downto 0);
 signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
 signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
-signal WRITE_FLAG :  STD_LOGIC := '0';
+signal READ_WRITE_MODE :  STD_LOGIC := READ_MODE;
+
+
 
 begin -- Begin architecture definition
 
@@ -122,7 +129,7 @@ MemoryManagement : MemoryManager port map (
     BUS_WRITE_DATA => DATA_TO_6502,
     BUS_ADDRESS => BUS_ADDRESS,
     MEMORY_CLOCK => MEMORY_CLOCK,
-    WRITE_FLAG => WRITE_FLAG,
+    WRITE_FLAG => READ_WRITE_MODE,
     PIO_LED_OUT => PIO_LED_OUT,
     PIO_7SEG_COMMON => PIO_7SEG_COMMON,
     PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
@@ -139,22 +146,13 @@ GEN1: for i in 0 to 7 generate
              O => DATA_TO_6502(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
              IO => DATA(i),     	-- Data inout port (connect directly to top-level port)
              I => DATA_FROM_6502(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
-             T => WRITE_FLAG          	-- 3-state enable input, high=input, low=output
+             T => READ_WRITE_MODE          	-- 3-state enable input, high=input, low=output
          );  
 
 
 end generate GEN1;
 
 -- End of IOBUF_inst instantiation
-
----- Concurrent signal propogation
---WRITE_FLAG <= not RWB;
---MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw clock we can 
---                       -- For now just pulse FPGA clock straight to memory clock
-
---DATA <= BUS_READ_DATA when RWB = PROCESSOR_READING_FROM_MEMORY;
---BUS_WRITE_DATA <= DATA when RWB = PROCESSOR_WRITING_TO_MEMORY;
---BUS_ADDRESS <= ADDRESS;
                        
 ---- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
 ---- Otherwise RDY is always high.
@@ -167,33 +165,72 @@ MEMORY_CLOCK <= CLOCK; -- If we needed to pace memory differently from the raw c
 DATA_TO_CPU_TAP <= DATA_TO_6502;
 DATA_FROM_CPU_TAP <= DATA_FROM_6502;
 
-wdc65c02_clockmachine : process (CLOCK, RESET)
+wdc65c02_writeRamFlag : process (CLOCK)
+variable WRITE_RAM_SETUP : natural range 0 to 1000 := WRITE_RAM_SETUP_PERIOD; -- When this is counted down to 0, we set the write signal for hold period.
+variable WRITE_RAM_HOLD : natural range 0 to 1000 := WRITE_RAM_HOLD_PERIOD; -- How long to leave the write flag high after its triggered
+begin
+    if (rising_edge(CLOCK)) then
+        if (RESET = CPU_RESET) then
+            READ_WRITE_MODE <= READ_MODE; 
+        else
+            READ_WRITE_MODE <= READ_MODE;
+            
+            -- The processor signal feeds directly into the IOBUFFER. However,
+            -- We manage the write to RAM flag based on the timing requirements, don't 
+            -- set the flag to write unless we are in the data valid period.
+            
+            if (PROCESSOR_STATE = WRITE_DATA) then
+                if (WRITE_RAM_SETUP > 0) then
+                    -- Give the CPU time to have valid data after the launch edge
+                    WRITE_RAM_SETUP := WRITE_RAM_SETUP - FPGA_CLOCK_PERIOD_NS; -- 
+                else
+                    if (WRITE_RAM_HOLD > 0) then
+                        -- Hold the write flag in write mode for hold time
+                        READ_WRITE_MODE <= WRITE_MODE; -- Address should already be setup, set this as write to send the data to ram
+                        WRITE_RAM_HOLD := WRITE_RAM_HOLD - FPGA_CLOCK_PERIOD_NS;
+                    else
+                        READ_WRITE_MODE <= READ_MODE; -- Write should be done by now, turn the write mode of on RAM before the cpu clock goes low
+                    end if;
+                end if;
+            end if;
+            
+            if (wdc65c02_CLOCK = '0') then
+                -- Reset for next write phase
+                WRITE_RAM_SETUP := WRITE_RAM_SETUP_PERIOD;
+                WRITE_RAM_HOLD := WRITE_RAM_HOLD_PERIOD;
+            end if;
+            
+            BUS_ADDRESS <= ADDRESS;
+        end if;
+    end if;
+end process wdc65c02_writeRamFlag;
+
+wdc65c02_clockmachine : process (CLOCK)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
 begin 
-    if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
-        FPGA_CLOCK_COUNTER_FOR_CPU := 1;
-        wdc65c02_CLOCK <= '0';
-        RESET_IN_PROGRESS := '1';
-    elsif (rising_edge(CLOCK)) then      
-        WRITE_FLAG <= not RWB;
-       
-        BUS_ADDRESS <= ADDRESS;
-        if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
-            RESET_IN_PROGRESS := '0';
-        end if;
-        
-        if (FPGA_CLOCK_COUNTER_FOR_CPU = FPGA_CLOCK_MHZ / CPU_CLOCK_DIVIDER) then
+    if (rising_edge(CLOCK)) then
+        if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
             FPGA_CLOCK_COUNTER_FOR_CPU := 1;
-            wdc65c02_CLOCK <= not wdc65c02_CLOCK;
-        else
-            FPGA_CLOCK_COUNTER_FOR_CPU := FPGA_CLOCK_COUNTER_FOR_CPU + 1;
-            wdc65c02_CLOCK <= wdc65c02_CLOCK; -- Is this needed?
+            wdc65c02_CLOCK <= '0';
+            RESET_IN_PROGRESS := '1';  
+        else                   
+            if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
+                RESET_IN_PROGRESS := '0';
+            end if;
+            
+            if (FPGA_CLOCK_COUNTER_FOR_CPU = FPGA_CLOCK_MHZ / CPU_CLOCK_DIVIDER) then
+                FPGA_CLOCK_COUNTER_FOR_CPU := 1;
+                wdc65c02_CLOCK <= not wdc65c02_CLOCK;
+            else
+                FPGA_CLOCK_COUNTER_FOR_CPU := FPGA_CLOCK_COUNTER_FOR_CPU + 1;
+                wdc65c02_CLOCK <= wdc65c02_CLOCK; -- Is this needed?
+            end if;
         end if;
     end if;
 end process wdc65c02_clockmachine;
 
-wdc65c02_statemachine : process (wdc65c02_CLOCK, RESET)
+wdc65c02_statemachine : process (wdc65c02_CLOCK)
 variable reset_clock_count : natural := 0;
 variable reset_in_progress : std_logic := '0';
 begin
@@ -230,12 +267,18 @@ begin
                     -- and is '1' unless single step is enabled
                     if (SYNC = SYNC_READING_OPCODE) then
                         PROCESSOR_STATE <= OPCODE_FETCH;
+                    elsif (RWB = CPU_WRITING_DATA) then
+                        PROCESSOR_STATE <= WRITE_DATA;
+                    else
+                        PROCESSOR_STATE <= READY;
+                    end if;                   
+                when READ_DATA =>
+                when WRITE_DATA =>
+                    if (RWB = CPU_WRITING_DATA) then
+                        PROCESSOR_STATE <= WRITE_DATA;
                     else
                         PROCESSOR_STATE <= READY;
                     end if;
-                    
-                when READ_DATA =>
-                when WRITE_DATA =>
                 when OPCODE_FETCH =>
                 
                     IF (SYNC = SYNC_READING_OPCODE) then

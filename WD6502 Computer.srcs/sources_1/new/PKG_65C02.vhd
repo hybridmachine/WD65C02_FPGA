@@ -58,7 +58,8 @@ package W65C02_DEFINITIONS is
     constant CPU_STANDBY : std_logic := '0'; -- RDY held low to standby
     constant SYNC_READING_OPCODE : std_logic := '1'; -- SYNC high when opcode fetch in progress
     constant RESET_MIN_CLOCKS : natural := 2; -- Hold reset low for min clocks (2 based on the spec)
-    
+    constant CPU_WRITING_DATA : std_logic := '0'; -- RWB  is low when the CPU is writing
+    constant CPU_READING_DATA : std_logic := '1'; -- RWB is high when the CPU is reading data
     -- Memory Map
     
     -- ROM ends at FFF9, FFFA - FFFF are managed directly by the memory manager
@@ -89,4 +90,21 @@ package W65C02_DEFINITIONS is
     
     constant MEM_MANAGER_STATUS         : std_logic_vector(15 downto 0) := x"0000";
 
+    -- Timing delays as specified in the 65C02 data sheet
+    -- Times in nanoseconds unless otherwise specified
+    constant tACC   : natural := 290; -- Access Time
+    constant tAH    : natural := 20;  -- Address Hold Time
+    constant tADS   : natural := 150; -- Address setup time
+    constant tBVD   : natural := 30;  -- Bus enable to valid data
+    constant tPWH   : natural := 250; -- Clock Pulse Width Hight
+    constant tPWL   : natural := 250; -- Clock Pulse Width Low
+    constant tCYC   : natural := 500; -- Cycle Time
+    constant tF     : natural := 5;   -- Fall time
+    constant tR     : natural := 5;   -- Rise time
+    constant tPCH   : natural := 10;  -- Processor control hold time
+    constant tPCS   : natural := 60;  -- Processor control setup time
+    constant tDHR   : natural := 10;  -- Read data hold time
+    constant tDSR   : natural := 60;  -- Read data setup time
+    constant tMDS   : natural := 140; -- Write Data Delay time
+    constant tDHW   : natural := 10;  -- Write Data hold time
 end package;

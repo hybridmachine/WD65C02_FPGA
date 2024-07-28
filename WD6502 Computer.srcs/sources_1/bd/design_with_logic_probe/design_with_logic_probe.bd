@@ -7,11 +7,10 @@
       "name": "design_with_logic_probe",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "None",
-      "tool_version": "2023.2",
+      "tool_version": "2024.1",
       "validated": "true"
     },
     "design_tree": {
-      "ila_0": "",
       "invert_reset_signal": "",
       "WDC65C02_Interface": ""
     },
@@ -105,36 +104,9 @@
       }
     },
     "components": {
-      "ila_0": {
-        "vlnv": "xilinx.com:ip:ila:6.2",
-        "ip_revision": "14",
-        "xci_name": "design_with_logic_probe_ila_0_0",
-        "xci_path": "ip\\design_with_logic_probe_ila_0_0\\design_with_logic_probe_ila_0_0.xci",
-        "inst_hier_path": "ila_0",
-        "parameters": {
-          "C_MONITOR_TYPE": {
-            "value": "Native"
-          },
-          "C_NUM_OF_PROBES": {
-            "value": "8"
-          },
-          "C_PROBE0_WIDTH": {
-            "value": "16"
-          },
-          "C_PROBE2_WIDTH": {
-            "value": "8"
-          },
-          "C_PROBE6_WIDTH": {
-            "value": "8"
-          },
-          "C_PROBE7_WIDTH": {
-            "value": "8"
-          }
-        }
-      },
       "invert_reset_signal": {
         "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
-        "ip_revision": "3",
+        "ip_revision": "4",
         "xci_name": "design_with_logic_probe_util_vector_logic_1_0",
         "xci_path": "ip\\design_with_logic_probe_util_vector_logic_1_0\\design_with_logic_probe_util_vector_logic_1_0.xci",
         "inst_hier_path": "invert_reset_signal",
@@ -247,7 +219,6 @@
       "Net": {
         "ports": [
           "ADDRESS_IN",
-          "ila_0/probe0",
           "WDC65C02_Interface/ADDRESS"
         ]
       },
@@ -260,7 +231,6 @@
       "RWB_PIN_1": {
         "ports": [
           "RWB",
-          "ila_0/probe3",
           "WDC65C02_Interface/RWB"
         ]
       },
@@ -273,29 +243,25 @@
       "SYNC_1": {
         "ports": [
           "SYNC",
-          "ila_0/probe4",
           "WDC65C02_Interface/SYNC"
         ]
       },
       "SingleStep_1": {
         "ports": [
           "SingleStep",
-          "ila_0/probe5",
           "WDC65C02_Interface/SINGLESTEP"
         ]
       },
       "WD6502_Interface_0_PHI2": {
         "ports": [
           "WDC65C02_Interface/PHI2",
-          "PHI2",
-          "ila_0/probe1"
+          "PHI2"
         ]
       },
       "WD6502_Interface_0_PIO_LED_OUT": {
         "ports": [
           "WDC65C02_Interface/PIO_LED_OUT",
-          "LED_OUT",
-          "ila_0/probe2"
+          "LED_OUT"
         ]
       },
       "WDC65C02_Interface_0_IRQB": {
@@ -337,7 +303,6 @@
       "clk_wiz_0_clk_out1": {
         "ports": [
           "CLOCK",
-          "ila_0/clk",
           "WDC65C02_Interface/CLOCK"
         ]
       },

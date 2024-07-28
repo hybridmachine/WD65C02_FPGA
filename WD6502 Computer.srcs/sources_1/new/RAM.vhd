@@ -57,13 +57,17 @@ end RAM;
 architecture inferred_ram_arch of RAM is
     type ram_contents_type is array (natural range<>) of std_logic_vector(DATA_WIDTH - 1 downto 0);
     shared variable ram_contents: ram_contents_type (0 to RAM_DEPTH - 1);
+    
+    signal douta_reg : std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
+    signal doutb_reg : std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 begin
 
 process(CLKA)
  begin
-  if CLKA'event and CLKA = '1' then
+  if rising_edge(CLKA) then
+   douta <= douta_reg;
    if ENA = '1' then
-    douta <= ram_contents(to_integer(unsigned(ADDRA)));
+    douta_reg <= ram_contents(to_integer(unsigned(ADDRA)));
     if (wea = '1') then
      ram_contents(to_integer(unsigned(ADDRA))) := dina;
     end if;
@@ -73,9 +77,10 @@ process(CLKA)
 
  process(CLKB)
  begin
-  if CLKB'event and CLKB = '1' then
+  if rising_edge(CLKB) then
+   doutb <= doutb_reg;
    if ENB = '1' then
-    doutb <= ram_contents(to_integer(unsigned(ADDRB)));
+    doutb_reg <= ram_contents(to_integer(unsigned(ADDRB)));
     if WEB = '1' then
      ram_contents(to_integer(unsigned(ADDRB))) := dinb;
     end if;
