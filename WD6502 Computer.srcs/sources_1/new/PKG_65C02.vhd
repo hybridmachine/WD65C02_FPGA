@@ -58,7 +58,8 @@ package W65C02_DEFINITIONS is
     constant CPU_STANDBY : std_logic := '0'; -- RDY held low to standby
     constant SYNC_READING_OPCODE : std_logic := '1'; -- SYNC high when opcode fetch in progress
     constant RESET_MIN_CLOCKS : natural := 2; -- Hold reset low for min clocks (2 based on the spec)
-    
+    constant CPU_WRITING_DATA : std_logic := '0'; -- RWB  is low when the CPU is writing
+    constant CPU_READING_DATA : std_logic := '1'; -- RWB is high when the CPU is reading data
     -- Memory Map
     
     -- ROM ends at FFF9, FFFA - FFFF are managed directly by the memory manager
