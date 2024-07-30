@@ -22,6 +22,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.W65C02_DEFINITIONS.ALL;
+use work.MEMORY_MANAGER.ALL;
 
 --! \author Brian Tabone
 --! @brief Manages the memory map of the computer. 
@@ -67,13 +68,12 @@ signal rom_clka: std_logic;
 signal pio_led_data: std_logic_vector(7 downto 0);
 
 signal PIO_7SEG_DISPLAY_VAL :std_logic_vector(15 downto 0);
-signal PIO_7SEG_ACTIVE_SIG: std_logic;
-signal PIO_7SEG_SEGMENTS_SIG:std_logic_vector(7 downto 0);
-signal PIO_7SEG_COMMON_SIG:std_logic_vector(3 downto 0);
+signal PIO_7SEG_ACTIVE: std_logic;
 
 signal PIO_ELAPSED_TIMER_CONTROL_REG_SIG : STD_LOGIC_VECTOR (7 downto 0);
 signal PIO_ELAPSED_TIMER_STATUS_REG_SIG : STD_LOGIC_VECTOR (7 downto 0);
 signal PIO_ELAPSED_TIMER_TICKS_MS_SIG : STD_LOGIC_VECTOR (31 downto 0);
+signal DATA_DIRECTION : READ_WRITE_MODE_TYPE;
 
 COMPONENT RAM is
     GENERIC(
@@ -172,10 +172,10 @@ PIO_7SEG_X_4_DEVICE: PIO_7SEG_X_4 generic map (
 )
 port map (
     CLOCK => MEMORY_CLOCK,
-    DISPLAY_ON => PIO_7SEG_ACTIVE_SIG,
+    DISPLAY_ON => PIO_7SEG_ACTIVE,
     VALUE => PIO_7SEG_DISPLAY_VAL,
-    SEGMENT_DRIVERS => PIO_7SEG_SEGMENTS_SIG,
-    COMMON_DRIVERS => PIO_7SEG_COMMON_SIG
+    SEGMENT_DRIVERS => PIO_7SEG_SEGMENTS,
+    COMMON_DRIVERS => PIO_7SEG_COMMON
     );
 
 PIO_ELAPSED_TIMER_DEVICE: PIO_ELAPSED_TIMER port map (
@@ -197,88 +197,65 @@ ram_web <= '0';
 ram_ena <= '1';
 ram_enb <= '1';
 
--- Propogate the 7 SEGMENT signals 
+-- Propogate registers and update DATA_DIRECTION 
 process(MEMORY_CLOCK)
 BEGIN
     if (rising_edge(MEMORY_CLOCK)) then
-        PIO_7SEG_SEGMENTS <= PIO_7SEG_SEGMENTS_SIG;
-        PIO_7SEG_COMMON <= PIO_7SEG_COMMON_SIG;
+        
+        if (WRITE_FLAG = '1') then
+            DATA_DIRECTION <= WRITE_TO_MEMORY;
+        else
+            DATA_DIRECTION <= READ_FROM_MEMORY;
+        end if;
     end if;
 END PROCESS;
 
 process(MEMORY_CLOCK)
 variable MEMORY_ADDRESS : unsigned(15 downto 0);
 variable SHIFTED_ADDRESS : unsigned(15 downto 0);
-
 begin    
     if (rising_edge(MEMORY_CLOCK)) then
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
-        if (unsigned(BOOT_VEC_ADDRESS_LOW) = MEMORY_ADDRESS) then
-            BUS_READ_DATA <= BOOT_VEC(7 downto 0);
-        elsif (unsigned(BOOT_VEC_ADDRESS_HIGH) = MEMORY_ADDRESS) then
-            BUS_READ_DATA <= BOOT_VEC(15 downto 8);
-        -- Read from ROM
-        elsif (unsigned(ROM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(ROM_END)) then
-            if (WRITE_FLAG = '0') then
-                SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(ROM_BASE);
-                rom_addra <= std_logic_vector(SHIFTED_ADDRESS);
-                
-                -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
-                BUS_READ_DATA <= rom_douta; 
-            else
-                -- Set the error flag and BUS_DATA to 0
-                BUS_READ_DATA <= "00000000";
-            end if;
-        -- Read/Write from/to RAM
-        elsif(unsigned(RAM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(RAM_END)) then
-            if(unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(MEM_MAPPED_IO_END)) then
-                if (unsigned(PIO_LED_ADDR) = MEMORY_ADDRESS) then
-                    -- Send data value to PIO_LED
-                    if (WRITE_FLAG = '1') then
-                        pio_led_data <= BUS_WRITE_DATA;
-                    end if;
-                elsif (unsigned(PIO_7SEG_ACTIVE) = MEMORY_ADDRESS AND WRITE_FLAG = '1') then
+        if (MemoryRegion(BUS_ADDRESS) = BOOT_VECTOR_REGION) then
+            ReadBootVector(BUS_READ_DATA, BUS_ADDRESS);
+        elsif((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
+            ReadROM(BUS_READ_DATA, BUS_ADDRESS, rom_addra, rom_douta);
+        elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
+            ReadRAM(BUS_READ_DATA, BUS_ADDRESS, ram_addrb, ram_doutb);
+        elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = WRITE_TO_MEMORY)) then
+            WriteRAM(BUS_WRITE_DATA, BUS_ADDRESS, ram_addra, ram_dina);
+        elsif((MemoryRegion(BUS_ADDRESS) = MEMORY_MAPPED_IO_REGION)) then
+            if (DATA_DIRECTION = WRITE_TO_MEMORY) then
+                if (PIO_LED_ADDR = BUS_ADDRESS) then
+                    pio_led_data <= BUS_WRITE_DATA;
+                elsif (PIO_7SEG_CONTROL = BUS_ADDRESS) then
                     if (BUS_WRITE_DATA /= x"00") then -- Any non zero value will activate the displays
-                        PIO_7SEG_ACTIVE_SIG <= '1';
+                        PIO_7SEG_ACTIVE <= '1';
                     else
-                        PIO_7SEG_ACTIVE_SIG <= '0';
+                        PIO_7SEG_ACTIVE <= '0';
                     end if;
-                elsif (MEMORY_ADDRESS = unsigned(PIO_7SEG_VAL) AND WRITE_FLAG = '1') then
+                elsif (BUS_ADDRESS = PIO_7SEG_VAL_LOW) then
                     PIO_7SEG_DISPLAY_VAL(7 downto 0) <= BUS_WRITE_DATA;
-                elsif (MEMORY_ADDRESS = (unsigned(PIO_7SEG_VAL) + 1) AND WRITE_FLAG = '1') then
+                elsif (BUS_ADDRESS = PIO_7SEG_VAL_HIGH) then
                     PIO_7SEG_DISPLAY_VAL(15 downto 8) <= BUS_WRITE_DATA;
                 -- Timer control and status
-                elsif (MEMORY_ADDRESS = (unsigned(PIO_TIMER_CTL)) AND WRITE_FLAG = '1') then
+                elsif (BUS_ADDRESS = PIO_TIMER_CTL) then
                     -- Set the timer control flags
                     PIO_ELAPSED_TIMER_CONTROL_REG_SIG <= BUS_WRITE_DATA;
-                elsif (MEMORY_ADDRESS = (unsigned(PIO_TIMER_STATUS)) AND WRITE_FLAG = '0') then
-                    -- Read the timer status
-                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_STATUS_REG_SIG;
-                -- Read blocks for timer value
-                elsif (MEMORY_ADDRESS = (unsigned(PIO_TIMER_VAL_MS)) AND WRITE_FLAG = '0') then
-                    -- Read the timer status
-                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(7 downto 0);
-                elsif (MEMORY_ADDRESS = (unsigned(PIO_TIMER_VAL_MS)+1) AND WRITE_FLAG = '0') then
-                    -- Read the timer status
-                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(15 downto 8);
-                elsif (MEMORY_ADDRESS = (unsigned(PIO_TIMER_VAL_MS)+2) AND WRITE_FLAG = '0') then
-                    -- Read the timer status
-                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(23 downto 16);
-                elsif (MEMORY_ADDRESS = (unsigned(PIO_TIMER_VAL_MS)+3) AND WRITE_FLAG = '0') then
-                    -- Read the timer status
-                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
                 end if;
             else
-                SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(RAM_BASE);
-                -- Write on port A, read on port B
-                if (WRITE_FLAG = '1') then
-                    ram_addra <= std_logic_vector(SHIFTED_ADDRESS);
-                    ram_dina <= BUS_WRITE_DATA; 
-                else
-                    -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
-                    ram_addrb <= std_logic_vector(SHIFTED_ADDRESS);
-                    BUS_READ_DATA <= ram_doutb;
+                -- Read from memory
+                if (BUS_ADDRESS = PIO_TIMER_STATUS) then
+                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_STATUS_REG_SIG;
+                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_1) then
+                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(7 downto 0);
+                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_2) then
+                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(15 downto 8);
+                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_3) then
+                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(23 downto 16);
+                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_4) then
+                    BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
                 end if;
             end if;
         else
