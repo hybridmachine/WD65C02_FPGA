@@ -144,16 +144,11 @@ begin
     T_WRITE_FLAG <= '1';
     T_BUS_ADDRESS <= std_logic_vector(unsigned(PIO_LED_ADDR));
     T_BUS_WRITE_DATA <= x"FE";
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait until T_PIO_LED_OUT'event;
     assert (T_PIO_LED_OUT = x"FE") report "LED control lines do not match requested" severity error;
+    
     T_BUS_WRITE_DATA <= x"ED";
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait until T_PIO_LED_OUT'event;
     assert (T_PIO_LED_OUT = x"ED") report "LED control lines do not match requested" severity error;
 
     report("Test completed successfully");

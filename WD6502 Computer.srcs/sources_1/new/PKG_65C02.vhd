@@ -23,21 +23,21 @@ use IEEE.NUMERIC_STD.ALL;
 
 package W65C02_DEFINITIONS is
     -- Pin types
-    subtype ADDRESS_65C02_T      is STD_LOGIC_VECTOR(15 downto 0);         -- Address bus
-    subtype BE_T           is STD_LOGIC;                        -- Bus Enable
-    subtype DATA_65C02_T         is STD_LOGIC_VECTOR (7 downto 0);    -- Data bus
-    subtype IRQB_T         is STD_LOGIC;                        -- Interrupt Request
-    subtype MLB_T          is STD_LOGIC;                        -- Memory Lock
-    subtype NMIB_T         is STD_LOGIC;                        -- Non-Maskable Interrupt
-    subtype PHI1O_T        is STD_LOGIC;                        -- Phase 1 out clock
-    subtype PHI2_T         is STD_LOGIC;                        -- Phase 2 in clock (main clock)
-    subtype PHI2O_T        is STD_LOGIC;                        -- Phase 2 out clock
-    subtype RDY_T          is STD_LOGIC;                        -- Ready
-    subtype RESB_T         is STD_LOGIC;                        -- Reset
-    subtype RWB_T          is STD_LOGIC;                        -- Read/Write
-    subtype SOB_T          is STD_LOGIC;                        -- Set Overflow
-    subtype SYNC_T         is STD_LOGIC;                        -- Synchronize
-    subtype VPB_T          is STD_LOGIC;                        -- Vector Pull  constant output : output_t;  -- Value assign is deferred
+    subtype ADDRESS_65C02_T      is std_logic_vector(15 downto 0);         -- Address bus
+    subtype BE_T           is std_logic;                        -- Bus Enable
+    subtype DATA_65C02_T         is std_logic_vector (7 downto 0);    -- Data bus
+    subtype IRQB_T         is std_logic;                        -- Interrupt Request
+    subtype MLB_T          is std_logic;                        -- Memory Lock
+    subtype NMIB_T         is std_logic;                        -- Non-Maskable Interrupt
+    subtype PHI1O_T        is std_logic;                        -- Phase 1 out clock
+    subtype PHI2_T         is std_logic;                        -- Phase 2 in clock (main clock)
+    subtype PHI2O_T        is std_logic;                        -- Phase 2 out clock
+    subtype RDY_T          is std_logic;                        -- Ready
+    subtype RESB_T         is std_logic;                        -- Reset
+    subtype RWB_T          is std_logic;                        -- Read/Write
+    subtype SOB_T          is std_logic;                        -- Set Overflow
+    subtype SYNC_T         is std_logic;                        -- Synchronize
+    subtype VPB_T          is std_logic;                        -- Vector Pull  constant output : output_t;  -- Value assign is deferred
 
     -- State constants
     -- From the W65C02 spec
