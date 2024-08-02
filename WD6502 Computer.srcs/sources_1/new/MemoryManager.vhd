@@ -32,12 +32,12 @@ entity MemoryManager is
     Port ( BUS_READ_DATA : out DATA_65C02_T; --! Read data
            BUS_WRITE_DATA : in DATA_65C02_T; --! Data to be written
            BUS_ADDRESS : in ADDRESS_65C02_T; --! Read/Write address
-           MEMORY_CLOCK : in STD_LOGIC; --! Memory clock, typically full FPGA clock speed
-           WRITE_FLAG : in STD_LOGIC; --! When 1, write data to address, otherwise read address and output on data line
-           PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
-           PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0); --! Common drivers for seven segment displays
-           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0); --! Segment drivers for selected seven segment display
-           RESET : in STD_LOGIC --! Reset 
+           MEMORY_CLOCK : in std_logic; --! Memory clock, typically full FPGA clock speed
+           WRITE_FLAG : in std_logic; --! When 1, write data to address, otherwise read address and output on data line
+           PIO_LED_OUT : out std_logic_vector (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
+           PIO_7SEG_COMMON : out std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
+           PIO_7SEG_SEGMENTS : out std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
+           RESET : in std_logic --! Reset 
            );
 end MemoryManager;
 
@@ -48,21 +48,21 @@ constant ADDRESS_WIDTH: natural := 16;
 
 
 -- RAM signals
-signal ram_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
-signal ram_addrb: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
+signal ram_addra: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
+signal ram_addrb: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
 signal ram_clka: std_logic;
 signal ram_clkb: std_logic;
-signal ram_dina: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-signal ram_dinb: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-signal ram_douta: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-signal ram_doutb: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
+signal ram_dina: std_logic_vector((DATA_WIDTH - 1) downto 0);
+signal ram_dinb: std_logic_vector((DATA_WIDTH - 1) downto 0);
+signal ram_douta: std_logic_vector((DATA_WIDTH - 1) downto 0);
+signal ram_doutb: std_logic_vector((DATA_WIDTH - 1) downto 0);
 signal ram_wea: std_logic;
 signal ram_web: std_logic;
 signal ram_ena: std_logic;
 signal ram_enb: std_logic;
 
-signal rom_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
-signal rom_douta: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
+signal rom_addra: std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
+signal rom_douta: std_logic_vector((DATA_WIDTH - 1) downto 0);
 signal rom_clka: std_logic;
 	
 signal pio_led_data: std_logic_vector(7 downto 0);
@@ -70,9 +70,9 @@ signal pio_led_data: std_logic_vector(7 downto 0);
 signal PIO_7SEG_DISPLAY_VAL :std_logic_vector(15 downto 0);
 signal PIO_7SEG_ACTIVE: std_logic;
 
-signal PIO_ELAPSED_TIMER_CONTROL_REG_SIG : STD_LOGIC_VECTOR (7 downto 0);
-signal PIO_ELAPSED_TIMER_STATUS_REG_SIG : STD_LOGIC_VECTOR (7 downto 0);
-signal PIO_ELAPSED_TIMER_TICKS_MS_SIG : STD_LOGIC_VECTOR (31 downto 0);
+signal PIO_ELAPSED_TIMER_CONTROL_REG_SIG : std_logic_vector (7 downto 0);
+signal PIO_ELAPSED_TIMER_STATUS_REG_SIG : std_logic_vector (7 downto 0);
+signal PIO_ELAPSED_TIMER_TICKS_MS_SIG : std_logic_vector (31 downto 0);
 signal DATA_DIRECTION : READ_WRITE_MODE_TYPE;
 
 COMPONENT RAM is
@@ -82,14 +82,14 @@ COMPONENT RAM is
     RAM_DEPTH: natural := 2**16
   );
     PORT (
-	addra: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
-	addrb: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
+	addra: IN std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
+	addrb: IN std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
 	clka: IN std_logic;
 	clkb: IN std_logic;
-	dina: IN std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-	dinb: IN std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-	douta: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
-	doutb: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
+	dina: IN std_logic_vector((DATA_WIDTH - 1) downto 0);
+	dinb: IN std_logic_vector((DATA_WIDTH - 1) downto 0);
+	douta: OUT std_logic_vector((DATA_WIDTH - 1) downto 0);
+	doutb: OUT std_logic_vector((DATA_WIDTH - 1) downto 0);
 	wea: IN std_logic;
 	web: IN std_logic;
 	ena: IN std_logic;
@@ -99,41 +99,41 @@ end COMPONENT;
 
 COMPONENT ROM is
     PORT (
-	addra: IN std_logic_VECTOR(15 downto 0);
+	addra: IN std_logic_vector(15 downto 0);
 	clka: IN std_logic;
-	douta: OUT std_logic_VECTOR(7 downto 0)
+	douta: OUT std_logic_vector(7 downto 0)
   );
 end COMPONENT;
 
 COMPONENT PIO_LED is
-    Port ( DATA : in STD_LOGIC_VECTOR (7 downto 0);
-           LED_CTL : out STD_LOGIC_VECTOR (7 downto 0);
-           CLOCK : in STD_LOGIC;
-           RESET : in STD_LOGIC);
+    Port ( DATA : in std_logic_vector (7 downto 0);
+           LED_CTL : out std_logic_vector (7 downto 0);
+           CLOCK : in std_logic;
+           RESET : in std_logic);
 end COMPONENT;
 
 COMPONENT PIO_7SEG_X_4 is
     GENERIC(
         -- On some boards, namely baysis3, the digit selector is actually low instead of high
         -- most boards are high so 1 is default, set to 0 for boards like baysis 3
-        SELECT_ACTIVE : STD_LOGIC := '1';
+        SELECT_ACTIVE : std_logic := '1';
         CLOCK_TICKS_PER_DIGIT : natural := 1000000; -- at 100mhz, this will give us 10ms per digit
-        COMMON_ANODE : STD_LOGIC := '1' -- When 1, true otherwise we are in common cathode mode
+        COMMON_ANODE : std_logic := '1' -- When 1, true otherwise we are in common cathode mode
     );
-    Port ( CLOCK : in STD_LOGIC; -- For now we'll run this at FPGA clock speed of 100mhz
-           DISPLAY_ON : STD_LOGIC; -- 0 for LEDs off, 1 for display value on input
-           VALUE : in STD_LOGIC_VECTOR (15 downto 0); -- 4 digits of 0-F hex. Note if using BCD , caller should limit 0-9, display doesn't truncate BCD illegal bits
-           SEGMENT_DRIVERS : out STD_LOGIC_VECTOR (7 downto 0);
-           COMMON_DRIVERS : out STD_LOGIC_VECTOR(3 downto 0)
+    Port ( CLOCK : in std_logic; -- For now we'll run this at FPGA clock speed of 100mhz
+           DISPLAY_ON : std_logic; -- 0 for LEDs off, 1 for display value on input
+           VALUE : in std_logic_vector (15 downto 0); -- 4 digits of 0-F hex. Note if using BCD , caller should limit 0-9, display doesn't truncate BCD illegal bits
+           SEGMENT_DRIVERS : out std_logic_vector (7 downto 0);
+           COMMON_DRIVERS : out std_logic_vector(3 downto 0)
            );
             
 end COMPONENT;
 
 COMPONENT PIO_ELAPSED_TIMER is
-    Port ( CLOCK : in STD_LOGIC;
-           CONTROL_REG : in STD_LOGIC_VECTOR (7 downto 0);
-           STATUS_REG : out STD_LOGIC_VECTOR (7 downto 0);
-           TICKS_MS : out STD_LOGIC_VECTOR (31 downto 0));
+    Port ( CLOCK : in std_logic;
+           CONTROL_REG : in std_logic_vector (7 downto 0);
+           STATUS_REG : out std_logic_vector (7 downto 0);
+           TICKS_MS : out std_logic_vector (31 downto 0));
 end COMPONENT;
 
 begin
@@ -200,8 +200,7 @@ ram_enb <= '1';
 -- Propogate registers and update DATA_DIRECTION 
 process(MEMORY_CLOCK)
 BEGIN
-    if (rising_edge(MEMORY_CLOCK)) then
-        
+    if (rising_edge(MEMORY_CLOCK)) then     
         if (WRITE_FLAG = '1') then
             DATA_DIRECTION <= WRITE_TO_MEMORY;
         else
