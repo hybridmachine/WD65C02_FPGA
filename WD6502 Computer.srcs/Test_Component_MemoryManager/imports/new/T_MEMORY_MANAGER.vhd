@@ -97,52 +97,40 @@ begin
     -- Here we read two bytes from ROM and write those two bytes to RAM
     T_WRITE_FLAG <= '0'; -- READ mode    
     T_BUS_ADDRESS <= ROM_BASE;
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait until T_BUS_READ_DATA'event;
     WRITTEN_BYTE_1 := T_BUS_READ_DATA;
-    T_WRITE_FLAG <= '1';
     T_BUS_ADDRESS <= RAM_BASE;
+    wait for CLOCK_PERIOD;
+    T_WRITE_FLAG <= '1';
     T_BUS_WRITE_DATA <= WRITTEN_BYTE_1;
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait for 6*CLOCK_PERIOD;
     
     T_WRITE_FLAG <= '0';
     T_BUS_ADDRESS <= std_logic_vector(unsigned(ROM_BASE) + 1);
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait for 6*CLOCK_PERIOD;
+
     WRITTEN_BYTE_2 := T_BUS_READ_DATA;
-    T_WRITE_FLAG <= '1';
     T_BUS_ADDRESS <= std_logic_vector(unsigned(RAM_BASE) + 1);
+    wait for 4*CLOCK_PERIOD;
     T_BUS_WRITE_DATA <= WRITTEN_BYTE_2;
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    
-        
+    T_WRITE_FLAG <= '1';
+    wait for 6*CLOCK_PERIOD;
+            
     -- Here we verify that the two bytes were written correctly to RAM
     T_WRITE_FLAG <= '0';
+    wait for 2*CLOCK_PERIOD;
     T_BUS_ADDRESS <= RAM_BASE;
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait for 6*CLOCK_PERIOD;
+
     assert (T_BUS_READ_DATA = WRITTEN_BYTE_1) report "RAM address 0 value does not match written" severity failure;
     T_BUS_ADDRESS <= std_logic_vector(unsigned(RAM_BASE) + 1);
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
-    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
+    wait for 6*CLOCK_PERIOD;
+
     assert (T_BUS_READ_DATA = WRITTEN_BYTE_2) report "RAM address 1 value does not match written" severity failure;
-       
-    T_WRITE_FLAG <= '1';
+    
     T_BUS_ADDRESS <= std_logic_vector(unsigned(PIO_LED_ADDR));
+    wait for CLOCK_PERIOD;   
+    T_WRITE_FLAG <= '1';
     T_BUS_WRITE_DATA <= x"FE";
     wait until T_PIO_LED_OUT'event;
     assert (T_PIO_LED_OUT = x"FE") report "LED control lines do not match requested" severity error;
