@@ -51,20 +51,22 @@ end COMPONENT;
 signal T_BUS_READ_DATA : DATA_65C02_T;
 signal T_BUS_WRITE_DATA : DATA_65C02_T;
 signal T_BUS_ADDRESS : ADDRESS_65C02_T;
-signal T_MEMORY_CLOCK : STD_LOGIC;
-signal T_WRITE_FLAG : STD_LOGIC;
-signal T_PIO_LED_OUT : STD_LOGIC_VECTOR (7 downto 0);
-signal T_PIO_7SEG_COMMON : STD_LOGIC_VECTOR(3 downto 0);
-signal T_PIO_7SEG_SEGMENTS : STD_LOGIC_VECTOR(7 downto 0);
-signal T_RESET : STD_LOGIC;
+signal T_MEMORY_CLOCK : std_logic;
+signal T_READ_WRITE_MODE : std_logic;
+signal T_PIO_LED_OUT : std_logic_vector (7 downto 0);
+signal T_PIO_7SEG_COMMON : std_logic_vector(3 downto 0);
+signal T_PIO_7SEG_SEGMENTS : std_logic_vector(7 downto 0);
+signal T_RESET : std_logic;
 
-constant CLOCK_PERIOD : time := 100ns; -- 10mhz
+constant CLOCK_PERIOD : time := 10ns; -- 100mhz
+constant READ_MODE : std_logic := '0';
+constant WRITE_MODE : std_logic := '1';
 
 begin
 
 DUT : MemoryManager PORT MAP (
         MEMORY_CLOCK => T_MEMORY_CLOCK,
-        WRITE_FLAG => T_WRITE_FLAG,
+        WRITE_FLAG => T_READ_WRITE_MODE,
         BUS_READ_DATA => T_BUS_READ_DATA,
         BUS_WRITE_DATA => T_BUS_WRITE_DATA,
         BUS_ADDRESS => T_BUS_ADDRESS,
@@ -90,22 +92,32 @@ variable WRITTEN_BYTE_2: std_logic_vector(7 downto 0);
 begin
 
     T_RESET <= CPU_RESET;
-    wait for 300ns;
+    wait for 10*CLOCK_PERIOD;
     T_RESET <= CPU_RUNNING;
-    wait for 300ns;
+    wait for 10*CLOCK_PERIOD;
+    
+    -- Check the boot vector
+    T_READ_WRITE_MODE <= READ_MODE;
+    T_BUS_ADDRESS <= BOOT_VEC_ADDRESS_LOW;
+    wait until T_BUS_READ_DATA'event;
+    assert (T_BUS_READ_DATA = BOOT_VEC(7 downto 0)) report "Invalid boot vector low bytes" severity failure;
+    
+    T_BUS_ADDRESS <= BOOT_VEC_ADDRESS_HIGH;
+    wait until T_BUS_READ_DATA'event;
+    assert (T_BUS_READ_DATA = BOOT_VEC(15 downto 8)) report "Invalid boot vector high bytes" severity failure;
     
     -- Here we read two bytes from ROM and write those two bytes to RAM
-    T_WRITE_FLAG <= '0'; -- READ mode    
+    T_READ_WRITE_MODE <= READ_MODE;    
     T_BUS_ADDRESS <= ROM_BASE;
     wait until T_BUS_READ_DATA'event;
     WRITTEN_BYTE_1 := T_BUS_READ_DATA;
     T_BUS_ADDRESS <= RAM_BASE;
     wait for CLOCK_PERIOD;
-    T_WRITE_FLAG <= '1';
+    T_READ_WRITE_MODE <= '1';
     T_BUS_WRITE_DATA <= WRITTEN_BYTE_1;
     wait for 6*CLOCK_PERIOD;
     
-    T_WRITE_FLAG <= '0';
+    T_READ_WRITE_MODE <= '0';
     T_BUS_ADDRESS <= std_logic_vector(unsigned(ROM_BASE) + 1);
     wait for 6*CLOCK_PERIOD;
 
@@ -113,11 +125,11 @@ begin
     T_BUS_ADDRESS <= std_logic_vector(unsigned(RAM_BASE) + 1);
     wait for 4*CLOCK_PERIOD;
     T_BUS_WRITE_DATA <= WRITTEN_BYTE_2;
-    T_WRITE_FLAG <= '1';
+    T_READ_WRITE_MODE <= '1';
     wait for 6*CLOCK_PERIOD;
             
     -- Here we verify that the two bytes were written correctly to RAM
-    T_WRITE_FLAG <= '0';
+    T_READ_WRITE_MODE <= '0';
     wait for 2*CLOCK_PERIOD;
     T_BUS_ADDRESS <= RAM_BASE;
     wait for 6*CLOCK_PERIOD;
@@ -130,7 +142,7 @@ begin
     
     T_BUS_ADDRESS <= std_logic_vector(unsigned(PIO_LED_ADDR));
     wait for CLOCK_PERIOD;   
-    T_WRITE_FLAG <= '1';
+    T_READ_WRITE_MODE <= WRITE_MODE;
     T_BUS_WRITE_DATA <= x"FE";
     wait until T_PIO_LED_OUT'event;
     assert (T_PIO_LED_OUT = x"FE") report "LED control lines do not match requested" severity error;

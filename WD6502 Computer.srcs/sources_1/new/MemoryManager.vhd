@@ -197,17 +197,7 @@ ram_web <= '0';
 ram_ena <= '1';
 ram_enb <= '1';
 
--- Propogate registers and update DATA_DIRECTION 
-process(MEMORY_CLOCK)
-BEGIN
-    if (rising_edge(MEMORY_CLOCK)) then     
-        if (WRITE_FLAG = '1') then
-            DATA_DIRECTION <= WRITE_TO_MEMORY;
-        else
-            DATA_DIRECTION <= READ_FROM_MEMORY;
-        end if;
-    end if;
-END PROCESS;
+DATA_DIRECTION <= READ_FROM_MEMORY when WRITE_FLAG = '0' else WRITE_TO_MEMORY;
 
 process(MEMORY_CLOCK)
 variable MEMORY_ADDRESS : unsigned(15 downto 0);
