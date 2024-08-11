@@ -37,6 +37,8 @@ entity MemoryManager is
            PIO_LED_OUT : out std_logic_vector (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
            PIO_7SEG_COMMON : out std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
            PIO_7SEG_SEGMENTS : out std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
+           PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
+           PIO_I2C_DATA_STREAMER_SCL : out std_logic;   
            RESET : in std_logic --! Reset 
            );
 end MemoryManager;
@@ -75,6 +77,12 @@ signal PIO_ELAPSED_TIMER_STATUS_REG_SIG : std_logic_vector (7 downto 0);
 signal PIO_ELAPSED_TIMER_TICKS_MS_SIG : std_logic_vector (31 downto 0);
 signal DATA_DIRECTION : READ_WRITE_MODE_TYPE;
 
+signal PIO_I2C_DATA_STREAMER_STATUS :  STD_LOGIC_VECTOR (7 downto 0);
+signal PIO_I2C_DATA_STREAMER_CONTROL : STD_LOGIC_VECTOR (7 downto 0);
+signal PIO_I2C_DATA_STREAMER_ADDRESS : STD_LOGIC_VECTOR (15 downto 0);
+signal PIO_I2C_DATA_STREAMER_DATA : STD_LOGIC_VECTOR (7 downto 0);
+signal PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS : STD_LOGIC_VECTOR(6 downto 0);
+            
 COMPONENT RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
@@ -136,6 +144,18 @@ COMPONENT PIO_ELAPSED_TIMER is
            TICKS_MS : out std_logic_vector (31 downto 0));
 end COMPONENT;
 
+COMPONENT PIO_I2C_DATA_STREAMER is
+    Port (  clk                 : in STD_LOGIC;
+            -- No reset, as per Ultra Fast Desig Guide don't use if it can be avoided, users can reset via the control bus
+            status              : out STD_LOGIC_VECTOR (7 downto 0);
+            control             : in STD_LOGIC_VECTOR (7 downto 0);
+            address             : in STD_LOGIC_VECTOR (15 downto 0);
+            data                : in STD_LOGIC_VECTOR (7 downto 0);
+            i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
+            sda                 : inout STD_LOGIC;
+            scl                 : out STD_LOGIC);
+end COMPONENT;
+
 begin
 
 RAM_DEVICE: RAM port map (
@@ -184,7 +204,18 @@ PIO_ELAPSED_TIMER_DEVICE: PIO_ELAPSED_TIMER port map (
     STATUS_REG => PIO_ELAPSED_TIMER_STATUS_REG_SIG,
     TICKS_MS => PIO_ELAPSED_TIMER_TICKS_MS_SIG
 );
- 
+
+PIO_I2C_DATA_STREAMER_DEVICE: PIO_I2C_DATA_STREAMER port map (  
+    clk => MEMORY_CLOCK,
+    status => PIO_I2C_DATA_STREAMER_STATUS,
+    control => PIO_I2C_DATA_STREAMER_CONTROL,
+    address => PIO_I2C_DATA_STREAMER_ADDRESS,
+    data => PIO_I2C_DATA_STREAMER_DATA,
+    i2c_target_address => PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS,
+    sda => PIO_I2C_DATA_STREAMER_SDA,
+    scl => PIO_I2C_DATA_STREAMER_SCL
+);
+
 -- Concurrent processes to distribute clock signals to RAM and ROM
 rom_clka <= MEMORY_CLOCK;
 ram_clka <= MEMORY_CLOCK;
