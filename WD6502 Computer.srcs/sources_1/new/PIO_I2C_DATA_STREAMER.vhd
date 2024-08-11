@@ -70,6 +70,7 @@ end COMPONENT;
 
 constant DATA_WIDTH: natural := 8;
 constant ADDRESS_WIDTH: natural := 16;
+constant SCL_CLOCK_DIVISOR: natural := 1000; -- At 100MHZ, gives us 100KHZ
 
 
 -- RAM signals
@@ -85,6 +86,7 @@ signal ram_wea: std_logic := '0';
 signal ram_web: std_logic := '0';
 signal ram_ena: std_logic := '1';
 signal ram_enb: std_logic := '1';
+signal i2c_scl: std_logic := '0';
 
 signal control_reg : std_logic_vector(control'length-1 to 0);
 
@@ -124,6 +126,24 @@ RAM_DEVICE: RAM port map (
 ram_ena <= '1';
 ram_enb <= '1';
 
+ram_clka <= clk;
+ram_clkb <= clk;
+
+scl <= i2c_scl;
+
+-- Drive the I2C clock
+process(clk)
+variable master_clock_ticks : natural range 0 to SCL_CLOCK_DIVISOR := 1; 
+begin
+    if (rising_edge (clk)) then
+        if (master_clock_ticks < SCL_CLOCK_DIVISOR) then
+            master_clock_ticks := master_clock_ticks + 1;
+        else
+            master_clock_ticks := 1;
+            i2c_scl <= not i2c_scl;
+        end if;
+    end if;
+end process;
 
 process(clk) begin
     if (rising_edge(clk)) then
