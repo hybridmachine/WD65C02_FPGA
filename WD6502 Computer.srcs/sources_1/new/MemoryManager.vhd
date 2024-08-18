@@ -13,7 +13,7 @@
 -- 
 -- Revision:
 -- Revision 0.01 - File Created
--- Additional Comments:
+-- Additional Comments: Memory management module
 -- 
 ----------------------------------------------------------------------------------
 
@@ -263,6 +263,16 @@ begin
                 elsif (BUS_ADDRESS = PIO_TIMER_CTL) then
                     -- Set the timer control flags
                     PIO_ELAPSED_TIMER_CONTROL_REG_SIG <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_CTRL) then
+                    PIO_I2C_DATA_STREAMER_CONTROL <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW) then
+                    PIO_I2C_DATA_STREAMER_ADDRESS(7 downto 0) <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH) then
+                    PIO_I2C_DATA_STREAMER_ADDRESS(15 downto 8) <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_DATA) then
+                    PIO_I2C_DATA_STREAMER_DATA <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_I2C_ADDRESS) then
+                    PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS <= BUS_WRITE_DATA(7 downto 1); 
                 end if;
             else
                 -- Read from memory
@@ -276,6 +286,8 @@ begin
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(23 downto 16);
                 elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_4) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
+                elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_STATUS) then
+                    BUS_READ_DATA <= PIO_I2C_DATA_STREAMER_STATUS;
                 end if;
             end if;
         else

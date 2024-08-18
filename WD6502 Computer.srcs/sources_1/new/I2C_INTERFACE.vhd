@@ -1,0 +1,137 @@
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: Brian Tabone
+-- 
+-- Create Date: 08/17/2024 04:28:30 PM
+-- Design Name: 
+-- Module Name: PIO_I2C_DATA_STREAMER - Behavioral
+-- Project Name: 
+-- Target Devices: 
+-- Tool Versions: 
+-- Description: 
+-- 
+-- Dependencies: 
+-- 
+-- Revision:
+-- Revision 0.01 - File Created
+-- Additional Comments: Adapted from EEPROM I2C example in "Circuit Design and Simulation with VHDL 2nd Edition"
+-- 
+----------------------------------------------------------------------------------
+
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity I2C_INTERFACE is
+    GENERIC (
+        fclk : POSITIVE := 100_000; -- Frequency in Kilohertz, of system clock
+        data_rate: POSITIVE := 100; -- Data rate for the I2C bus   
+        write_time: POSITIVE := 5 -- Max write time in MS
+    );
+    Port (  clk                 : in STD_LOGIC;
+            rst                 : in STD_LOGIC;
+            read_write_mode     : in STD_LOGIC; -- 1 write, 0 read
+            data                : in STD_LOGIC_VECTOR (7 downto 0);
+            ack_error          : out STD_LOGIC;
+            i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
+            sda                 : inout STD_LOGIC;
+            scl                 : out STD_LOGIC);
+end I2C_INTERFACE;
+
+architecture finite_state_machine of I2C_INTERFACE is
+
+constant scl_divider: INTEGER := (fclk/8)/data_rate;
+constant delay: INTEGER := write_time * data_rate;
+
+signal auxiliary_clock, bus_clock, data_clock: STD_LOGIC := '0';
+signal data_in, data_out: STD_LOGIC_VECTOR(7 downto 0);
+signal wr_flag, rd_flag: STD_LOGIC;
+signal ack: STD_LOGIC_VECTOR(2 downto 0);
+signal timer: NATURAL RANGE 0 to delay;
+shared variable idx: NATURAL RANGE 0 to delay;
+-- State machine signals
+TYPE state_type IS (idle, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop_no_ack, ack1, ack2, ack3, ack4);
+signal present_state, next_state: state_type;
+
+begin
+
+    ack_error <= ack(0) OR ack(1) OR ack(2); 
+
+    ------ Auxiliary clock -----------------------------
+    -- Frequency = 4 * data_rate
+
+    process(clk)
+        VARIABLE count: INTEGER RANGE 0 to scl_divider := 0;
+    begin
+        if (rising_edge(clk)) then
+            count := count + 1;
+            if (count = scl_divider) then
+                auxiliary_clock <= NOT auxiliary_clock;
+                count := 0;
+            end if;
+        end if;
+    end process;
+
+    ------ Bus & Data clocks -----------------------------
+    -- Frequency = 100khz for default params
+
+    process(auxiliary_clock)
+        variable count: INTEGER RANGE 0 to 3;
+    begin
+        if (rising_edge(auxiliary_clock)) then
+            count := count + 1;
+            if (count = 0) then
+                bus_clock <= '0';
+            elsif(count = 1) then
+                data_clock <= '1';
+            elsif(count = 2) then
+                bus_clock <= '1';
+            else
+                data_clock <= '0';
+            end if;
+        end if;
+    end process;
+
+    ------ Lower section of FSM: -----------------------------
+    process(data_clk)
+    begin
+        if (rising_edge(data_clk)) then
+            if (rst = '1') then
+                pr_state <= idle;
+                idx := 0;
+            else
+                if (idx = timer-1) then
+                    present_state <= next_state;
+                    idx := 0;
+                else
+                    idx := idx + 1;
+                end if;
+            end if;
+        elsif (falling_edge(data_clk)) then
+            if (present_state = idle) then
+                wr_flag <= read_write_mode;
+                rd_flag <= not read_write_mode;
+            end if;
+            -- Store ACK signals during writing:
+            if (present_state = ack1) then
+                ack(0) <= sda;
+            elsif(present_state = ack2) then
+                ack(1) <= sda;
+            elsif(present_state = ack3) then
+                ack(2) <= sda;
+            end if;
+
+            -- Store data read from memory:
+            if (present_state = rd_data) then
+                data_in(7-idx) <= sda;
+            end if;
+        end if;   
+    end process;
+end finite_state_machine;

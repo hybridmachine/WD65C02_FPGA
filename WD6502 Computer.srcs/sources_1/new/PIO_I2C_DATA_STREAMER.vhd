@@ -86,9 +86,10 @@ signal ram_wea: std_logic := '0';
 signal ram_web: std_logic := '0';
 signal ram_ena: std_logic := '1';
 signal ram_enb: std_logic := '1';
+
 signal i2c_scl: std_logic := '0';
 
-signal control_reg : std_logic_vector(control'length-1 to 0);
+signal control_reg : std_logic_vector(control'length-1 downto 0);
 
 type STREAMER_STATE_T is ( RESET_START,
                     RESET_INPROGRESS,
@@ -101,6 +102,17 @@ type STREAMER_STATE_T is ( RESET_START,
 
 signal CURRENT_STREAMER_STATE : STREAMER_STATE_T;
 signal NEXT_STREAMER_STATE : STREAMER_STATE_T;
+
+type IC2_STATE_T is ( START_WRITE,
+    START_READ,
+    SEND_BYTE,
+    WAIT_ACK,
+    RESET,
+    STANDBY
+);
+
+signal CURRENT_I2C_STATE : IC2_STATE_T := STANDBY;
+signal NEXT_I2C_STATE : IC2_STATE_T := STANDBY;
 
 constant CONTROL_RESET : std_logic_vector(7 downto 0) := x"00";
 constant CONTROL_WRITE_BUFFER : std_logic_vector(7 downto 0) := x"01";
@@ -129,21 +141,9 @@ ram_enb <= '1';
 ram_clka <= clk;
 ram_clkb <= clk;
 
-scl <= i2c_scl;
+ram_web <= '0'; -- B is our read only port
 
--- Drive the I2C clock
-process(clk)
-variable master_clock_ticks : natural range 0 to SCL_CLOCK_DIVISOR := 1; 
-begin
-    if (rising_edge (clk)) then
-        if (master_clock_ticks < SCL_CLOCK_DIVISOR) then
-            master_clock_ticks := master_clock_ticks + 1;
-        else
-            master_clock_ticks := 1;
-            i2c_scl <= not i2c_scl;
-        end if;
-    end if;
-end process;
+scl <= i2c_scl;
 
 process(clk) begin
     if (rising_edge(clk)) then

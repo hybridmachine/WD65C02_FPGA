@@ -60,6 +60,8 @@ package W65C02_DEFINITIONS is
     constant RESET_MIN_CLOCKS : natural := 2; -- Hold reset low for min clocks (2 based on the spec)
     constant CPU_WRITING_DATA : std_logic := '0'; -- RWB  is low when the CPU is writing
     constant CPU_READING_DATA : std_logic := '1'; -- RWB is high when the CPU is reading data
+    constant I2C_STREAMING  : DATA_65C02_T := x"02";
+    constant I2C_STORING    : DATA_65C02_T := x"01";
     -- Memory Map
     
     -- ROM ends at FFF9, FFFA - FFFF are managed directly by the memory manager
@@ -86,7 +88,12 @@ package W65C02_DEFINITIONS is
     constant PIO_TIMER_VAL_MS_3         : ADDRESS_65C02_T := x"0209"; -- 4 bytes
     constant PIO_TIMER_VAL_MS_4         : ADDRESS_65C02_T := x"0210"; -- 4 bytes
     constant PIO_FIRMWARE_VERSION       : ADDRESS_65C02_T := x"0211"; -- 1 byte (streams one character at a time)
-    
+    constant PIO_I2C_DATA_STRM_STATUS   : ADDRESS_65C02_T := x"0212";
+    constant PIO_I2C_DATA_STRM_CTRL     : ADDRESS_65C02_T := x"0213";
+    constant PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW     : ADDRESS_65C02_T := x"0214";
+    constant PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH    : ADDRESS_65C02_T := x"0215";
+    constant PIO_I2C_DATA_STRM_DATA         : ADDRESS_65C02_T := x"0216";
+    constant PIO_I2C_DATA_STRM_I2C_ADDRESS  : ADDRESS_65C02_T := x"0217"; -- First 7 bits is address, 8th bit is ignored and used internally for read/write mode
     constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
     constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     
