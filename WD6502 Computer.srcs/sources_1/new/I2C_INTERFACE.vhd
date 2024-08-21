@@ -63,7 +63,7 @@ signal present_state, next_state: state_type;
 begin
 
     ack_error <= ack(0) OR ack(1) OR ack(2); 
-
+    
     ------ Auxiliary clock -----------------------------
     -- Frequency = 4 * data_rate
 
@@ -72,6 +72,7 @@ begin
     begin
         if (rising_edge(clk)) then
             count := count + 1;
+            data_out <= data;
             if (count = scl_divider) then
                 auxiliary_clock <= NOT auxiliary_clock;
                 count := 0;
@@ -104,7 +105,7 @@ begin
     begin
         if (rising_edge(data_clk)) then
             if (rst = '1') then
-                pr_state <= idle;
+                present_state <= idle;
                 idx := 0;
             else
                 if (idx = timer-1) then
@@ -134,4 +135,40 @@ begin
             end if;
         end if;   
     end process;
+
+    ----Upper section of FSM:---------------------
+    process(present_state, bus_clock, data_clock, wr_flag, rd_flag, data_out, sda)
+    begin
+        case present_state is
+            when idle =>
+                scl <= '1';
+                sda <= '1';
+                timer <= delay;
+                if (wr_flag = '1' or rd_flag = '1') then
+                    next_state <= start_wr;
+                else
+                    next_state <= idle;
+                end if;
+            when start_wr =>
+                scl <= '1';
+                sda <= data_clk;
+                timer <= 1;
+                next_state <= dev_addr_wr;
+            when dev_addr_wr => 
+                scl <= bus_clock;
+                sda <= i2c_target_address(7-idx);
+                timer <= 8;
+                next_state <= ack1;
+            when ack1 =>
+                scl <= bus_clock;
+                sda <= 'Z';
+                timer <= 1;
+                next_state <= wr_data;
+            when wr_data =>
+                scl <= bus_clock;
+                sda <= data_out(7-idx);   
+        end case;
+    end process;
+
+
 end finite_state_machine;
