@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 08/17/2024 04:28:30 PM
 -- Design Name: 
--- Module Name: PIO_I2C_DATA_STREAMER - Behavioral
+-- Module Name: I2C Interface - Behavioral
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
@@ -39,7 +39,7 @@ entity I2C_INTERFACE is
             rst                 : in STD_LOGIC;
             read_write_mode     : in STD_LOGIC; -- 1 write, 0 read
             data                : in STD_LOGIC_VECTOR (7 downto 0);
-            ack_error          : out STD_LOGIC;
+            ack_error           : out STD_LOGIC;
             i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
             sda                 : inout STD_LOGIC;
             scl                 : out STD_LOGIC);
@@ -101,9 +101,9 @@ begin
     end process;
 
     ------ Lower section of FSM: -----------------------------
-    process(data_clk)
+    process(data_clock)
     begin
-        if (rising_edge(data_clk)) then
+        if (rising_edge(data_clock)) then
             if (rst = '1') then
                 present_state <= idle;
                 idx := 0;
@@ -115,7 +115,8 @@ begin
                     idx := idx + 1;
                 end if;
             end if;
-        elsif (falling_edge(data_clk)) then
+        end if;
+        if (falling_edge(data_clock)) then
             if (present_state = idle) then
                 wr_flag <= read_write_mode;
                 rd_flag <= not read_write_mode;
@@ -151,7 +152,7 @@ begin
                 end if;
             when start_wr =>
                 scl <= '1';
-                sda <= data_clk;
+                sda <= data_clock;
                 timer <= 1;
                 next_state <= dev_addr_wr;
             when dev_addr_wr => 
@@ -166,9 +167,10 @@ begin
                 next_state <= wr_data;
             when wr_data =>
                 scl <= bus_clock;
-                sda <= data_out(7-idx);   
+                sda <= data_out(7-idx);
+            when others =>
+                next_state <= idle;  
         end case;
     end process;
-
-
+    
 end finite_state_machine;

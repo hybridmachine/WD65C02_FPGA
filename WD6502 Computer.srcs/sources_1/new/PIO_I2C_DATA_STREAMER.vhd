@@ -68,6 +68,22 @@ COMPONENT RAM is
   );
 end COMPONENT;
 
+COMPONENT I2C_INTERFACE is
+    GENERIC (
+        fclk : POSITIVE := 100_000; -- Frequency in Kilohertz, of system clock
+        data_rate: POSITIVE := 100; -- Data rate for the I2C bus   
+        write_time: POSITIVE := 5 -- Max write time in MS
+    );
+    Port (  clk                 : in STD_LOGIC;
+            rst                 : in STD_LOGIC;
+            read_write_mode     : in STD_LOGIC; -- 1 write, 0 read
+            data                : in STD_LOGIC_VECTOR (7 downto 0);
+            ack_error           : out STD_LOGIC;
+            i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
+            sda                 : inout STD_LOGIC;
+            scl                 : out STD_LOGIC);
+end COMPONENT;
+
 constant DATA_WIDTH: natural := 8;
 constant ADDRESS_WIDTH: natural := 16;
 constant SCL_CLOCK_DIVISOR: natural := 1000; -- At 100MHZ, gives us 100KHZ
@@ -114,6 +130,11 @@ type IC2_STATE_T is ( START_WRITE,
 signal CURRENT_I2C_STATE : IC2_STATE_T := STANDBY;
 signal NEXT_I2C_STATE : IC2_STATE_T := STANDBY;
 
+signal i2c_reset : std_logic := '1';
+signal i2c_readwrite_mode : std_logic := '0';
+signal i2c_data : std_logic_vector(7 downto 0);
+signal i2c_ack_error : std_logic := '0';
+
 constant CONTROL_RESET : std_logic_vector(7 downto 0) := x"00";
 constant CONTROL_WRITE_BUFFER : std_logic_vector(7 downto 0) := x"01";
 constant CONTROL_STREAM_BUFFER : std_logic_vector(7 downto 0) := x"02";
@@ -134,6 +155,17 @@ RAM_DEVICE: RAM port map (
     ena => ram_ena,
     enb => ram_enb
 ); 
+
+I2C_DEVICE: I2C_INTERFACE port map (
+    clk => clk,
+    rst => i2c_reset,
+    read_write_mode => i2c_readwrite_mode,
+    data => i2c_data,
+    ack_error => i2c_ack_error,
+    i2c_target_address => i2c_target_address,
+    sda => sda, 
+    scl => scl
+);
 
 ram_ena <= '1';
 ram_enb <= '1';
