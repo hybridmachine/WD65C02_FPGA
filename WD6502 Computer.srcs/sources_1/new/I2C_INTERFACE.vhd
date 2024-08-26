@@ -84,10 +84,14 @@ begin
     -- Frequency = 100khz for default params
 
     process(auxiliary_clock)
-        variable count: INTEGER RANGE 0 to 3;
+        variable count: INTEGER RANGE 0 to 3 := 0;
     begin
         if (rising_edge(auxiliary_clock)) then
             count := count + 1;
+            -- Simulator wasn't honoring limit so forcing it
+            if (count > 3) then
+                count := 0;
+            end if;
             if (count = 0) then
                 bus_clock <= '0';
             elsif(count = 1) then
@@ -157,8 +161,8 @@ begin
                 next_state <= dev_addr_wr;
             when dev_addr_wr => 
                 scl <= bus_clock;
-                sda <= i2c_target_address(7-idx);
-                timer <= 8;
+                sda <= i2c_target_address(6-idx);
+                timer <= 7;
                 next_state <= ack1;
             when ack1 =>
                 scl <= bus_clock;
