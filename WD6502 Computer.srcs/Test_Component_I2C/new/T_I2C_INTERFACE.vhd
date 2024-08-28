@@ -47,7 +47,8 @@ architecture Behavioral of T_I2C_INTERFACE is
     constant READ_WRITE_MODE_READ : std_logic := '0';
     constant RESET : std_logic := '1';
     constant RUN : std_logic := '0';
-
+    type i2c_state_type is (idle, starting, addressing, ack, master_reading, master_writing, stop);
+    signal present_state, next_state: i2c_state_type := idle;
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
@@ -65,28 +66,80 @@ dut: entity work.I2C_INTERFACE
 stimuli_generator: process begin
     t_rst <= RESET;
     t_data <= x"AB";
-    t_i2c_target_address <= "0001111"; -- 0x0F
+    t_i2c_target_address <= "0101011"; -- 
     t_read_write_mode <= READ_WRITE_MODE_WRITE;
     wait for 10 * CLOCK_PERIOD;
     t_rst <= RUN; 
     wait; -- For now just wait, we'll add continue conditions later
 end process stimuli_generator;
 
-response_checker: process(t_rst, t_scl, t_sda) 
-    variable idx : natural range 0 to 7 := 0;
+i2c_state_propogation: process(t_clk)
+begin
+    if (rising_edge(t_clk)) then
+        present_state <= next_state;
+    end if;
+end process;
+
+i2c_test_client: process(t_scl, t_sda)
+    variable frame_bit_idx : natural range 0 to 8 := 8;
+    variable target_address : std_logic_vector(6 downto 0);
+    variable read_write_mode : std_logic;
     variable received_data : std_logic_vector(7 downto 0);
 begin
-    if (rising_edge(t_scl)) then
-        if (t_rst = RUN) then
-            if (idx < 7) then
-                received_data(idx) := t_sda;
-                idx := idx + 1;
-            else
-                assert(received_data = t_data) report "Data sent and received do not match!" severity failure;
-                --wait; -- Success so break here
-            end if;
-        end if;
+    next_state <= present_state; -- In case no assignment
+    if (falling_edge(t_sda)) then
+        case present_state is
+            when idle => 
+                next_state <= starting;
+            when others =>
+                next_state <= present_state;
+        end case;
     end if;
-end process response_checker;
+    
+    if (falling_edge(t_scl)) then
+        case present_state is
+            when starting =>
+                frame_bit_idx := 8;
+                next_state <= addressing;
+            when others =>
+                next_state <= present_state;
+        end case;
+    end if;
+    
+    if (rising_edge(t_scl)) then
+        case present_state is
+            when addressing =>
+                if (frame_bit_idx >= 1) then
+                    target_address(frame_bit_idx-2) := t_sda;
+                elsif (frame_bit_idx = 1) then
+                    assert (target_address = t_i2c_target_address) report "Target address mismatch" severity error;
+                    read_write_mode := t_sda;
+                else
+                    next_state <= ack;
+                end if;
+                frame_bit_idx := frame_bit_idx - 1;
+            when ack =>
+                frame_bit_idx := 8;
+                t_sda <= '0'; -- pull low for ack to master
+                if (read_write_mode = '0') then
+                    next_state <= master_writing;
+                else
+                    next_state <= master_reading;
+                end if;
+            when master_writing =>
+                received_data(frame_bit_idx - 1) := t_sda;
+                frame_bit_idx := frame_bit_idx - 1;
+                if (frame_bit_idx = 0) then
+                    assert (t_data = received_data) report "Data received mismatch" severity error;
+                    next_state <= ack;
+                else
+                    next_state <= master_writing;
+                end if;
+            when others =>
+                next_state <= present_state;
+        end case;
+    end if;
+end process i2c_test_client;
+
 
 end Behavioral;
