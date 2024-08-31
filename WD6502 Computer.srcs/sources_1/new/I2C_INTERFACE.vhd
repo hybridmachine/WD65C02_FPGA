@@ -55,6 +55,7 @@ signal data_in, data_out: STD_LOGIC_VECTOR(7 downto 0);
 signal wr_flag, rd_flag: STD_LOGIC;
 signal ack: STD_LOGIC_VECTOR(2 downto 0);
 signal timer: NATURAL RANGE 0 to delay;
+
 shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
 TYPE state_type IS (idle, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop_no_ack, ack1, ack2, ack3, ack4);

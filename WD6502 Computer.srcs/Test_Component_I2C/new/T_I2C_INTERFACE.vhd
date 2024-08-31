@@ -39,6 +39,10 @@ architecture Behavioral of T_I2C_INTERFACE is
 
     signal t_clk, t_rst, t_read_write_mode : std_logic := '0';
     signal t_ack_error, t_scl, t_sda : std_logic;
+    signal t_master_to_client_sda : std_logic;
+    signal t_client_to_master_sda : std_logic;
+    signal t_client_to_master_write : std_logic := '0';
+    
     signal t_data : std_logic_vector(7 downto 0);
     signal t_i2c_target_address: std_logic_vector(6 downto 0);
 
@@ -52,6 +56,8 @@ architecture Behavioral of T_I2C_INTERFACE is
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
+t_master_to_client_sda <= t_sda;
+t_sda <= t_client_to_master_sda when t_client_to_master_write = '1' else 'Z';
 
 dut: entity work.I2C_INTERFACE
     port map(clk => t_clk, 
@@ -86,13 +92,14 @@ i2c_test_client: process(t_scl, t_sda)
     variable read_write_mode : std_logic;
     variable received_data : std_logic_vector(7 downto 0);
 begin
-    next_state <= present_state; -- In case no assignment
+    --next_state <= present_state; -- In case no assignment
+    t_client_to_master_write <= '0';
     if (falling_edge(t_sda)) then
         case present_state is
             when idle => 
                 next_state <= starting;
             when others =>
-                next_state <= present_state;
+                --next_state <= next_state;
         end case;
     end if;
     
@@ -102,32 +109,33 @@ begin
                 frame_bit_idx := 8;
                 next_state <= addressing;
             when others =>
-                next_state <= present_state;
+                --next_state <= next_state;
         end case;
     end if;
     
     if (rising_edge(t_scl)) then
         case present_state is
             when addressing =>
-                if (frame_bit_idx >= 1) then
-                    target_address(frame_bit_idx-2) := t_sda;
+                if (frame_bit_idx > 1) then
+                    target_address(frame_bit_idx-2) := t_master_to_client_sda;
                 elsif (frame_bit_idx = 1) then
                     assert (target_address = t_i2c_target_address) report "Target address mismatch" severity error;
-                    read_write_mode := t_sda;
+                    read_write_mode := '0';
                 else
                     next_state <= ack;
                 end if;
                 frame_bit_idx := frame_bit_idx - 1;
             when ack =>
                 frame_bit_idx := 8;
-                t_sda <= '0'; -- pull low for ack to master
+                t_client_to_master_sda <= '0'; -- pull low for ack to master
+                t_client_to_master_write <= '1';
                 if (read_write_mode = '0') then
                     next_state <= master_writing;
                 else
                     next_state <= master_reading;
                 end if;
             when master_writing =>
-                received_data(frame_bit_idx - 1) := t_sda;
+                received_data(frame_bit_idx - 1) := t_master_to_client_sda;
                 frame_bit_idx := frame_bit_idx - 1;
                 if (frame_bit_idx = 0) then
                     assert (t_data = received_data) report "Data received mismatch" severity error;
@@ -136,7 +144,7 @@ begin
                     next_state <= master_writing;
                 end if;
             when others =>
-                next_state <= present_state;
+                --next_state <= present_state;
         end case;
     end if;
 end process i2c_test_client;
