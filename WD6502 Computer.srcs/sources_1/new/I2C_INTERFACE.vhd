@@ -58,7 +58,7 @@ signal timer: NATURAL RANGE 0 to delay;
 
 shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
-TYPE state_type IS (idle, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop_no_ack, ack1, ack2, ack3, ack4);
+TYPE state_type IS (idle, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, ack1, ack2, ack3, ack4);
 signal present_state, next_state: state_type;
 
 begin
@@ -173,6 +173,18 @@ begin
             when wr_data =>
                 scl <= bus_clock;
                 sda <= data_out(7-idx);
+                timer <= 8;
+                next_state <= ack3;
+            when ack3 =>
+                scl <= bus_clock;
+                sda <= 'Z';
+                timer <= 1;
+                next_state <= stop;
+            when stop =>
+                scl <= '1';
+                sda <= NOT data_clock;
+                timer <= 1;
+                next_state <= idle;
             when others =>
                 next_state <= idle;  
         end case;
