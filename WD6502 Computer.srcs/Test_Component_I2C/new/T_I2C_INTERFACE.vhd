@@ -120,7 +120,7 @@ begin
                     target_address(frame_bit_idx-2) := t_master_to_client_sda;
                 elsif (frame_bit_idx = 1) then
                     assert (target_address = t_i2c_target_address) report "Target address mismatch" severity error;
-                    read_write_mode := '0';
+                    read_write_mode := t_master_to_client_sda;
                 else
                     next_state <= ack;
                 end if;

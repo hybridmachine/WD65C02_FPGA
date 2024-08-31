@@ -58,7 +58,7 @@ signal timer: NATURAL RANGE 0 to delay;
 
 shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
-TYPE state_type IS (idle, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, ack1, ack2, ack3, ack4);
+TYPE state_type IS (idle, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, send_read_write_mode, ack1, ack2, ack3, ack4);
 signal present_state, next_state: state_type;
 
 begin
@@ -164,6 +164,11 @@ begin
                 scl <= bus_clock;
                 sda <= i2c_target_address(6-idx);
                 timer <= 7;
+                next_state <= send_read_write_mode;
+            when send_read_write_mode =>
+                scl <= bus_clock;
+                sda <= not wr_flag; -- 0 means we write back to client
+                timer <= 1;
                 next_state <= ack1;
             when ack1 =>
                 scl <= bus_clock;
