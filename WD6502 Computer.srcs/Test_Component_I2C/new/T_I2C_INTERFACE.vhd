@@ -42,6 +42,7 @@ architecture Behavioral of T_I2C_INTERFACE is
     signal t_master_to_client_sda : std_logic;
     signal t_client_to_master_sda : std_logic;
     signal t_client_to_master_write : std_logic := '0';
+    signal t_client_received_data : std_logic_vector(7 downto 0);
     
     signal t_data : std_logic_vector(7 downto 0);
     signal t_i2c_target_address: std_logic_vector(6 downto 0);
@@ -136,6 +137,7 @@ begin
                 end if;
             when master_writing =>
                 received_data(frame_bit_idx - 1) := t_master_to_client_sda;
+                t_client_received_data(frame_bit_idx - 1) <= t_master_to_client_sda;
                 frame_bit_idx := frame_bit_idx - 1;
                 if (frame_bit_idx = 0) then
                     assert (t_data = received_data) report "Data received mismatch" severity error;

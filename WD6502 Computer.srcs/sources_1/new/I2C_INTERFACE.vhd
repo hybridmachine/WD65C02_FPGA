@@ -173,7 +173,7 @@ begin
             when ack1 =>
                 scl <= bus_clock;
                 sda <= 'Z';
-                timer <= 1;
+                timer <= 2;
                 next_state <= wr_data;
             when wr_data =>
                 scl <= bus_clock;
