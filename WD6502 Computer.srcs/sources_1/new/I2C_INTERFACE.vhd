@@ -37,6 +37,7 @@ entity I2C_INTERFACE is
     );
     Port (  clk                 : in STD_LOGIC;
             rst                 : in STD_LOGIC;
+            que_for_send        : out STD_LOGIC; -- 1 for driver to write, 0 for sending
             read_write_mode     : in STD_LOGIC; -- 1 write, 0 read
             data                : in STD_LOGIC_VECTOR (7 downto 0);
             ack_error           : out STD_LOGIC;
@@ -173,7 +174,7 @@ begin
             when ack1 =>
                 scl <= bus_clock;
                 sda <= 'Z';
-                timer <= 2;
+                timer <= 1;
                 next_state <= wr_data;
             when wr_data =>
                 scl <= bus_clock;

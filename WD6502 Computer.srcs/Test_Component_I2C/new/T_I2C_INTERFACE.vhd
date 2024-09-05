@@ -109,6 +109,17 @@ begin
             when starting =>
                 frame_bit_idx := 8;
                 next_state <= addressing;
+            when ack =>
+                frame_bit_idx := 8;
+                
+                t_client_to_master_sda <= '0'; -- pull low for ack to master
+                t_client_to_master_write <= '1';
+                
+                if (read_write_mode = '0') then
+                    next_state <= master_writing;
+                else
+                    next_state <= master_reading;
+                end if;
             when others =>
                 --next_state <= next_state;
         end case;
@@ -126,25 +137,18 @@ begin
                     next_state <= ack;
                 end if;
                 frame_bit_idx := frame_bit_idx - 1;
-            when ack =>
-                frame_bit_idx := 8;
-                t_client_to_master_sda <= '0'; -- pull low for ack to master
-                t_client_to_master_write <= '1';
-                if (read_write_mode = '0') then
-                    next_state <= master_writing;
-                else
-                    next_state <= master_reading;
-                end if;
             when master_writing =>
-                received_data(frame_bit_idx - 1) := t_master_to_client_sda;
-                t_client_received_data(frame_bit_idx - 1) <= t_master_to_client_sda;
-                frame_bit_idx := frame_bit_idx - 1;
+                t_client_to_master_write <= '0';
                 if (frame_bit_idx = 0) then
                     assert (t_data = received_data) report "Data received mismatch" severity error;
                     next_state <= ack;
                 else
+                    received_data(frame_bit_idx - 1) := t_master_to_client_sda;
+                    t_client_received_data(frame_bit_idx - 1) <= t_master_to_client_sda;
+                    frame_bit_idx := frame_bit_idx - 1;
                     next_state <= master_writing;
                 end if;
+                
             when others =>
                 --next_state <= present_state;
         end case;
