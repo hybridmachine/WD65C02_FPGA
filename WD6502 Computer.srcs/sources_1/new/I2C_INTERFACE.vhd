@@ -56,6 +56,7 @@ signal data_in, data_out: STD_LOGIC_VECTOR(7 downto 0);
 signal wr_flag, rd_flag: STD_LOGIC;
 signal ack: STD_LOGIC_VECTOR(2 downto 0);
 signal timer: NATURAL RANGE 0 to delay;
+signal que_for_send_sig : STD_LOGIC := '1';
 
 shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
@@ -65,6 +66,7 @@ signal present_state, next_state: state_type;
 begin
 
     ack_error <= ack(0) OR ack(1) OR ack(2); 
+    que_for_send <= que_for_send_sig;
     
     ------ Auxiliary clock -----------------------------
     -- Frequency = 4 * data_rate
@@ -74,7 +76,16 @@ begin
     begin
         if (rising_edge(clk)) then
             count := count + 1;
-            data_out <= data;
+            -- We've drained the queue, pull in the data then we'll signal the caller to send the next byte
+            if (present_state = wr_data) then
+                que_for_send_sig <= '1'; -- Tell the caller to queue the next byte
+            end if;
+            
+            if (que_for_send_sig = '1' and present_state /= wr_data) then
+                data_out <= data;
+                que_for_send_sig = '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
+            end if;
+            
             if (count = scl_divider) then
                 auxiliary_clock <= NOT auxiliary_clock;
                 count := 0;
@@ -185,7 +196,7 @@ begin
                 scl <= bus_clock;
                 sda <= 'Z';
                 timer <= 1;
-                next_state <= stop;
+                next_state <= wr_data;
             when stop =>
                 scl <= '1';
                 sda <= NOT data_clock;
