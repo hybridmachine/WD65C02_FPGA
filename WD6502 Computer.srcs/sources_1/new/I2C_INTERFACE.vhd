@@ -37,6 +37,7 @@ entity I2C_INTERFACE is
     );
     Port (  clk                 : in STD_LOGIC;
             rst                 : in STD_LOGIC;
+            stream_complete     : in STD_LOGIC; -- 0 for in progress, 1 for complete
             que_for_send        : out STD_LOGIC; -- 1 for driver to write, 0 for sending
             read_write_mode     : in STD_LOGIC; -- 1 write, 0 read
             data                : in STD_LOGIC_VECTOR (7 downto 0);
@@ -81,9 +82,14 @@ begin
                 que_for_send_sig <= '1'; -- Tell the caller to queue the next byte
             end if;
             
-            if (que_for_send_sig = '1' and present_state /= wr_data) then
+            -- Notify the caller that we are about to launch data
+            if (que_for_send_sig = '1' and present_state /= idle) then
+                que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
+            end if;
+            
+            -- The caller has been notified, data should be safe to copy to internal register
+            if (que_for_send_sig = '0' and present_state /= wr_data) then
                 data_out <= data;
-                que_for_send_sig = '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
             end if;
             
             if (count = scl_divider) then
@@ -196,7 +202,11 @@ begin
                 scl <= bus_clock;
                 sda <= 'Z';
                 timer <= 1;
-                next_state <= wr_data;
+                if (stream_complete = '0') then
+                    next_state <= wr_data;
+                else
+                    next_state <= stop;
+                end;
             when stop =>
                 scl <= '1';
                 sda <= NOT data_clock;

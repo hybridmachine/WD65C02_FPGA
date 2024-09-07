@@ -43,7 +43,8 @@ architecture Behavioral of T_I2C_INTERFACE is
     signal t_client_to_master_sda : std_logic;
     signal t_client_to_master_write : std_logic := '0';
     signal t_client_received_data : std_logic_vector(7 downto 0);
-    
+    signal t_stream_complete : std_logic := '0';
+    signal t_que_for_send : std_logic;
     signal t_data : std_logic_vector(7 downto 0);
     signal t_i2c_target_address: std_logic_vector(6 downto 0);
 
@@ -63,6 +64,8 @@ t_sda <= t_client_to_master_sda when t_client_to_master_write = '1' else 'Z';
 dut: entity work.I2C_INTERFACE
     port map(clk => t_clk, 
              rst => t_rst, 
+             stream_complete => t_stream_complete,
+             que_for_send => t_que_for_send,
              read_write_mode => t_read_write_mode, 
              ack_error => t_ack_error,
              data => t_data,
