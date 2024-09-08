@@ -83,7 +83,7 @@ begin
             end if;
             
             -- Notify the caller that we are about to launch data
-            if (que_for_send_sig = '1' and present_state /= idle) then
+            if (que_for_send_sig = '1' and present_state /= wr_data) then
                 que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
             end if;
             
@@ -206,7 +206,7 @@ begin
                     next_state <= wr_data;
                 else
                     next_state <= stop;
-                end;
+                end if;
             when stop =>
                 scl <= '1';
                 sda <= NOT data_clock;

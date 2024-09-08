@@ -75,11 +75,27 @@ dut: entity work.I2C_INTERFACE
 
 stimuli_generator: process begin
     t_rst <= RESET;
+    t_stream_complete <= '0';
     t_data <= x"AB";
     t_i2c_target_address <= "0101011"; -- 
     t_read_write_mode <= READ_WRITE_MODE_WRITE;
     wait for 10 * CLOCK_PERIOD;
     t_rst <= RUN; 
+    wait until t_que_for_send = '0';  
+    wait until t_que_for_send = '1';
+    t_data <= x"BC";
+    wait until t_que_for_send = '0';
+    wait until t_que_for_send = '1';
+    t_data <= x"CD";
+    wait until t_que_for_send = '0';
+    wait until t_que_for_send = '1';
+    t_data <= x"DE";
+    wait until t_que_for_send = '0';  
+    wait until t_que_for_send = '1';
+    t_data <= x"EF";
+    wait until t_que_for_send = '0';  
+    wait until t_que_for_send = '1';
+    t_stream_complete <= '1';   
     wait; -- For now just wait, we'll add continue conditions later
 end process stimuli_generator;
 
