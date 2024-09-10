@@ -46,6 +46,7 @@ architecture Behavioral of T_I2C_INTERFACE is
     signal t_stream_complete : std_logic := '0';
     signal t_que_for_send : std_logic;
     signal t_data : std_logic_vector(7 downto 0);
+    signal t_data_inflight : std_logic_vector(7 downto 0);
     signal t_i2c_target_address: std_logic_vector(6 downto 0);
 
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
@@ -77,24 +78,31 @@ stimuli_generator: process begin
     t_rst <= RESET;
     t_stream_complete <= '0';
     t_data <= x"AB";
+    
+    
     t_i2c_target_address <= "0101011"; -- 
     t_read_write_mode <= READ_WRITE_MODE_WRITE;
     wait for 10 * CLOCK_PERIOD;
     t_rst <= RUN; 
     wait until t_que_for_send = '0';  
     wait until t_que_for_send = '1';
+    t_data_inflight <= x"AB";
     t_data <= x"BC";
     wait until t_que_for_send = '0';
     wait until t_que_for_send = '1';
+    t_data_inflight <= x"BC";
     t_data <= x"CD";
     wait until t_que_for_send = '0';
     wait until t_que_for_send = '1';
+    t_data_inflight <= x"CD";
     t_data <= x"DE";
     wait until t_que_for_send = '0';  
     wait until t_que_for_send = '1';
+    t_data_inflight <= x"DE";
     t_data <= x"EF";
     wait until t_que_for_send = '0';  
     wait until t_que_for_send = '1';
+    t_data_inflight <= x"EF";
     t_stream_complete <= '1';   
     wait; -- For now just wait, we'll add continue conditions later
 end process stimuli_generator;
@@ -159,7 +167,7 @@ begin
             when master_writing =>
                 t_client_to_master_write <= '0';
                 if (frame_bit_idx = 0) then
-                    assert (t_data = received_data) report "Data received mismatch" severity error;
+                    assert (t_data_inflight = received_data) report "Data received mismatch" severity error;
                     next_state <= ack;
                 else
                     received_data(frame_bit_idx - 1) := t_master_to_client_sda;

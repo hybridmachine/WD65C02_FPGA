@@ -78,20 +78,13 @@ begin
         if (rising_edge(clk)) then
             count := count + 1;
             -- We've drained the queue, pull in the data then we'll signal the caller to send the next byte
-            if (present_state = wr_data) then
+            if (present_state = wr_data or present_state = idle) then
                 que_for_send_sig <= '1'; -- Tell the caller to queue the next byte
-            end if;
-            
-            -- Notify the caller that we are about to launch data
-            if (que_for_send_sig = '1' and present_state /= wr_data) then
+            elsif (que_for_send_sig = '1') then
                 que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
-            end if;
-            
-            -- The caller has been notified, data should be safe to copy to internal register
-            if (que_for_send_sig = '0' and present_state /= wr_data) then
                 data_out <= data;
             end if;
-            
+                        
             if (count = scl_divider) then
                 auxiliary_clock <= NOT auxiliary_clock;
                 count := 0;
