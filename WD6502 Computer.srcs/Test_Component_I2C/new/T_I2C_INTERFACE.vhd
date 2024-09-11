@@ -124,11 +124,19 @@ begin
     t_client_to_master_write <= '0';
     if (falling_edge(t_sda)) then
         case present_state is
-            when idle => 
-                next_state <= starting;
+            when idle =>  
+                if (t_scl = '1') then
+                    next_state <= starting;
+                end if;
             when others =>
                 --next_state <= next_state;
         end case;
+    end if;
+    
+    if (rising_edge(t_sda)) then
+        if (t_scl = '1') then
+            next_state <= stop;
+        end if;
     end if;
     
     if (falling_edge(t_scl)) then
@@ -168,14 +176,18 @@ begin
                 t_client_to_master_write <= '0';
                 if (frame_bit_idx = 0) then
                     assert (t_data_inflight = received_data) report "Data received mismatch" severity error;
-                    next_state <= ack;
+                    if (t_stream_complete = '0') then
+                        next_state <= ack;
+                        -- The master should send the stop signal and we'll check that in the stop state
+                    end if;
                 else
                     received_data(frame_bit_idx - 1) := t_master_to_client_sda;
                     t_client_received_data(frame_bit_idx - 1) <= t_master_to_client_sda;
                     frame_bit_idx := frame_bit_idx - 1;
                     next_state <= master_writing;
                 end if;
-                
+            when stop =>
+                next_state <= idle;
             when others =>
                 --next_state <= present_state;
         end case;
