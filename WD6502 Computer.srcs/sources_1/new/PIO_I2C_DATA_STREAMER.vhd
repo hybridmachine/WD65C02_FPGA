@@ -76,6 +76,8 @@ COMPONENT I2C_INTERFACE is
     );
     Port (  clk                 : in STD_LOGIC;
             rst                 : in STD_LOGIC;
+            stream_complete     : in STD_LOGIC; -- 0 for in progress, 1 for complete
+            que_for_send        : out STD_LOGIC; -- 1 for driver to write, 0 for sending
             read_write_mode     : in STD_LOGIC; -- 1 write, 0 read
             data                : in STD_LOGIC_VECTOR (7 downto 0);
             ack_error           : out STD_LOGIC;
@@ -102,8 +104,6 @@ signal ram_wea: std_logic := '0';
 signal ram_web: std_logic := '0';
 signal ram_ena: std_logic := '1';
 signal ram_enb: std_logic := '1';
-
-signal i2c_scl: std_logic := '0';
 
 signal control_reg : std_logic_vector(control'length-1 downto 0);
 
@@ -134,6 +134,8 @@ signal i2c_reset : std_logic := '1';
 signal i2c_readwrite_mode : std_logic := '0';
 signal i2c_data : std_logic_vector(7 downto 0);
 signal i2c_ack_error : std_logic := '0';
+signal i2c_stream_complete : STD_LOGIC; -- 0 for in progress, 1 for complete
+signal i2c_que_for_send : STD_LOGIC; -- 1 for driver to write, 0 for sending
 
 constant CONTROL_RESET : std_logic_vector(7 downto 0) := x"00";
 constant CONTROL_WRITE_BUFFER : std_logic_vector(7 downto 0) := x"01";
@@ -159,6 +161,8 @@ RAM_DEVICE: RAM port map (
 I2C_DEVICE: I2C_INTERFACE port map (
     clk => clk,
     rst => i2c_reset,
+    stream_complete => i2c_stream_complete,
+    que_for_send => i2c_que_for_send,
     read_write_mode => i2c_readwrite_mode,
     data => i2c_data,
     ack_error => i2c_ack_error,
@@ -174,8 +178,6 @@ ram_clka <= clk;
 ram_clkb <= clk;
 
 ram_web <= '0'; -- B is our read only port
-
-scl <= i2c_scl;
 
 process(clk) begin
     if (rising_edge(clk)) then
