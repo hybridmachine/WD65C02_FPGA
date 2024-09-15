@@ -22,10 +22,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -111,7 +108,9 @@ type STREAMER_STATE_T is ( RESET_START,
                     RESET_INPROGRESS,
                     RESET_COMPLETE,
                     READY,
-                    STREAM_DATA_OVER_I2C,
+                    STREAM_DATA_OVER_I2C_READ_FROM_RAM,
+                    STREAM_DATA_OVER_I2C_WRITE_TO_I2C,
+                    STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT,
                     WRITE_DATA_TO_BUFFER_START,
                     WRITE_DATA_TO_BUFFER_COMMIT,
                     WRITE_DATA_TO_BUFFER_COMPLETE);
@@ -191,11 +190,13 @@ process(clk) begin
 end process;
 
 process(CURRENT_STREAMER_STATE) 
-variable buffer_offset : natural range 0 to 2047 := 0;
+variable buffer_end_address : natural range 0 to 2047 := 0;
+variable byte_outbound_via_i2c : natural range 0 to 2047 := 0;
+variable cycle_delay : natural range 0 to 255 := 0;
 begin
     case CURRENT_STREAMER_STATE is
         when RESET_START =>
-            buffer_offset := 0;
+            buffer_end_address := 0;
             NEXT_STREAMER_STATE <= RESET_INPROGRESS;
         when RESET_INPROGRESS =>
             -- In case we need to zero out the buffer, for now we just reset the offset
@@ -206,7 +207,8 @@ begin
             if (control_reg = CONTROL_WRITE_BUFFER) then
                 NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_START;
             elsif (control_reg = CONTROL_STREAM_BUFFER) then
-                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C;
+                cycle_delay := 2;
+                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
             else
                 NEXT_STREAMER_STATE <= READY;
             end if;
@@ -219,12 +221,37 @@ begin
             ram_wea <= '1'; -- Address and data should be good, commit the write
             NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMPLETE;
         when WRITE_DATA_TO_BUFFER_COMPLETE =>
-            buffer_offset := buffer_offset + 1;
+            buffer_end_address := buffer_end_address + 1;
             ram_wea <= '0'; -- Write should be complete, turn off write mode
             NEXT_STREAMER_STATE <= READY;
-        when STREAM_DATA_OVER_I2C =>
-            -- TODO implement
-            NEXT_STREAMER_STATE <= READY;
+        when STREAM_DATA_OVER_I2C_READ_FROM_RAM =>
+            if (byte_outbound_via_i2c <= buffer_end_address) then
+                if (cycle_delay = 0) then
+                    byte_outbound_via_i2c := byte_outbound_via_i2c + 1;
+                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;
+                else
+                    cycle_delay := cycle_delay - 1;
+                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
+                    ram_addrb <= std_logic_vector(to_unsigned(buffer_end_address, ram_addrb'length));
+                end if;
+            else
+                i2c_stream_complete <= '1';
+                NEXT_STREAMER_STATE <= READY;
+            end if;
+        when STREAM_DATA_OVER_I2C_WRITE_TO_I2C =>  
+            if (i2c_que_for_send = '1') then
+                i2c_data <= ram_doutb;
+                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
+            else
+                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;
+            end if;  
+        when STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT =>  
+            if (i2c_que_for_send = '0') then
+                -- Data is marked in flight, get the buffer ready to send the next byte
+                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
+            else
+                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
+            end if;        
         when OTHERS =>
             NEXT_STREAMER_STATE <= RESET_START;
     end case;
