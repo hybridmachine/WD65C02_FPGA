@@ -36,16 +36,24 @@ end T_I2C_DATA_STREAMER;
 
 architecture Behavioral of T_I2C_DATA_STREAMER is
 
-signal t_clk : STD_LOGIC := '0';
-signal t_status : STD_LOGIC_VECTOR (7 downto 0);
-signal t_control : STD_LOGIC_VECTOR (7 downto 0);
-signal t_address             : STD_LOGIC_VECTOR (15 downto 0);
-signal t_data                :  STD_LOGIC_VECTOR (7 downto 0);
-signal t_i2c_target_address  : STD_LOGIC_VECTOR(6 downto 0);
-signal t_sda                 : STD_LOGIC;
-signal t_scl                 : STD_LOGIC;
+    signal t_clk : STD_LOGIC := '0';
+    signal t_status : STD_LOGIC_VECTOR (7 downto 0);
+    signal t_control : STD_LOGIC_VECTOR (7 downto 0);
+    signal t_address             : STD_LOGIC_VECTOR (15 downto 0);
+    signal t_data                :  STD_LOGIC_VECTOR (7 downto 0);
+    signal t_i2c_target_address  : STD_LOGIC_VECTOR(6 downto 0);
+    signal t_sda                 : STD_LOGIC;
+    signal t_scl                 : STD_LOGIC;
+    
+    constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
+    constant READ_WRITE_MODE_WRITE : std_logic := '1';
+    constant READ_WRITE_MODE_READ : std_logic := '0';
+    constant RESET : std_logic := '1';
+    constant RUN : std_logic := '0';
 
 begin
+
+t_clk <= not t_clk after (CLOCK_PERIOD / 2);
 
 dut: entity work.PIO_I2C_DATA_STREAMER 
 Port map (  clk => t_clk,
@@ -56,5 +64,10 @@ Port map (  clk => t_clk,
             i2c_target_address => t_i2c_target_address,  
             sda => t_sda,                 
             scl => t_scl);                 
+
+stimuli_generator: process begin
+    t_i2c_target_address <= "000111";
+    
+end process stimuli_generator;
 
 end Behavioral;

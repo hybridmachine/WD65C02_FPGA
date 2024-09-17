@@ -23,6 +23,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.I2C_DATA_STREAMER.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -135,10 +136,6 @@ signal i2c_data : std_logic_vector(7 downto 0);
 signal i2c_ack_error : std_logic := '0';
 signal i2c_stream_complete : STD_LOGIC; -- 0 for in progress, 1 for complete
 signal i2c_que_for_send : STD_LOGIC; -- 1 for driver to write, 0 for sending
-
-constant CONTROL_RESET : std_logic_vector(7 downto 0) := x"00";
-constant CONTROL_WRITE_BUFFER : std_logic_vector(7 downto 0) := x"01";
-constant CONTROL_STREAM_BUFFER : std_logic_vector(7 downto 0) := x"02";
 
 begin
 
