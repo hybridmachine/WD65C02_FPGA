@@ -20,10 +20,11 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use work.I2C_DATA_STREAMER.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -46,6 +47,8 @@ architecture Behavioral of T_I2C_DATA_STREAMER is
     signal t_scl                 : STD_LOGIC;
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
+    constant DEFAULT_WAIT_PERIOD : time := 20 * CLOCK_PERIOD;
+    
     constant READ_WRITE_MODE_WRITE : std_logic := '1';
     constant READ_WRITE_MODE_READ : std_logic := '0';
     constant RESET : std_logic := '1';
@@ -65,9 +68,47 @@ Port map (  clk => t_clk,
             sda => t_sda,                 
             scl => t_scl);                 
 
-stimuli_generator: process begin
-    t_i2c_target_address <= "000111";
+stimuli_generator: process 
+variable write_address : natural := 0;
+begin
+    t_i2c_target_address <= "0000111";
+    t_control <= CONTROL_RESET;
     
+    t_address <= std_logic_vector(to_unsigned(write_address, 16));
+    t_data <= x"CE";
+    write_address := write_address + 1;
+    
+    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_WRITE_BUFFER;
+    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_STANDBY;
+    
+    t_address <= std_logic_vector(to_unsigned(write_address, 16));
+    t_data <= x"FA";
+    write_address := write_address + 1;
+    
+    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_WRITE_BUFFER;
+    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_STANDBY;
+    
+    t_address <= std_logic_vector(to_unsigned(write_address, 16));
+    t_data <= x"ED";
+    write_address := write_address + 1;
+    
+    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_WRITE_BUFFER;
+    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_STANDBY;
+    
+    t_address <= std_logic_vector(to_unsigned(write_address, 16));
+    t_data <= x"FE";
+    write_address := write_address + 1;
+    
+    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_STREAM_BUFFER;
+    
+    wait;
 end process stimuli_generator;
 
 end Behavioral;
