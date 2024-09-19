@@ -79,33 +79,39 @@ begin
     write_address := write_address + 1;
     
     wait for DEFAULT_WAIT_PERIOD;
-    t_control <= CONTROL_WRITE_BUFFER;
-    wait for DEFAULT_WAIT_PERIOD;
+    
     t_control <= CONTROL_STANDBY;
+    wait on t_status until t_status = STATUS_READY;
+    t_control <= CONTROL_WRITE_BUFFER;
+    wait on t_status until t_status = STATUS_WRITING_RAM;
+    t_control <= CONTROL_STANDBY;
+    wait on t_status until t_status = STATUS_READY;
     
     t_address <= std_logic_vector(to_unsigned(write_address, 16));
     t_data <= x"FA";
-    write_address := write_address + 1;
-    
-    wait for DEFAULT_WAIT_PERIOD;
+    write_address := write_address + 1;    
     t_control <= CONTROL_WRITE_BUFFER;
-    wait for DEFAULT_WAIT_PERIOD;
+    wait until t_status = STATUS_WRITING_RAM;
     t_control <= CONTROL_STANDBY;
+    wait until t_status = STATUS_READY;
     
     t_address <= std_logic_vector(to_unsigned(write_address, 16));
     t_data <= x"ED";
     write_address := write_address + 1;
     
-    wait for DEFAULT_WAIT_PERIOD;
     t_control <= CONTROL_WRITE_BUFFER;
-    wait for DEFAULT_WAIT_PERIOD;
+    wait until t_status = STATUS_WRITING_RAM;
     t_control <= CONTROL_STANDBY;
+    wait until t_status = STATUS_READY;
     
     t_address <= std_logic_vector(to_unsigned(write_address, 16));
     t_data <= x"FE";
     write_address := write_address + 1;
     
-    wait for DEFAULT_WAIT_PERIOD;
+    t_control <= CONTROL_WRITE_BUFFER;
+    wait until t_status = STATUS_WRITING_RAM;
+    t_control <= CONTROL_STANDBY;
+    wait until t_status = STATUS_READY;
     t_control <= CONTROL_STREAM_BUFFER;
     
     wait;

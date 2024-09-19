@@ -27,4 +27,10 @@ package I2C_DATA_STREAMER is
     constant CONTROL_WRITE_BUFFER : std_logic_vector(7 downto 0) := x"01";
     constant CONTROL_STREAM_BUFFER : std_logic_vector(7 downto 0) := x"02";
     constant CONTROL_STANDBY : std_logic_vector(7 downto 0) := x"03"; -- Set when caller is loading next byte to send
+
+    constant STATUS_READY : std_logic_vector(7 downto 0) := x"00";
+    constant STATUS_WRITING_RAM : std_logic_vector(7 downto 0) := x"01";
+    constant STATUS_STREAMING_I2C : std_logic_vector(7 downto 0) := x"02";
+    constant STATUS_RESETTING : std_logic_vector(7 downto 0) := x"03";
+    
 end package I2C_DATA_STREAMER;
