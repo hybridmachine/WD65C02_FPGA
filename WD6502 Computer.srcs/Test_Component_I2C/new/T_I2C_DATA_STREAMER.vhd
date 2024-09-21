@@ -117,4 +117,23 @@ begin
     wait;
 end process stimuli_generator;
 
+
+i2c_stream_verifier: process(t_control, t_sda, t_scl)
+variable data_frame : std_logic_vector(8 downto 0) := "000000000";
+variable data_frame_idx : natural range 0 to 8 := 8;
+begin
+    if (rising_edge(t_scl)) then
+        if (t_status = STATUS_STREAMING_I2C) then
+            data_frame(data_frame_idx) := t_sda;
+            if (data_frame_idx <= 0) then
+                data_frame_idx := 8;
+                -- For now set a breakpoint here and manually check the data, see if it looks right
+                data_frame := "000000000";
+            else
+                data_frame_idx := data_frame_idx - 1;
+            end if;
+        end if;
+     end if;
+end process i2c_stream_verifier;
+
 end Behavioral;
