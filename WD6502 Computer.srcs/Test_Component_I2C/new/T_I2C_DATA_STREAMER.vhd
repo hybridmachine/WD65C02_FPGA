@@ -81,11 +81,11 @@ begin
     wait for DEFAULT_WAIT_PERIOD;
     
     t_control <= CONTROL_STANDBY;
-    wait on t_status until t_status = STATUS_READY;
+    wait until t_status = STATUS_READY;
     t_control <= CONTROL_WRITE_BUFFER;
-    wait on t_status until t_status = STATUS_WRITING_RAM;
+    wait until t_status = STATUS_WRITING_RAM;
     t_control <= CONTROL_STANDBY;
-    wait on t_status until t_status = STATUS_READY;
+    wait until t_status = STATUS_READY;
     
     t_address <= std_logic_vector(to_unsigned(write_address, 16));
     t_data <= x"FA";
