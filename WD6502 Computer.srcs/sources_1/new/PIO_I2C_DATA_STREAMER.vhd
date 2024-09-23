@@ -188,13 +188,14 @@ process(clk) begin
     end if;
 end process;
 
-process(CURRENT_STREAMER_STATE, control_reg) 
+process(CURRENT_STREAMER_STATE, control_reg, i2c_que_for_send) 
 variable buffer_end_address : natural range 0 to 2047 := 0;
 variable byte_outbound_via_i2c : natural range 0 to 2047 := 0;
 variable cycle_delay : natural range 0 to 255 := 0;
 begin
     case CURRENT_STREAMER_STATE is
         when RESET_START =>
+            i2c_reset <= '1';
             status_reg <= STATUS_RESETTING;
             buffer_end_address := 0;
             NEXT_STREAMER_STATE <= RESET_INPROGRESS;
@@ -232,6 +233,7 @@ begin
             NEXT_STREAMER_STATE <= READY;
         when STREAM_DATA_OVER_I2C_READ_FROM_RAM =>
             status_reg <= STATUS_STREAMING_I2C;
+            i2c_reset <= '0'; 
             if (byte_outbound_via_i2c <= buffer_end_address) then
                 if (cycle_delay = 0) then
                     byte_outbound_via_i2c := byte_outbound_via_i2c + 1;
