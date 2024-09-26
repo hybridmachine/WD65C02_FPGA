@@ -238,10 +238,11 @@ begin
                 if (cycle_delay = 0) then
                     byte_outbound_via_i2c := byte_outbound_via_i2c + 1;
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;
+                    cycle_delay := 2;
                 else
                     cycle_delay := cycle_delay - 1;
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
-                    ram_addrb <= std_logic_vector(to_unsigned(buffer_end_address, ram_addrb'length));
+                    ram_addrb <= std_logic_vector(to_unsigned(byte_outbound_via_i2c, ram_addrb'length));
                 end if;
             else
                 i2c_stream_complete <= '1';
