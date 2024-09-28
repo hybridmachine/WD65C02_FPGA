@@ -232,7 +232,7 @@ begin
             ram_wea <= '0'; -- Write should be complete, turn off write mode
             NEXT_STREAMER_STATE <= READY;
         when STREAM_DATA_OVER_I2C_READ_FROM_RAM =>
-            status_reg <= STATUS_STREAMING_I2C;
+            status_reg <= STATUS_READING_STREAM_BUFFER;
             i2c_reset <= '0'; 
             if (byte_outbound_via_i2c <= buffer_end_address) then
                 if (cycle_delay = 0) then
@@ -249,7 +249,7 @@ begin
                 NEXT_STREAMER_STATE <= READY;
             end if;
         when STREAM_DATA_OVER_I2C_WRITE_TO_I2C =>
-            status_reg <= STATUS_STREAMING_I2C;  
+            status_reg <= STATUS_READING_STREAM_BUFFER;  
             if (i2c_que_for_send = '1') then
                 i2c_data <= ram_doutb;
                 NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
