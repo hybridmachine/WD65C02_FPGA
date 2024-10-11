@@ -78,8 +78,6 @@ begin
     t_data <= x"CE";
     write_address := write_address + 1;
     
-    wait for DEFAULT_WAIT_PERIOD;
-    
     t_control <= CONTROL_STANDBY;
     wait until t_status = STATUS_READY;
     t_control <= CONTROL_WRITE_BUFFER;
@@ -118,7 +116,7 @@ begin
 end process stimuli_generator;
 
 
-i2c_stream_verifier: process(t_control, t_sda, t_scl)
+i2c_stream_verifier: process(t_status, t_sda, t_scl)
 variable data_frame : std_logic_vector(8 downto 0) := "000000000";
 variable data_frame_idx : natural range 0 to 8 := 8;
 begin

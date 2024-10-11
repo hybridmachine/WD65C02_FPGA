@@ -234,6 +234,7 @@ begin
         when STREAM_DATA_OVER_I2C_READ_FROM_RAM =>
             status_reg <= STATUS_READING_STREAM_BUFFER;
             i2c_reset <= '0'; 
+            i2c_readwrite_mode <= '1';
             if (byte_outbound_via_i2c <= buffer_end_address) then
                 if (cycle_delay = 0) then
                     byte_outbound_via_i2c := byte_outbound_via_i2c + 1;
