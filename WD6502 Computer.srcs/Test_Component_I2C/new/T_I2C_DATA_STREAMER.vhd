@@ -126,8 +126,9 @@ begin
 end;
 
 i2c_stream_verifier: process(t_sda, t_scl)
-variable data_frame : std_logic_vector(8 downto 0) := "000000000";
-variable data_frame_idx : natural range 0 to 8 := 8;
+variable data_frame : std_logic_vector(7 downto 0) := "00000000";
+variable address_frame : std_logic_vector(7 downto 0) := "00000000";
+variable data_frame_idx : natural range 0 to 7 := 7;
 begin
     
     -- Detect start condition
@@ -156,13 +157,11 @@ begin
     
     if (rising_edge(t_scl)) then
         if (i2c_present_state = address) then
-            data_frame(data_frame_idx) := t_sda;
+            address_frame(data_frame_idx) := t_sda;
             if (data_frame_idx <= 0) then
                 i2c_next_state <= address_ack;
                 t_sda <= '0'; -- Send the ack the master
-                data_frame_idx := 8;
-                -- For now set a breakpoint here and manually check the data, see if it looks right
-                data_frame := "000000000";
+                data_frame_idx := 7;
             else
                 data_frame_idx := data_frame_idx - 1;
             end if;
@@ -171,9 +170,9 @@ begin
             if (data_frame_idx <= 0) then
                 i2c_next_state <= data_ack;
                 t_sda <= '0'; -- Send the ack the master
-                data_frame_idx := 8;
+                data_frame_idx := 7;
                 -- For now set a breakpoint here and manually check the data, see if it looks right
-                data_frame := "000000000";
+                data_frame := "00000000";
             else
                 data_frame_idx := data_frame_idx - 1;
             end if;
