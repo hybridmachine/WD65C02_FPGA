@@ -54,6 +54,8 @@ architecture Behavioral of T_I2C_DATA_STREAMER is
     constant RESET : std_logic := '1';
     constant RUN : std_logic := '0';
 
+    type i2c_state_type is (idle, start, address, address_ack, data_ack, master_reading, master_writing, stop);
+    signal i2c_present_state, i2c_next_state: i2c_state_type := idle;
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
@@ -115,15 +117,53 @@ begin
     wait;
 end process stimuli_generator;
 
+-- Distribute the i2c next state
+process(t_clk)
+begin
+    if (rising_edge(t_clk)) then
+        i2c_present_state <= i2c_next_state;
+    end if;
+end;
 
-i2c_stream_verifier: process(t_status, t_sda, t_scl)
+i2c_stream_verifier: process(t_sda, t_scl)
 variable data_frame : std_logic_vector(8 downto 0) := "000000000";
 variable data_frame_idx : natural range 0 to 8 := 8;
 begin
+    if (falling_edge(t_sda)) then
+        if (i2c_present_state = idle) then
+            if (t_scl = '1') then
+                -- Starting
+                i2c_next_state <= start;
+            end if;
+        end if;
+    end if;
+    
+    if (falling_edge(t_scl)) then
+        if (i2c_present_state = start) then
+            i2c_next_state <= address;
+        elsif (i2c_present_state = address_ack or i2c_present_state = data_ack) then
+            t_sda <= 'Z'; -- Release data line, ack complete
+            i2c_next_state <= master_writing;
+        end if;
+    end if;
+    
     if (rising_edge(t_scl)) then
-        if (t_status = STATUS_STREAMING_I2C) then
+        if (i2c_present_state = address) then
             data_frame(data_frame_idx) := t_sda;
             if (data_frame_idx <= 0) then
+                i2c_next_state <= address_ack;
+                t_sda <= '0'; -- Send the ack the master
+                data_frame_idx := 8;
+                -- For now set a breakpoint here and manually check the data, see if it looks right
+                data_frame := "000000000";
+            else
+                data_frame_idx := data_frame_idx - 1;
+            end if;
+        elsif (i2c_present_state = master_writing) then
+            data_frame(data_frame_idx) := t_sda;
+            if (data_frame_idx <= 0) then
+                i2c_next_state <= data_ack;
+                t_sda <= '0'; -- Send the ack the master
                 data_frame_idx := 8;
                 -- For now set a breakpoint here and manually check the data, see if it looks right
                 data_frame := "000000000";
