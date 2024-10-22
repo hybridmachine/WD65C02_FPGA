@@ -129,12 +129,19 @@ i2c_stream_verifier: process(t_sda, t_scl)
 variable data_frame : std_logic_vector(8 downto 0) := "000000000";
 variable data_frame_idx : natural range 0 to 8 := 8;
 begin
+    
+    -- Detect start condition
     if (falling_edge(t_sda)) then
-        if (i2c_present_state = idle) then
-            if (t_scl = '1') then
-                -- Starting
-                i2c_next_state <= start;
-            end if;
+        if (t_scl = '1') then
+            -- Starting
+            i2c_next_state <= start;
+        end if;
+    end if;
+    
+    -- Detect stop condition
+    if (rising_edge(t_sda)) then
+        if (t_scl = '0') then
+            i2c_next_state <= stop;
         end if;
     end if;
     
