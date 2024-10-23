@@ -44,6 +44,8 @@ architecture Behavioral of T_I2C_DATA_STREAMER is
     signal t_data                :  STD_LOGIC_VECTOR (7 downto 0);
     signal t_i2c_target_address  : STD_LOGIC_VECTOR(6 downto 0);
     signal t_sda                 : STD_LOGIC;
+    signal t_master_to_client_sda : std_logic;
+    signal t_client_to_master_sda : std_logic;
     signal t_scl                 : STD_LOGIC;
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
@@ -59,6 +61,10 @@ architecture Behavioral of T_I2C_DATA_STREAMER is
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
+t_master_to_client_sda <= t_sda;
+
+-- When in ack, send low signal back to master otherwise set to high impedence so master can write
+t_sda <= '0' when (i2c_present_state = data_ack or i2c_present_state = address_ack) else 'Z';
 
 dut: entity work.PIO_I2C_DATA_STREAMER 
 Port map (  clk => t_clk,
@@ -123,7 +129,7 @@ begin
     if (rising_edge(t_clk)) then
         i2c_present_state <= i2c_next_state;
     end if;
-end;
+end process;
 
 i2c_stream_verifier: process(t_sda, t_scl)
 variable data_frame : std_logic_vector(7 downto 0) := "00000000";
@@ -141,7 +147,7 @@ begin
     
     -- Detect stop condition
     if (rising_edge(t_sda)) then
-        if (t_scl = '0') then
+        if (t_scl = '1') then
             i2c_next_state <= stop;
         end if;
     end if;
@@ -150,26 +156,23 @@ begin
         if (i2c_present_state = start) then
             i2c_next_state <= address;
         elsif (i2c_present_state = address_ack or i2c_present_state = data_ack) then
-            t_sda <= 'Z'; -- Release data line, ack complete
             i2c_next_state <= master_writing;
         end if;
     end if;
     
     if (rising_edge(t_scl)) then
         if (i2c_present_state = address) then
-            address_frame(frame_idx) := t_sda;
+            address_frame(frame_idx) := t_master_to_client_sda;
             if (frame_idx <= 0) then
                 i2c_next_state <= address_ack;
-                t_sda <= '0'; -- Send the ack the master
                 frame_idx := 7;
             else
                 frame_idx := frame_idx - 1;
             end if;
         elsif (i2c_present_state = master_writing) then
-            data_frame(frame_idx) := t_sda;
+            data_frame(frame_idx) := t_master_to_client_sda;
             if (frame_idx <= 0) then
                 i2c_next_state <= data_ack;
-                t_sda <= '0'; -- Send the ack the master
                 frame_idx := 7;
                 -- For now set a breakpoint here and manually check the data, see if it looks right
                 data_frame := "00000000";
