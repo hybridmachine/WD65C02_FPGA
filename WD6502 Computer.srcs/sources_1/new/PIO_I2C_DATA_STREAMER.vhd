@@ -188,86 +188,89 @@ process(clk) begin
     end if;
 end process;
 
-process(CURRENT_STREAMER_STATE, control_reg, i2c_que_for_send) 
+process(clk) 
 variable buffer_end_address : natural range 0 to 2047 := 0;
 variable byte_outbound_via_i2c : natural range 0 to 2047 := 0;
 variable cycle_delay : natural range 0 to 255 := 0;
 begin
-    case CURRENT_STREAMER_STATE is
-        when RESET_START =>
-            i2c_reset <= '1';
-            status_reg <= STATUS_RESETTING;
-            buffer_end_address := 0;
-            NEXT_STREAMER_STATE <= RESET_INPROGRESS;
-        when RESET_INPROGRESS =>
-            status_reg <= STATUS_RESETTING;
-            -- In case we need to zero out the buffer, for now we just reset the offset
-            NEXT_STREAMER_STATE <= RESET_COMPLETE;
-        when RESET_COMPLETE =>
-            status_reg <= STATUS_RESETTING;
-            NEXT_STREAMER_STATE <= READY;
-        when READY =>
-            status_reg <= STATUS_READY;
-            if (control_reg = CONTROL_WRITE_BUFFER) then
-                NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_START;
-            elsif (control_reg = CONTROL_STREAM_BUFFER) then
-                cycle_delay := 2;
-                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
-            else
+    if (rising_edge(clk)) then
+        case CURRENT_STREAMER_STATE is
+            when RESET_START =>
+                i2c_reset <= '1';
+                status_reg <= STATUS_RESETTING;
+                buffer_end_address := 0;
+                NEXT_STREAMER_STATE <= RESET_INPROGRESS;
+            when RESET_INPROGRESS =>
+                status_reg <= STATUS_RESETTING;
+                -- In case we need to zero out the buffer, for now we just reset the offset
+                NEXT_STREAMER_STATE <= RESET_COMPLETE;
+            when RESET_COMPLETE =>
+                status_reg <= STATUS_RESETTING;
                 NEXT_STREAMER_STATE <= READY;
-            end if;
-        when WRITE_DATA_TO_BUFFER_START =>
-            status_reg <= STATUS_WRITING_RAM;
-            ram_wea <= '0'; -- Make sure not in write mode then setup address and data lines
-            ram_addra <= address;
-            ram_dina <= data; 
-            NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMMIT;
-        when WRITE_DATA_TO_BUFFER_COMMIT =>
-            status_reg <= STATUS_WRITING_RAM;
-            ram_wea <= '1'; -- Address and data should be good, commit the write
-            NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMPLETE;
-        when WRITE_DATA_TO_BUFFER_COMPLETE =>
-            status_reg <= STATUS_WRITING_RAM;
-            buffer_end_address := buffer_end_address + 1;
-            ram_wea <= '0'; -- Write should be complete, turn off write mode
-            NEXT_STREAMER_STATE <= READY;
-        when STREAM_DATA_OVER_I2C_READ_FROM_RAM =>
-            status_reg <= STATUS_READING_STREAM_BUFFER;
-            i2c_reset <= '0'; 
-            i2c_readwrite_mode <= '1';
-            if (byte_outbound_via_i2c <= buffer_end_address) then
-                if (cycle_delay = 0) then
-                    byte_outbound_via_i2c := byte_outbound_via_i2c + 1;
-                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;
+            when READY =>
+                status_reg <= STATUS_READY;
+                if (control_reg = CONTROL_WRITE_BUFFER) then
+                    NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_START;
+                elsif (control_reg = CONTROL_STREAM_BUFFER) then
                     cycle_delay := 2;
-                else
-                    cycle_delay := cycle_delay - 1;
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
-                    ram_addrb <= std_logic_vector(to_unsigned(byte_outbound_via_i2c, ram_addrb'length));
+                else
+                    NEXT_STREAMER_STATE <= READY;
                 end if;
-            else
-                i2c_stream_complete <= '1';
+            when WRITE_DATA_TO_BUFFER_START =>
+                status_reg <= STATUS_WRITING_RAM;
+                ram_wea <= '0'; -- Make sure not in write mode then setup address and data lines
+                ram_addra <= address;
+                ram_dina <= data; 
+                NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMMIT;
+            when WRITE_DATA_TO_BUFFER_COMMIT =>
+                status_reg <= STATUS_WRITING_RAM;
+                ram_wea <= '1'; -- Address and data should be good, commit the write
+                NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMPLETE;
+            when WRITE_DATA_TO_BUFFER_COMPLETE =>
+                status_reg <= STATUS_WRITING_RAM;
+                buffer_end_address := buffer_end_address + 1;
+                ram_wea <= '0'; -- Write should be complete, turn off write mode
                 NEXT_STREAMER_STATE <= READY;
-            end if;
-        when STREAM_DATA_OVER_I2C_WRITE_TO_I2C =>
-            status_reg <= STATUS_READING_STREAM_BUFFER;  
-            if (i2c_que_for_send = '1') then
-                i2c_data <= ram_doutb;
-                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
-            else
-                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;
-            end if;  
-        when STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT =>  
-            status_reg <= STATUS_STREAMING_I2C;
-            if (i2c_que_for_send = '0') then
-                -- Data is marked in flight, get the buffer ready to send the next byte
-                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
-            else
-                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
-            end if;        
-        when OTHERS =>
-            NEXT_STREAMER_STATE <= RESET_START;
-    end case;
+            when STREAM_DATA_OVER_I2C_READ_FROM_RAM =>
+                status_reg <= STATUS_READING_STREAM_BUFFER;
+                i2c_readwrite_mode <= '1';
+                i2c_stream_complete <= '0';   
+                if (byte_outbound_via_i2c <= buffer_end_address) then
+                    if (cycle_delay = 0) then
+                        byte_outbound_via_i2c := byte_outbound_via_i2c + 1;
+                        NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;
+                        cycle_delay := 2;
+                    else
+                        cycle_delay := cycle_delay - 1;
+                        NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
+                        ram_addrb <= std_logic_vector(to_unsigned(byte_outbound_via_i2c, ram_addrb'length));
+                    end if;
+                else
+                    i2c_stream_complete <= '1';
+                    NEXT_STREAMER_STATE <= READY;
+                end if;
+            when STREAM_DATA_OVER_I2C_WRITE_TO_I2C =>
+                status_reg <= STATUS_READING_STREAM_BUFFER;  
+                if (i2c_que_for_send = '1') then
+                    i2c_data <= ram_doutb;
+                    i2c_reset <= '0';
+                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
+                else
+                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;
+                end if;  
+            when STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT =>  
+                status_reg <= STATUS_STREAMING_I2C;
+                if (i2c_que_for_send = '0') then
+                    -- Data is marked in flight, get the buffer ready to send the next byte
+                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
+                else
+                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
+                end if;        
+            when OTHERS =>
+                NEXT_STREAMER_STATE <= RESET_START;
+        end case;
+    end if;
 end process;
 
 end Behavioral;
