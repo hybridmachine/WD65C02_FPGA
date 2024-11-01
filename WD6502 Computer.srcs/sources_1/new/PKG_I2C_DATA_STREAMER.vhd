@@ -33,5 +33,6 @@ package I2C_DATA_STREAMER is
     constant STATUS_STREAMING_I2C : std_logic_vector(7 downto 0) := x"02";
     constant STATUS_READING_STREAM_BUFFER : std_logic_vector(7 downto 0) := x"03";
     constant STATUS_RESETTING : std_logic_vector(7 downto 0) := x"04";
+    constant STATUS_STREAMING_I2C_COMPLETE : std_logic_vector(7 downto 0) := x"05";
     
 end package I2C_DATA_STREAMER;

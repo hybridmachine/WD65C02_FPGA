@@ -112,6 +112,7 @@ type STREAMER_STATE_T is ( RESET_START,
                     STREAM_DATA_OVER_I2C_READ_FROM_RAM,
                     STREAM_DATA_OVER_I2C_WRITE_TO_I2C,
                     STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT,
+                    STREAM_DATA_OVER_I2C_COMPLETE,
                     WRITE_DATA_TO_BUFFER_START,
                     WRITE_DATA_TO_BUFFER_COMMIT,
                     WRITE_DATA_TO_BUFFER_COMPLETE);
@@ -248,7 +249,7 @@ begin
                     end if;
                 else
                     i2c_stream_complete <= '1';
-                    NEXT_STREAMER_STATE <= READY;
+                    NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_COMPLETE;
                 end if;
             when STREAM_DATA_OVER_I2C_WRITE_TO_I2C =>
                 status_reg <= STATUS_READING_STREAM_BUFFER;  
@@ -267,6 +268,14 @@ begin
                 else
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
                 end if;        
+                
+            when STREAM_DATA_OVER_I2C_COMPLETE =>
+                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_COMPLETE;
+                status_reg <= STATUS_STREAMING_I2C_COMPLETE;
+                -- Wait until a reset is requested to transition to ready
+                if (control_reg = CONTROL_RESET) then
+                    NEXT_STREAMER_STATE <= READY;
+                end if;
             when OTHERS =>
                 NEXT_STREAMER_STATE <= RESET_START;
         end case;
