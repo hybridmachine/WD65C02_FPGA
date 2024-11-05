@@ -206,6 +206,9 @@ begin
                 timer <= 1;
                 next_state <= idle;
             when others =>
+                scl <= '1';
+                sda <= '1';
+                timer <= delay;
                 next_state <= idle;  
         end case;
     end process;
