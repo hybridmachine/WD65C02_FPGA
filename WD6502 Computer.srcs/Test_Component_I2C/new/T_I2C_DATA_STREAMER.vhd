@@ -121,6 +121,11 @@ begin
     wait until t_status = STATUS_READY;
     t_control <= CONTROL_STREAM_BUFFER;
     
+    wait until t_status = STATUS_STREAMING_I2C_COMPLETE;
+    t_control <= CONTROL_RESET;
+    wait until t_status = STATUS_RESETTING;
+    t_control <= CONTROL_STANDBY;
+    wait until t_status = STATUS_READY;
     wait;
 end process stimuli_generator;
 

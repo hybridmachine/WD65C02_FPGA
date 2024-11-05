@@ -270,11 +270,12 @@ begin
                 end if;        
                 
             when STREAM_DATA_OVER_I2C_COMPLETE =>
+                i2c_reset <= '1';
                 NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_COMPLETE;
                 status_reg <= STATUS_STREAMING_I2C_COMPLETE;
                 -- Wait until a reset is requested to transition to ready
                 if (control_reg = CONTROL_RESET) then
-                    NEXT_STREAMER_STATE <= READY;
+                    NEXT_STREAMER_STATE <= RESET_START;
                 end if;
             when OTHERS =>
                 NEXT_STREAMER_STATE <= RESET_START;
