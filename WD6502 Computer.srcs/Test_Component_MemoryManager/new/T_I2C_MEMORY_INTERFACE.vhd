@@ -24,10 +24,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.W65C02_DEFINITIONS.ALL;
 use work.MEMORY_MANAGER.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use work.I2C_DATA_STREAMER.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -52,7 +49,36 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_RESET : std_logic;
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
+    constant address_setup_ns : time := tADS * 1 ns;
+    constant address_hold_time : time := tAH * 1 ns;
+    constant MODE_WRITE : std_logic := '1';
+    constant MODE_READ : std_logic := not MODE_WRITE;
     
+    
+    procedure WriteToMemory( signal  memory_clock : in std_logic;
+                             constant i_address : in ADDRESS_65C02_T;
+                             signal o_address : out ADDRESS_65C02_T;
+                             constant i_data    : in DATA_65C02_T;
+                             signal o_data    : out DATA_65C02_T;
+                             signal write_flag   : out std_logic) is
+    begin
+         -- Set I2C target address
+    wait until falling_edge(memory_clock);
+    o_address <= i_address;
+    
+    wait until rising_edge(memory_clock);
+    wait until falling_edge(memory_clock);
+    o_data <= i_data; 
+    
+    wait until rising_edge(memory_clock);
+    wait until falling_edge(memory_clock);
+    -- Set write mode
+    write_flag <= MODE_WRITE;
+    
+    wait until rising_edge(memory_clock);
+    wait until falling_edge(memory_clock);
+    write_flag <= MODE_READ;
+    end procedure;
 begin
 
 T_MEMORY_CLOCK <= not T_MEMORY_CLOCK after (CLOCK_PERIOD / 2);
@@ -79,14 +105,17 @@ begin
     T_RESET <= CPU_RUNNING;
     wait for 10*CLOCK_PERIOD;
     
-    -- Set write mode
     -- Write control register with I2C reset
+    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_CTRL,T_BUS_ADDRESS,CONTROL_RESET,T_BUS_WRITE_DATA,T_WRITE_FLAG);
+        
     -- Write control register with I2C buffer write
     -- Set I2C buffer address
     -- Write data to I2C buffer
     -- Loop to write a few test bytes
     -- Write control register to set I2C address
     -- Set I2C address.
+    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_I2C_ADDRESS,T_BUS_ADDRESS,x"BE",T_BUS_WRITE_DATA,T_WRITE_FLAG);
+    
     -- Write control register to start streaming
 end process stimuli_generator;
 
