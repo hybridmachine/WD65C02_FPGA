@@ -99,6 +99,8 @@ dut: entity work.MemoryManager
 
 
 stimuli_generator: process
+variable stream_address : DATA_65C02_T;
+variable stream_value : DATA_65C02_T;
 begin
     T_RESET <= CPU_RESET;
     wait for 10*CLOCK_PERIOD;
@@ -106,47 +108,80 @@ begin
     wait for 10*CLOCK_PERIOD;
     
     -- Write control register with I2C reset
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_CTRL,T_BUS_ADDRESS,CONTROL_RESET,T_BUS_WRITE_DATA,T_WRITE_FLAG);
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_CTRL,
+                    T_BUS_ADDRESS,
+                    CONTROL_RESET,
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
     
     -- Write control register with I2C standby
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_CTRL,T_BUS_ADDRESS,CONTROL_STANDBY,T_BUS_WRITE_DATA,T_WRITE_FLAG);
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_CTRL,
+                    T_BUS_ADDRESS,
+                    CONTROL_STANDBY,
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
         
     -- Write control register with I2C buffer write
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_CTRL,T_BUS_ADDRESS,CONTROL_WRITE_BUFFER,T_BUS_WRITE_DATA,T_WRITE_FLAG);
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_CTRL,
+                    T_BUS_ADDRESS,
+                    CONTROL_WRITE_BUFFER,
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
     
-    -- Set I2C buffer address
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW,T_BUS_ADDRESS,x"00",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH,T_BUS_ADDRESS,x"00",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    
-    -- Write data to I2C buffer
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA,T_BUS_ADDRESS,x"FE",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    
-    -- Loop to write a few test bytes
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW,T_BUS_ADDRESS,x"01",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH,T_BUS_ADDRESS,x"00",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    
-    -- Write data to I2C buffer
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA,T_BUS_ADDRESS,x"ED",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-
-    -- Loop to write a few test bytes
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW,T_BUS_ADDRESS,x"02",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH,T_BUS_ADDRESS,x"00",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    
-    -- Write data to I2C buffer
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA,T_BUS_ADDRESS,x"FA",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-
-    -- Loop to write a few test bytes
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW,T_BUS_ADDRESS,x"03",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH,T_BUS_ADDRESS,x"00",T_BUS_WRITE_DATA,T_WRITE_FLAG);
-    
-    -- Write data to I2C buffer
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_DATA,T_BUS_ADDRESS,x"CE",T_BUS_WRITE_DATA,T_WRITE_FLAG);
+    -- Write FeedFace to first four bytes of stream buffer (conceptually 0 is leftmost, 3 is rightmost byte
+    for Addr_Low in 0 to 3 loop
+        stream_address := std_logic_vector( to_unsigned( Addr_Low, stream_address'length));
+        WriteToMemory(  T_MEMORY_CLOCK,
+                        PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW,
+                        T_BUS_ADDRESS,
+                        stream_address,
+                        T_BUS_WRITE_DATA,T_WRITE_FLAG);
+        WriteToMemory(  T_MEMORY_CLOCK,
+                        PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH,
+                        T_BUS_ADDRESS,
+                        x"00",
+                        T_BUS_WRITE_DATA,
+                        T_WRITE_FLAG);
+        case Addr_Low is
+            when 0 =>
+                stream_value := x"FE";
+            when 1 =>
+                stream_value := x"ED";
+            when 2 =>
+                stream_value := x"FA";
+            when 3 =>
+                stream_value := x"CE";
+            when others =>
+                stream_value := x"FF";
+        end case;
+        
+        -- Write data to I2C buffer
+        WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_DATA,
+                    T_BUS_ADDRESS,
+                    stream_value,
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
+    end loop;
 
     -- Set I2C address.
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_I2C_ADDRESS,T_BUS_ADDRESS,x"BE",T_BUS_WRITE_DATA,T_WRITE_FLAG);
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_I2C_ADDRESS,
+                    T_BUS_ADDRESS,
+                    x"BE",
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
     
     -- Write control register to start streaming
-    WriteToMemory(T_MEMORY_CLOCK,PIO_I2C_DATA_STRM_CTRL,T_BUS_ADDRESS,CONTROL_STREAM_BUFFER,T_BUS_WRITE_DATA,T_WRITE_FLAG);
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_CTRL,
+                    T_BUS_ADDRESS,
+                    CONTROL_STREAM_BUFFER,
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
     
 end process stimuli_generator;
 
