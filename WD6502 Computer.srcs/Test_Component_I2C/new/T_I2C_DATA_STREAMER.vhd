@@ -56,16 +56,32 @@ architecture Behavioral of T_I2C_DATA_STREAMER is
     constant RESET : std_logic := '1';
     constant RUN : std_logic := '0';
 
+    type i2c_data_direction is (master_to_client, client_to_master);
     type i2c_state_type is (idle, start, address, address_ack, data_ack, master_reading, master_writing, stop);
     signal i2c_present_state, i2c_next_state: i2c_state_type := idle;
+
+    function I2CDataDirection(present_i2c_state : i2c_state_type) return i2c_data_direction is
+    begin
+        case present_i2c_state is
+            when data_ack =>
+                return client_to_master;
+            when address_ack =>
+                return client_to_master;
+            when others =>
+                return master_to_client;
+        end case; 
+    end function;
+    
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
-t_master_to_client_sda <= t_sda;
-
+t_master_to_client_sda <= t_sda when (I2CDataDirection(i2c_present_state) = master_to_client)  else 'Z';
+ 
 -- When in ack, send low signal back to master otherwise set to high impedence so master can write
-t_sda <= '0' when (i2c_present_state = data_ack or i2c_present_state = address_ack) else 'Z';
-t_ack <= '0' when (i2c_present_state = data_ack or i2c_present_state = address_ack) else 'Z';
+t_client_to_master_sda <= '0' when (I2CDataDirection(i2c_present_state) = client_to_master) else 'Z';
+t_sda <= t_client_to_master_sda when (I2CDataDirection(i2c_present_state) = client_to_master) else 'Z';
+
+t_ack <= t_client_to_master_sda;
 
 dut: entity work.PIO_I2C_DATA_STREAMER 
 Port map (  clk => t_clk,
@@ -80,7 +96,7 @@ Port map (  clk => t_clk,
 stimuli_generator: process 
 variable write_address : natural := 0;
 begin
-    t_i2c_target_address <= "0000111";
+    t_i2c_target_address <= "1010110";
     t_control <= CONTROL_RESET;
     
     t_address <= std_logic_vector(to_unsigned(write_address, 16));
