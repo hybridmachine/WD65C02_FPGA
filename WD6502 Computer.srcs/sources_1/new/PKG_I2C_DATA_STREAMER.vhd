@@ -35,4 +35,6 @@ package I2C_DATA_STREAMER is
     constant STATUS_RESETTING : std_logic_vector(7 downto 0) := x"04";
     constant STATUS_STREAMING_I2C_COMPLETE : std_logic_vector(7 downto 0) := x"05";
     
+    constant I2C_MODE_WRITE : std_logic := '1';
+    constant I2C_MODE_READ : std_logic := not I2C_MODE_WRITE;
 end package I2C_DATA_STREAMER;
