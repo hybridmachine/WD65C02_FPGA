@@ -111,8 +111,7 @@ type STREAMER_STATE_T is ( RESET_START,
                     READY,
                     STREAM_DATA_OVER_I2C_READ_FROM_RAM,
                     STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_WRITEMODE,
-                    STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE,
-                    
+                    STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE,                   
                     STREAM_DATA_OVER_I2C_WRITE_TO_I2C,
                     STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT,
                     STREAM_DATA_OVER_I2C_COMPLETE,
@@ -195,6 +194,7 @@ end process;
 process(clk) 
 variable buffer_end_address : natural range 0 to 2047 := 0;
 variable byte_outbound_via_i2c : natural range 0 to 2047 := 0;
+variable byte_just_sent_via_i2c : natural range 0 to 2047 := 0;
 variable cycle_delay : natural range 0 to 255 := 0;
 begin
     if (rising_edge(clk)) then
@@ -252,6 +252,7 @@ begin
                         cycle_delay := cycle_delay - 1;
                         NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE;
                         ram_addrb <= std_logic_vector(to_unsigned(byte_outbound_via_i2c, ram_addrb'length));
+                        byte_just_sent_via_i2c := byte_outbound_via_i2c;
                     end if;
                 else
                     i2c_stream_complete <= '1';
@@ -269,7 +270,7 @@ begin
             when STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT =>  
                 status_reg <= STATUS_STREAMING_I2C;
                 if (i2c_que_for_send = '0') then
-                    byte_outbound_via_i2c := byte_outbound_via_i2c + 1; -- Increment to next byte
+                    byte_outbound_via_i2c := byte_just_sent_via_i2c + 1; -- Increment to next byte
                     -- Data is marked in flight, get the buffer ready to send the next byte
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
                 else
