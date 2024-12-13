@@ -188,7 +188,7 @@ begin
             address_frame(frame_idx) := t_master_to_client_sda;
             if (frame_idx <= 0) then
                 i2c_next_state <= address_ack;
-                ack_delay := 1;
+                ack_delay := 0;
                 frame_idx := 7;
             else
                 frame_idx := frame_idx - 1;
@@ -197,7 +197,7 @@ begin
             data_frame(frame_idx) := t_master_to_client_sda;
             if (frame_idx <= 0) then
                 i2c_next_state <= data_ack;
-                ack_delay := 1;
+                ack_delay := 0;
                 frame_idx := 7;
                 -- For now set a breakpoint here and manually check the data, see if it looks right
                 data_frame := "00000000";
