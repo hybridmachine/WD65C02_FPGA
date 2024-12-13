@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x23B26FBA2749A87B",
+      "boundary_crc": "0xA551FD389A8790B",
       "device": "xc7a35tcpg236-1",
       "gen_directory": "../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe",
       "name": "design_with_logic_probe",
@@ -89,9 +89,6 @@
       "IRQB": {
         "direction": "O"
       },
-      "NMIB": {
-        "direction": "O"
-      },
       "PIO_7SEG_COMMON": {
         "direction": "O",
         "left": "3",
@@ -101,6 +98,31 @@
         "direction": "O",
         "left": "7",
         "right": "0"
+      },
+      "PIO_I2C_DATA_STREAMER_SDA": {
+        "direction": "IO"
+      },
+      "PIO_I2C_DATA_STREAMER_SCL": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "FREQ_HZ": {
+            "value": "100000000",
+            "value_src": "default"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
       }
     },
     "components": {
@@ -211,6 +233,12 @@
             "direction": "O",
             "left": "7",
             "right": "0"
+          },
+          "PIO_I2C_DATA_STREAMER_SDA": {
+            "direction": "IO"
+          },
+          "PIO_I2C_DATA_STREAMER_SCL": {
+            "direction": "O"
           }
         }
       }
@@ -226,6 +254,12 @@
         "ports": [
           "DATA",
           "WDC65C02_Interface/DATA"
+        ]
+      },
+      "Net2": {
+        "ports": [
+          "PIO_I2C_DATA_STREAMER_SDA",
+          "WDC65C02_Interface/PIO_I2C_DATA_STREAMER_SDA"
         ]
       },
       "RWB_PIN_1": {
@@ -270,12 +304,6 @@
           "IRQB"
         ]
       },
-      "WDC65C02_Interface_0_NMIB": {
-        "ports": [
-          "WDC65C02_Interface/NMIB",
-          "NMIB"
-        ]
-      },
       "WDC65C02_Interface_0_PIO_7SEG_COMMON": {
         "ports": [
           "WDC65C02_Interface/PIO_7SEG_COMMON",
@@ -298,6 +326,12 @@
         "ports": [
           "WDC65C02_Interface/RESB",
           "RESB"
+        ]
+      },
+      "WDC65C02_Interface_PIO_I2C_DATA_STREAMER_SCL": {
+        "ports": [
+          "WDC65C02_Interface/PIO_I2C_DATA_STREAMER_SCL",
+          "PIO_I2C_DATA_STREAMER_SCL"
         ]
       },
       "clk_wiz_0_clk_out1": {

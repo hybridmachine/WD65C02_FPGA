@@ -23,21 +23,21 @@ use IEEE.NUMERIC_STD.ALL;
 
 package W65C02_DEFINITIONS is
     -- Pin types
-    subtype ADDRESS_65C02_T      is STD_LOGIC_VECTOR(15 downto 0);         -- Address bus
-    subtype BE_T           is STD_LOGIC;                        -- Bus Enable
-    subtype DATA_65C02_T         is STD_LOGIC_VECTOR (7 downto 0);    -- Data bus
-    subtype IRQB_T         is STD_LOGIC;                        -- Interrupt Request
-    subtype MLB_T          is STD_LOGIC;                        -- Memory Lock
-    subtype NMIB_T         is STD_LOGIC;                        -- Non-Maskable Interrupt
-    subtype PHI1O_T        is STD_LOGIC;                        -- Phase 1 out clock
-    subtype PHI2_T         is STD_LOGIC;                        -- Phase 2 in clock (main clock)
-    subtype PHI2O_T        is STD_LOGIC;                        -- Phase 2 out clock
-    subtype RDY_T          is STD_LOGIC;                        -- Ready
-    subtype RESB_T         is STD_LOGIC;                        -- Reset
-    subtype RWB_T          is STD_LOGIC;                        -- Read/Write
-    subtype SOB_T          is STD_LOGIC;                        -- Set Overflow
-    subtype SYNC_T         is STD_LOGIC;                        -- Synchronize
-    subtype VPB_T          is STD_LOGIC;                        -- Vector Pull  constant output : output_t;  -- Value assign is deferred
+    subtype ADDRESS_65C02_T      is std_logic_vector(15 downto 0);         -- Address bus
+    subtype BE_T           is std_logic;                        -- Bus Enable
+    subtype DATA_65C02_T         is std_logic_vector (7 downto 0);    -- Data bus
+    subtype IRQB_T         is std_logic;                        -- Interrupt Request
+    subtype MLB_T          is std_logic;                        -- Memory Lock
+    subtype NMIB_T         is std_logic;                        -- Non-Maskable Interrupt
+    subtype PHI1O_T        is std_logic;                        -- Phase 1 out clock
+    subtype PHI2_T         is std_logic;                        -- Phase 2 in clock (main clock)
+    subtype PHI2O_T        is std_logic;                        -- Phase 2 out clock
+    subtype RDY_T          is std_logic;                        -- Ready
+    subtype RESB_T         is std_logic;                        -- Reset
+    subtype RWB_T          is std_logic;                        -- Read/Write
+    subtype SOB_T          is std_logic;                        -- Set Overflow
+    subtype SYNC_T         is std_logic;                        -- Synchronize
+    subtype VPB_T          is std_logic;                        -- Vector Pull  constant output : output_t;  -- Value assign is deferred
 
     -- State constants
     -- From the W65C02 spec
@@ -60,35 +60,47 @@ package W65C02_DEFINITIONS is
     constant RESET_MIN_CLOCKS : natural := 2; -- Hold reset low for min clocks (2 based on the spec)
     constant CPU_WRITING_DATA : std_logic := '0'; -- RWB  is low when the CPU is writing
     constant CPU_READING_DATA : std_logic := '1'; -- RWB is high when the CPU is reading data
+    constant I2C_STREAMING  : DATA_65C02_T := x"02";
+    constant I2C_STORING    : DATA_65C02_T := x"01";
     -- Memory Map
     
     -- ROM ends at FFF9, FFFA - FFFF are managed directly by the memory manager
-    constant ROM_END                    : std_logic_vector(15 downto 0) := x"FFF9";
-    constant ROM_BASE                   : std_logic_vector(15 downto 0) := x"FC00";
+    constant ROM_END                    : ADDRESS_65C02_T := x"FFF9";
+    constant ROM_BASE                   : ADDRESS_65C02_T := x"FC00";
     
-    constant BOOT_VEC                   : std_logic_vector(15 downto 0) := ROM_BASE; -- Jump to the start of ROM
-    constant BOOT_VEC_ADDRESS_LOW       : std_logic_vector(15 downto 0) := x"FFFC";
-    constant BOOT_VEC_ADDRESS_HIGH      : std_logic_vector(15 downto 0) := x"FFFD";
+    constant BOOT_VEC                   : ADDRESS_65C02_T := ROM_BASE; -- Jump to the start of ROM
+    constant BOOT_VEC_ADDRESS_LOW       : ADDRESS_65C02_T := x"FFFC";
+    constant BOOT_VEC_ADDRESS_HIGH      : ADDRESS_65C02_T := x"FFFD";
 
-    constant RAM_END                    : std_logic_vector(15 downto 0) := x"FBFF";
-    constant RAM_BASE                   : std_logic_vector(15 downto 0) := x"0000";
+    constant RAM_END                    : ADDRESS_65C02_T := x"FBFF";
+    constant RAM_BASE                   : ADDRESS_65C02_T := x"0000";
     
-    constant MEM_MAPPED_IO_END          : std_logic_vector(15 downto 0) := x"03FF";
-    constant MEM_MAPPED_IO_BASE         : std_logic_vector(15 downto 0) := x"0200";
-    constant PIO_LED_ADDR               : std_logic_vector(15 downto 0) := MEM_MAPPED_IO_BASE; -- 1 byte
-    constant PIO_7SEG_VAL               : std_logic_vector(15 downto 0) := x"0201"; -- 2 bytes
-    constant PIO_7SEG_ACTIVE            : std_logic_vector(15 downto 0) := x"0203"; -- 2 byte
-    constant PIO_TIMER_CTL              : std_logic_vector(15 downto 0) := x"0205"; -- 1 byte
-    constant PIO_TIMER_STATUS           : std_logic_vector(15 downto 0) := x"0206"; -- 1 byte
-    constant PIO_TIMER_VAL_MS           : std_logic_vector(15 downto 0) := x"0207"; -- 4 bytes
+    constant MEM_MAPPED_IO_END          : ADDRESS_65C02_T := x"03FF";
+    constant MEM_MAPPED_IO_BASE         : ADDRESS_65C02_T := x"0200";
+    constant PIO_LED_ADDR               : ADDRESS_65C02_T := MEM_MAPPED_IO_BASE; -- 1 byte
+    constant PIO_7SEG_VAL_LOW           : ADDRESS_65C02_T := x"0201"; -- 1 bytes
+    constant PIO_7SEG_VAL_HIGH          : ADDRESS_65C02_T := x"0202"; -- 1 bytes
+    constant PIO_7SEG_CONTROL           : ADDRESS_65C02_T := x"0203"; -- 2 byte
+    constant PIO_TIMER_CTL              : ADDRESS_65C02_T := x"0205"; -- 1 byte
+    constant PIO_TIMER_STATUS           : ADDRESS_65C02_T := x"0206"; -- 1 byte
+    constant PIO_TIMER_VAL_MS_1         : ADDRESS_65C02_T := x"0207"; -- 4 bytes
+    constant PIO_TIMER_VAL_MS_2         : ADDRESS_65C02_T := x"0208"; -- 4 bytes
+    constant PIO_TIMER_VAL_MS_3         : ADDRESS_65C02_T := x"0209"; -- 4 bytes
+    constant PIO_TIMER_VAL_MS_4         : ADDRESS_65C02_T := x"0210"; -- 4 bytes
+    constant PIO_FIRMWARE_VERSION       : ADDRESS_65C02_T := x"0211"; -- 1 byte (streams one character at a time)
+    constant PIO_I2C_DATA_STRM_STATUS   : ADDRESS_65C02_T := x"0212";
+    constant PIO_I2C_DATA_STRM_CTRL     : ADDRESS_65C02_T := x"0213";
+    constant PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW     : ADDRESS_65C02_T := x"0214";
+    constant PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH    : ADDRESS_65C02_T := x"0215";
+    constant PIO_I2C_DATA_STRM_DATA         : ADDRESS_65C02_T := x"0216";
+    constant PIO_I2C_DATA_STRM_I2C_ADDRESS  : ADDRESS_65C02_T := x"0217"; -- First 7 bits is address, 8th bit is ignored and used internally for read/write mode
+    constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
+    constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     
-    constant STACK_END                  : std_logic_vector(15 downto 0) := x"01FF";
-    constant STACK_BASE                 : std_logic_vector(15 downto 0) := x"0100";
+    constant SYS_RESERVED_END           : ADDRESS_65C02_T := x"00FF";
+    constant SYS_RESERVED_BASE          : ADDRESS_65C02_T := x"0001";
     
-    constant SYS_RESERVED_END           : std_logic_vector(15 downto 0) := x"00FF";
-    constant SYS_RESERVED_BASE          : std_logic_vector(15 downto 0) := x"0001";
-    
-    constant MEM_MANAGER_STATUS         : std_logic_vector(15 downto 0) := x"0000";
+    constant MEM_MANAGER_STATUS         : ADDRESS_65C02_T := x"0000";
 
     -- Timing delays as specified in the 65C02 data sheet
     -- Times in nanoseconds unless otherwise specified

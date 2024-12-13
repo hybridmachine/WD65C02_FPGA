@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="T_I2C_DATA_STREAMER_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="T_I2C_DATA_STREAMER" />
+            <top_module name="i2c_data_streamer" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="5,152.736876 us"></ZoomStartTime>
+      <ZoomEndTime time="5,269.236877 us"></ZoomEndTime>
+      <Cursor1Time time="5,096.486876 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="512"></NameColumnWidth>
+      <ValueColumnWidth column_width="284"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="103" />
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_clk" type="logic">
+      <obj_property name="ElementShortName">t_clk</obj_property>
+      <obj_property name="ObjectShortName">t_clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_status" type="array">
+      <obj_property name="ElementShortName">t_status[7:0]</obj_property>
+      <obj_property name="ObjectShortName">t_status[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_control" type="array">
+      <obj_property name="ElementShortName">t_control[7:0]</obj_property>
+      <obj_property name="ObjectShortName">t_control[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_address" type="array">
+      <obj_property name="ElementShortName">t_address[15:0]</obj_property>
+      <obj_property name="ObjectShortName">t_address[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_data" type="array">
+      <obj_property name="ElementShortName">t_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">t_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_i2c_target_address" type="array">
+      <obj_property name="ElementShortName">t_i2c_target_address[6:0]</obj_property>
+      <obj_property name="ObjectShortName">t_i2c_target_address[6:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_sda" type="logic">
+      <obj_property name="ElementShortName">t_sda</obj_property>
+      <obj_property name="ObjectShortName">t_sda</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_master_to_client_sda" type="logic">
+      <obj_property name="ElementShortName">t_master_to_client_sda</obj_property>
+      <obj_property name="ObjectShortName">t_master_to_client_sda</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_client_to_master_sda" type="logic">
+      <obj_property name="ElementShortName">t_client_to_master_sda</obj_property>
+      <obj_property name="ObjectShortName">t_client_to_master_sda</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_scl" type="logic">
+      <obj_property name="ElementShortName">t_scl</obj_property>
+      <obj_property name="ObjectShortName">t_scl</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/t_ack" type="logic">
+      <obj_property name="ElementShortName">t_ack</obj_property>
+      <obj_property name="ObjectShortName">t_ack</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/i2c_next_state" type="other">
+      <obj_property name="ElementShortName">i2c_next_state</obj_property>
+      <obj_property name="ObjectShortName">i2c_next_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/CLOCK_PERIOD" type="other">
+      <obj_property name="ElementShortName">CLOCK_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">CLOCK_PERIOD</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/DEFAULT_WAIT_PERIOD" type="other">
+      <obj_property name="ElementShortName">DEFAULT_WAIT_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">DEFAULT_WAIT_PERIOD</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/READ_WRITE_MODE_WRITE" type="logic">
+      <obj_property name="ElementShortName">READ_WRITE_MODE_WRITE</obj_property>
+      <obj_property name="ObjectShortName">READ_WRITE_MODE_WRITE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/READ_WRITE_MODE_READ" type="logic">
+      <obj_property name="ElementShortName">READ_WRITE_MODE_READ</obj_property>
+      <obj_property name="ObjectShortName">READ_WRITE_MODE_READ</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/RESET" type="logic">
+      <obj_property name="ElementShortName">RESET</obj_property>
+      <obj_property name="ObjectShortName">RESET</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/RUN" type="logic">
+      <obj_property name="ElementShortName">RUN</obj_property>
+      <obj_property name="ObjectShortName">RUN</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/stream_complete" type="logic">
+      <obj_property name="ElementShortName">stream_complete</obj_property>
+      <obj_property name="ObjectShortName">stream_complete</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/que_for_send" type="logic">
+      <obj_property name="ElementShortName">que_for_send</obj_property>
+      <obj_property name="ObjectShortName">que_for_send</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/read_write_mode" type="logic">
+      <obj_property name="ElementShortName">read_write_mode</obj_property>
+      <obj_property name="ObjectShortName">read_write_mode</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data" type="array">
+      <obj_property name="ElementShortName">data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/ack_error" type="logic">
+      <obj_property name="ElementShortName">ack_error</obj_property>
+      <obj_property name="ObjectShortName">ack_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/i2c_target_address" type="array">
+      <obj_property name="ElementShortName">i2c_target_address[6:0]</obj_property>
+      <obj_property name="ObjectShortName">i2c_target_address[6:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="group47" type="group">
+      <obj_property name="label">I2C Device</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/sda" type="logic">
+         <obj_property name="ElementShortName">sda</obj_property>
+         <obj_property name="ObjectShortName">sda</obj_property>
+      </wvobject>
+      <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/scl" type="logic">
+         <obj_property name="ElementShortName">scl</obj_property>
+         <obj_property name="ObjectShortName">scl</obj_property>
+      </wvobject>
+      <wvobject fp_name="/T_I2C_DATA_STREAMER/i2c_present_state" type="other">
+         <obj_property name="ElementShortName">i2c_present_state</obj_property>
+         <obj_property name="ObjectShortName">i2c_present_state</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/auxiliary_clock" type="logic">
+      <obj_property name="ElementShortName">auxiliary_clock</obj_property>
+      <obj_property name="ObjectShortName">auxiliary_clock</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/bus_clock" type="logic">
+      <obj_property name="ElementShortName">bus_clock</obj_property>
+      <obj_property name="ObjectShortName">bus_clock</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_clock" type="logic">
+      <obj_property name="ElementShortName">data_clock</obj_property>
+      <obj_property name="ObjectShortName">data_clock</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_in" type="array">
+      <obj_property name="ElementShortName">data_in[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_in[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_out" type="array">
+      <obj_property name="ElementShortName">data_out[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_out[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/wr_flag" type="logic">
+      <obj_property name="ElementShortName">wr_flag</obj_property>
+      <obj_property name="ObjectShortName">wr_flag</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/rd_flag" type="logic">
+      <obj_property name="ElementShortName">rd_flag</obj_property>
+      <obj_property name="ObjectShortName">rd_flag</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/ack" type="array">
+      <obj_property name="ElementShortName">ack[2:0]</obj_property>
+      <obj_property name="ObjectShortName">ack[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/timer" type="other">
+      <obj_property name="ElementShortName">timer</obj_property>
+      <obj_property name="ObjectShortName">timer</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/que_for_send_sig" type="logic">
+      <obj_property name="ElementShortName">que_for_send_sig</obj_property>
+      <obj_property name="ObjectShortName">que_for_send_sig</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/present_state" type="other">
+      <obj_property name="ElementShortName">present_state</obj_property>
+      <obj_property name="ObjectShortName">present_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/next_state" type="other">
+      <obj_property name="ElementShortName">next_state</obj_property>
+      <obj_property name="ObjectShortName">next_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/fclk" type="other">
+      <obj_property name="ElementShortName">fclk</obj_property>
+      <obj_property name="ObjectShortName">fclk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_rate" type="other">
+      <obj_property name="ElementShortName">data_rate</obj_property>
+      <obj_property name="ObjectShortName">data_rate</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/write_time" type="other">
+      <obj_property name="ElementShortName">write_time</obj_property>
+      <obj_property name="ObjectShortName">write_time</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/scl_divider" type="other">
+      <obj_property name="ElementShortName">scl_divider</obj_property>
+      <obj_property name="ObjectShortName">scl_divider</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/delay" type="other">
+      <obj_property name="ElementShortName">delay</obj_property>
+      <obj_property name="ObjectShortName">delay</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/stream_complete" type="logic">
+      <obj_property name="ElementShortName">stream_complete</obj_property>
+      <obj_property name="ObjectShortName">stream_complete</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/que_for_send" type="logic">
+      <obj_property name="ElementShortName">que_for_send</obj_property>
+      <obj_property name="ObjectShortName">que_for_send</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/read_write_mode" type="logic">
+      <obj_property name="ElementShortName">read_write_mode</obj_property>
+      <obj_property name="ObjectShortName">read_write_mode</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data" type="array">
+      <obj_property name="ElementShortName">data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/ack_error" type="logic">
+      <obj_property name="ElementShortName">ack_error</obj_property>
+      <obj_property name="ObjectShortName">ack_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/i2c_target_address" type="array">
+      <obj_property name="ElementShortName">i2c_target_address[6:0]</obj_property>
+      <obj_property name="ObjectShortName">i2c_target_address[6:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/sda" type="logic">
+      <obj_property name="ElementShortName">sda</obj_property>
+      <obj_property name="ObjectShortName">sda</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/scl" type="logic">
+      <obj_property name="ElementShortName">scl</obj_property>
+      <obj_property name="ObjectShortName">scl</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/auxiliary_clock" type="logic">
+      <obj_property name="ElementShortName">auxiliary_clock</obj_property>
+      <obj_property name="ObjectShortName">auxiliary_clock</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/bus_clock" type="logic">
+      <obj_property name="ElementShortName">bus_clock</obj_property>
+      <obj_property name="ObjectShortName">bus_clock</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_clock" type="logic">
+      <obj_property name="ElementShortName">data_clock</obj_property>
+      <obj_property name="ObjectShortName">data_clock</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_in" type="array">
+      <obj_property name="ElementShortName">data_in[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_in[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_out" type="array">
+      <obj_property name="ElementShortName">data_out[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_out[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/wr_flag" type="logic">
+      <obj_property name="ElementShortName">wr_flag</obj_property>
+      <obj_property name="ObjectShortName">wr_flag</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/rd_flag" type="logic">
+      <obj_property name="ElementShortName">rd_flag</obj_property>
+      <obj_property name="ObjectShortName">rd_flag</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/ack" type="array">
+      <obj_property name="ElementShortName">ack[2:0]</obj_property>
+      <obj_property name="ObjectShortName">ack[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/timer" type="other">
+      <obj_property name="ElementShortName">timer</obj_property>
+      <obj_property name="ObjectShortName">timer</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/que_for_send_sig" type="logic">
+      <obj_property name="ElementShortName">que_for_send_sig</obj_property>
+      <obj_property name="ObjectShortName">que_for_send_sig</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/present_state" type="other">
+      <obj_property name="ElementShortName">present_state</obj_property>
+      <obj_property name="ObjectShortName">present_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/next_state" type="other">
+      <obj_property name="ElementShortName">next_state</obj_property>
+      <obj_property name="ObjectShortName">next_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/fclk" type="other">
+      <obj_property name="ElementShortName">fclk</obj_property>
+      <obj_property name="ObjectShortName">fclk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/data_rate" type="other">
+      <obj_property name="ElementShortName">data_rate</obj_property>
+      <obj_property name="ObjectShortName">data_rate</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/write_time" type="other">
+      <obj_property name="ElementShortName">write_time</obj_property>
+      <obj_property name="ObjectShortName">write_time</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/scl_divider" type="other">
+      <obj_property name="ElementShortName">scl_divider</obj_property>
+      <obj_property name="ObjectShortName">scl_divider</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/I2C_DEVICE/delay" type="other">
+      <obj_property name="ElementShortName">delay</obj_property>
+      <obj_property name="ObjectShortName">delay</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/status" type="array">
+      <obj_property name="ElementShortName">status[7:0]</obj_property>
+      <obj_property name="ObjectShortName">status[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/control" type="array">
+      <obj_property name="ElementShortName">control[7:0]</obj_property>
+      <obj_property name="ObjectShortName">control[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/address" type="array">
+      <obj_property name="ElementShortName">address[15:0]</obj_property>
+      <obj_property name="ObjectShortName">address[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/data" type="array">
+      <obj_property name="ElementShortName">data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/i2c_target_address" type="array">
+      <obj_property name="ElementShortName">i2c_target_address[6:0]</obj_property>
+      <obj_property name="ObjectShortName">i2c_target_address[6:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_addra" type="array">
+      <obj_property name="ElementShortName">ram_addra[15:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_addra[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_clka" type="logic">
+      <obj_property name="ElementShortName">ram_clka</obj_property>
+      <obj_property name="ObjectShortName">ram_clka</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_clkb" type="logic">
+      <obj_property name="ElementShortName">ram_clkb</obj_property>
+      <obj_property name="ObjectShortName">ram_clkb</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_dina" type="array">
+      <obj_property name="ElementShortName">ram_dina[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_dina[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_dinb" type="array">
+      <obj_property name="ElementShortName">ram_dinb[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_dinb[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_douta" type="array">
+      <obj_property name="ElementShortName">ram_douta[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_douta[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="group291" type="group">
+      <obj_property name="label">PIO STREAMER I2C View</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/sda" type="logic">
+         <obj_property name="ElementShortName">sda</obj_property>
+         <obj_property name="ObjectShortName">sda</obj_property>
+      </wvobject>
+      <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/scl" type="logic">
+         <obj_property name="ElementShortName">scl</obj_property>
+         <obj_property name="ObjectShortName">scl</obj_property>
+      </wvobject>
+      <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_addrb" type="array">
+         <obj_property name="ElementShortName">ram_addrb[15:0]</obj_property>
+         <obj_property name="ObjectShortName">ram_addrb[15:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_doutb" type="array">
+         <obj_property name="ElementShortName">ram_doutb[7:0]</obj_property>
+         <obj_property name="ObjectShortName">ram_doutb[7:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_wea" type="logic">
+      <obj_property name="ElementShortName">ram_wea</obj_property>
+      <obj_property name="ObjectShortName">ram_wea</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_web" type="logic">
+      <obj_property name="ElementShortName">ram_web</obj_property>
+      <obj_property name="ObjectShortName">ram_web</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_ena" type="logic">
+      <obj_property name="ElementShortName">ram_ena</obj_property>
+      <obj_property name="ObjectShortName">ram_ena</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ram_enb" type="logic">
+      <obj_property name="ElementShortName">ram_enb</obj_property>
+      <obj_property name="ObjectShortName">ram_enb</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/control_reg" type="array">
+      <obj_property name="ElementShortName">control_reg[7:0]</obj_property>
+      <obj_property name="ObjectShortName">control_reg[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/CURRENT_STREAMER_STATE" type="other">
+      <obj_property name="ElementShortName">CURRENT_STREAMER_STATE</obj_property>
+      <obj_property name="ObjectShortName">CURRENT_STREAMER_STATE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/NEXT_STREAMER_STATE" type="other">
+      <obj_property name="ElementShortName">NEXT_STREAMER_STATE</obj_property>
+      <obj_property name="ObjectShortName">NEXT_STREAMER_STATE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/CURRENT_I2C_STATE" type="other">
+      <obj_property name="ElementShortName">CURRENT_I2C_STATE</obj_property>
+      <obj_property name="ObjectShortName">CURRENT_I2C_STATE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/NEXT_I2C_STATE" type="other">
+      <obj_property name="ElementShortName">NEXT_I2C_STATE</obj_property>
+      <obj_property name="ObjectShortName">NEXT_I2C_STATE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/i2c_reset" type="logic">
+      <obj_property name="ElementShortName">i2c_reset</obj_property>
+      <obj_property name="ObjectShortName">i2c_reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/i2c_readwrite_mode" type="logic">
+      <obj_property name="ElementShortName">i2c_readwrite_mode</obj_property>
+      <obj_property name="ObjectShortName">i2c_readwrite_mode</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/i2c_data" type="array">
+      <obj_property name="ElementShortName">i2c_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">i2c_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/i2c_ack_error" type="logic">
+      <obj_property name="ElementShortName">i2c_ack_error</obj_property>
+      <obj_property name="ObjectShortName">i2c_ack_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/i2c_stream_complete" type="logic">
+      <obj_property name="ElementShortName">i2c_stream_complete</obj_property>
+      <obj_property name="ObjectShortName">i2c_stream_complete</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/i2c_que_for_send" type="logic">
+      <obj_property name="ElementShortName">i2c_que_for_send</obj_property>
+      <obj_property name="ObjectShortName">i2c_que_for_send</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/status_reg" type="array">
+      <obj_property name="ElementShortName">status_reg[7:0]</obj_property>
+      <obj_property name="ObjectShortName">status_reg[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/DATA_WIDTH" type="other">
+      <obj_property name="ElementShortName">DATA_WIDTH</obj_property>
+      <obj_property name="ObjectShortName">DATA_WIDTH</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/ADDRESS_WIDTH" type="other">
+      <obj_property name="ElementShortName">ADDRESS_WIDTH</obj_property>
+      <obj_property name="ObjectShortName">ADDRESS_WIDTH</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_DATA_STREAMER/dut/SCL_CLOCK_DIVISOR" type="other">
+      <obj_property name="ElementShortName">SCL_CLOCK_DIVISOR</obj_property>
+      <obj_property name="ObjectShortName">SCL_CLOCK_DIVISOR</obj_property>
+   </wvobject>
+</wave_config>

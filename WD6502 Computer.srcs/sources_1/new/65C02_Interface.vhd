@@ -64,7 +64,11 @@ entity WDC65C02_Interface is
            -- IO pins
            PIO_LED_OUT  : out STD_LOGIC_VECTOR(7 downto 0); --! PIO Led pins    
            PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0); --! 7 Segment common drivers
-           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0)); --! 7 Segment segment drivers                    
+           PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
+           PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
+           PIO_I2C_DATA_STREAMER_SCL : out std_logic
+           );                    
+            
 end WDC65C02_Interface;
 
 architecture Behavioral of WDC65C02_Interface is
@@ -78,6 +82,8 @@ COMPONENT MemoryManager is
            PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
            PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
+           PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
+           PIO_I2C_DATA_STREAMER_SCL : out std_logic;
            RESET : in STD_LOGIC
            );
 end COMPONENT;
@@ -133,6 +139,8 @@ MemoryManagement : MemoryManager port map (
     PIO_LED_OUT => PIO_LED_OUT,
     PIO_7SEG_COMMON => PIO_7SEG_COMMON,
     PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
+    PIO_I2C_DATA_STREAMER_SCL => PIO_I2C_DATA_STREAMER_SCL,
+    PIO_I2C_DATA_STREAMER_SDA => PIO_I2C_DATA_STREAMER_SDA,
     RESET => RESET
 );
 

@@ -50,7 +50,8 @@ set_property PACKAGE_PIN M1 [get_ports SYNC]
 set_property PACKAGE_PIN M2 [get_ports RWB]
 set_property PACKAGE_PIN M3 [get_ports RDY]
 set_property PACKAGE_PIN L3 [get_ports IRQB]
-set_property PACKAGE_PIN K3 [get_ports NMIB]
+set_property PACKAGE_PIN J3 [get_ports PIO_I2C_DATA_STREAMER_SCL]
+set_property PACKAGE_PIN K3 [get_ports PIO_I2C_DATA_STREAMER_SDA]
 set_property PACKAGE_PIN U18 [get_ports Reset]
 set_property PACKAGE_PIN R2 [get_ports SingleStep]
 
@@ -88,7 +89,10 @@ set_property IOSTANDARD LVCMOS33 [get_ports RDY]
 # Processor interrupt controls
 set_property IOSTANDARD LVCMOS33 [get_ports IRQB]
 
-set_property IOSTANDARD LVCMOS33 [get_ports NMIB]
+set_property IOSTANDARD LVCMOS33 [get_ports PIO_I2C_DATA_STREAMER_SDA]
+set_property PULLTYPE PULLUP [get_ports PIO_I2C_DATA_STREAMER_SDA]
+
+set_property IOSTANDARD LVCMOS33 [get_ports PIO_I2C_DATA_STREAMER_SCL]
 
 # Set to center directional button on board
 set_property IOSTANDARD LVCMOS33 [get_ports Reset]
