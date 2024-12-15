@@ -26,6 +26,7 @@
 ;
 ;***************************************************************************    
 
+
 CODE
 ; Build as relocatable, specify start address in linker options, see make.bat for start address
     CHIP	65C02
@@ -58,6 +59,13 @@ CODE
 ;                               Local Constants
 ;***************************************************************************
 ;
+    PIO_I2C_DATA_STRM_STATUS:               equ $0212
+    PIO_I2C_DATA_STRM_CTRL:                 equ $0213
+    PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW:     equ $0214
+    PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH:    equ $0215
+    PIO_I2C_DATA_STRM_DATA:                 equ $0216
+    PIO_I2C_DATA_STRM_I2C_ADDRESS:          equ $0217 ; High 7 bits is address, least significant bit is used internally (any value here is ignored, leave 0)
+
 
 ;***************************************************************************
 ;                               Library Code
