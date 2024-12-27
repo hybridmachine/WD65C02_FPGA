@@ -46,7 +46,11 @@ CODE
 ;***************************************************************************
 ;                              External Modules
 ;***************************************************************************
-;None
+
+    XREF SUB_I2CSTREAM_GETSTATUS
+    XREF SUB_I2CSTREAM_WRITEBYTE
+    XREF SUB_I2CSTREAM_STREAM
+    XREF SUB_I2CSTREAM_INITIALIZE
 
 ;***************************************************************************
 ;                              External Variables
@@ -72,7 +76,15 @@ START:
 ;***************************************************************************
 ;
 
+	LDA #00
+	JSR SUB_I2CSTREAM_INITIALIZE
+	CMP #$76
+	BEQ TEST_FAIL
 
+
+TEST_FAIL:
+	BRK
+	
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php
