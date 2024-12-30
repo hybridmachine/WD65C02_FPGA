@@ -37,7 +37,6 @@ CODE
 ;***************************************************************************
 ;None
 
-
 ;***************************************************************************
 ;                              Global Modules
 ;***************************************************************************
@@ -57,19 +56,18 @@ CODE
 ;***************************************************************************
 ;None
 
-
 ;***************************************************************************
 ;                               Local Constants
 ;***************************************************************************
 ;
 
 START:
-		sei             ; Ignore maskable interrupts
-        clc             ; Clear carry
-    	cld             ; Clear decimal mode
+	SEI             ; Ignore maskable interrupts
+	CLC             ; Clear carry
+	CLD             ; Clear decimal mode
 
-		ldx	#$ff		; Initialize the stack pointer
-		txs
+	LDX	#$ff		; Initialize the stack pointer
+	TXS
 
 ;***************************************************************************
 ;                               Application Code
@@ -78,8 +76,41 @@ START:
 
 	LDA #00
 	JSR SUB_I2CSTREAM_INITIALIZE
+	; Test that accumulator has default address set
 	CMP #$76
-	BEQ TEST_FAIL
+	BNE TEST_FAIL
+	
+	; Test for status STATUS_READY (#$00)
+	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
+	TXA ; If X is 0, then this sets the Zero flag
+	BNE TEST_FAIL ; Expect Zero to be set
+
+	LDX #$00
+	LDY #$00
+	LDA #$00
+	
+	; Write 254 bytes of data to buffer
+LOOP_WRITE:
+	; Save registers
+	PHA
+	PHX
+	PHY
+	; Write byte to buffer
+	JSR SUB_I2CSTREAM_WRITEBYTE
+	BNE TEST_FAIL ; accumulator should be set to 0
+
+	; Restore registers
+	PLY
+	PLX
+	PLA
+
+	; Increment X and A (Leave Y at 0)
+	INX
+	INA
+
+	BNE LOOP_WRITE ; If hasn't rolled to 0, keep going
+
+	BRK ; End of test 
 
 
 TEST_FAIL:
