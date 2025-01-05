@@ -116,7 +116,7 @@ SUB_I2CSTREAM_INITIALIZE:
     ; Reload the accumulator and set the I2C target address
     PLA
     BNE I2C_SET_ADDRESS ; If 0 , we'll first load default address in accumulator
-    LDA DEFAULT_I2C_ADDRESS
+    LDA #DEFAULT_I2C_ADDRESS
 I2C_SET_ADDRESS
     STA PIO_I2C_DATA_STRM_I2C_ADDRESS
     RTS
