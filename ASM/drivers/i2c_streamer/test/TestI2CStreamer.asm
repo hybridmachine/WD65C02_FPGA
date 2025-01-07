@@ -59,7 +59,12 @@ CODE
 ;***************************************************************************
 ;                               Local Constants
 ;***************************************************************************
-;
+	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
+	CYCLE_COUNT_LOW_ADDR:	equ		$01
+
+;***************************************************************************
+;                              Macros
+;***************************************************************************
 
 START:
 	SEI             ; Ignore maskable interrupts
@@ -110,8 +115,37 @@ LOOP_WRITE:
 
 	BNE LOOP_WRITE ; If hasn't rolled to 0, keep going
 
+	; Send the stream
+	JSR SUB_I2CSTREAM_STREAM
+
+	; Spin for some clock cycles
+	LDA #$01
+	STA CYCLE_COUNT_HIGH_ADDR
+	LDA #$00
+	STA CYCLE_COUNT_LOW_ADDR
+	JSR SPIN_FOR_DELAY
+
 	BRK ; End of test 
 
+; CYCLE_COUNT_HIGH in $02 and CYCLE_COUNT_LOW in $01
+SPIN_FOR_DELAY: 
+	SEC
+    LDA CYCLE_COUNT_LOW_ADDR
+	SBC #$01
+	BCC DECREMENT_HIGH
+	STA CYCLE_COUNT_LOW_ADDR
+	JMP SPIN_FOR_DELAY
+DECREMENT_HIGH:
+	SEC
+	LDA CYCLE_COUNT_HIGH_ADDR
+	BEQ END_SPIN ; High is 0, we are done counting down
+	SBC #$01
+	STA CYCLE_COUNT_HIGH_ADDR
+	LDA #$FF
+	STA CYCLE_COUNT_LOW_ADDR
+	JMP SPIN_FOR_DELAY
+END_SPIN: 
+    RTS
 
 TEST_FAIL:
 	BRK
