@@ -50,6 +50,8 @@ CODE
     XREF SUB_I2CSTREAM_WRITEBYTE
     XREF SUB_I2CSTREAM_STREAM
     XREF SUB_I2CSTREAM_INITIALIZE
+	XREF SUB_SEVENSEG_DISPLAY_VALUE
+    XREF SUB_SEVENSEG_DISABLE
 
 ;***************************************************************************
 ;                              External Variables
@@ -61,7 +63,10 @@ CODE
 ;***************************************************************************
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
 	CYCLE_COUNT_LOW_ADDR:	equ		$01
-
+	STACK_BASE:				equ		$0100
+	
+	; Memory addresses for I2C interface status
+    PIO_I2C_DATA_STRM_STATUS:               equ $0212
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -118,31 +123,52 @@ LOOP_WRITE:
 	; Send the stream
 	JSR SUB_I2CSTREAM_STREAM
 
+WATCH_STATUS:
 	; Spin for some clock cycles
 	LDA #$01
-	STA CYCLE_COUNT_HIGH_ADDR
+	PHA
 	LDA #$00
-	STA CYCLE_COUNT_LOW_ADDR
+	PHA
 	JSR SPIN_FOR_DELAY
 
+	LDA #$00
+	PHA 
+	LDA PIO_I2C_DATA_STRM_STATUS
+	PHA
+	JSR SUB_SEVENSEG_DISPLAY_VALUE
+	; Cleanup stack
+	PLA
+	PLA
+
+	JMP WATCH_STATUS ; For now just loop forever watching status
 	BRK ; End of test 
 
-; CYCLE_COUNT_HIGH in $02 and CYCLE_COUNT_LOW in $01
+; CYCLE_COUNT_HIGH in STACK+4 and CYCLE_COUNT_LOW in STACK+3
 SPIN_FOR_DELAY: 
-	SEC
-    LDA CYCLE_COUNT_LOW_ADDR
+	TSX ; Put the stack location in X
+	INX ; Points to return address of function high
+	INX ; Points to return address of function low
+	INX ; Points to low address
+    LDA STACK_BASE,X ; load low address
+	SEC 
 	SBC #$01
 	BCC DECREMENT_HIGH
-	STA CYCLE_COUNT_LOW_ADDR
+	STA STACK_BASE,X
 	JMP SPIN_FOR_DELAY
 DECREMENT_HIGH:
+	TSX ; Put the stack location in X
+	INX ; Points to return address of function high
+	INX ; Points to return address of function low
+	INX ; Points to low address
+	INX ; Points to high address
 	SEC
-	LDA CYCLE_COUNT_HIGH_ADDR
+	LDA STACK_BASE,X
 	BEQ END_SPIN ; High is 0, we are done counting down
 	SBC #$01
-	STA CYCLE_COUNT_HIGH_ADDR
+	STA STACK_BASE,X
+	DEX ; Point to low address
 	LDA #$FF
-	STA CYCLE_COUNT_LOW_ADDR
+	STA STACK_BASE,X
 	JMP SPIN_FOR_DELAY
 END_SPIN: 
     RTS

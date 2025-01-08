@@ -35,8 +35,8 @@ CODE
     ; Counter value location
     COUNTER_ADDRESS:    equ $10
     ; Driver functions
-    XREF SEVENSEG_DISPLAY_VALUE
-    XREF SEVENSEG_DISABLE
+    XREF SUB_SEVENSEG_DISPLAY_VALUE
+    XREF SUB_SEVENSEG_DISABLE
 
 START:
     ; Initialize counter
@@ -70,7 +70,7 @@ COUNTER_LOOP:
     PHA
     LDA COUNTER_ADDRESS
     PHA
-    JSR SEVENSEG_DISPLAY_VALUE
+    JSR SUB_SEVENSEG_DISPLAY_VALUE
     ; Cleanup stack
     PLA
     PLA
