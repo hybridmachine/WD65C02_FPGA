@@ -67,6 +67,7 @@ CODE
 	
 	; Memory addresses for I2C interface status
     PIO_I2C_DATA_STRM_STATUS:               equ $0212
+
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -88,13 +89,15 @@ START:
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
 	CMP #$76
-	BNE TEST_FAIL
-	
+	BEQ TEST_INIT_PASS
+	JSR TEST_FAIL
+TEST_INIT_PASS:
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
-	BNE TEST_FAIL ; Expect Zero to be set
-
+	BEQ TEST_STATUS_PASS ; Expect Zero to be set
+	JSR TEST_FAIL
+TEST_STATUS_PASS
 	LDX #$00
 	LDY #$00
 	LDA #$00
@@ -107,8 +110,9 @@ LOOP_WRITE:
 	PHY
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
-	BNE TEST_FAIL ; accumulator should be set to 0
-
+	BEQ TEST_WRITE_PASS ; accumulator should be set to 0
+	JSR TEST_FAIL
+TEST_WRITE_PASS:
 	; Restore registers
 	PLY
 	PLX
@@ -117,6 +121,13 @@ LOOP_WRITE:
 	; Increment X and A (Leave Y at 0)
 	INX
 	INA
+
+	PHX
+	PHA
+	JSR SUB_SEVENSEG_DISPLAY_VALUE
+	; Cleanup stack
+	PLA
+	PLA
 
 	BNE LOOP_WRITE ; If hasn't rolled to 0, keep going
 
@@ -130,6 +141,9 @@ WATCH_STATUS:
 	LDA #$00
 	PHA
 	JSR SPIN_FOR_DELAY
+	; Cleanup stack
+	PLA
+	PLA
 
 	LDA #$00
 	PHA 
@@ -174,6 +188,8 @@ END_SPIN:
     RTS
 
 TEST_FAIL:
+	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
+	JMP TEST_FAIL
 	BRK
 	
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
