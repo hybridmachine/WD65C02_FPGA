@@ -67,7 +67,7 @@ CODE
 	
 	; Memory addresses for I2C interface status
     PIO_I2C_DATA_STRM_STATUS:               equ $0212
-
+	LED_IO_ADDR:			equ		$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -96,6 +96,7 @@ TEST_INIT_PASS:
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
 	BEQ TEST_STATUS_PASS ; Expect Zero to be set
+	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
 	JSR TEST_FAIL
 TEST_STATUS_PASS
 	LDX #$00
