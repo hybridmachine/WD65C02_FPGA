@@ -99,8 +99,8 @@ IRQHandler:
 
 ;***************************************************************************
 vectors	SECTION OFFSET $FFFA
-					;65C02 Interrupt Vectors
-					; Common 8 bit Vectors for all CPUs
+		;65C02 Interrupt Vectors
+		; Common 8 bit Vectors for all CPUs
 
 		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
 		dw	START		        ; $FFFC -  RESET (ALL)
