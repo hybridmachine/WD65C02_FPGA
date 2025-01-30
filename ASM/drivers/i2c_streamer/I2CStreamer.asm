@@ -112,7 +112,7 @@ SUB_I2CSTREAM_INITIALIZE:
     ; Save off accumulator then reset the I2C interface then set it to stanby
     PHA
     SEND_CONTROL_BYTE CONTROL_RESET
-    SEND_CONTROL_BYTE CONTROL_STANDBY
+    ; SEND_CONTROL_BYTE CONTROL_STANDBY
     ; Reload the accumulator and set the I2C target address
     PLA
     BNE I2C_SET_ADDRESS ; If 0 , we'll first load default address in accumulator

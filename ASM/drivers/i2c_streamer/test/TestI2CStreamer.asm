@@ -52,6 +52,7 @@ CODE
     XREF SUB_I2CSTREAM_INITIALIZE
 	XREF SUB_SEVENSEG_DISPLAY_VALUE
     XREF SUB_SEVENSEG_DISABLE
+	XREF POST_MEMORY_TEST
 
 ;***************************************************************************
 ;                              External Variables
@@ -84,14 +85,21 @@ START:
 ;                               Application Code
 ;***************************************************************************
 ;
+	jsr SUB_SEVENSEG_DISABLE
+	; Run power on self test functions
+	jsr POST_MEMORY_TEST
 
+	; MAIN
 	LDA #00
+	STA LED_IO_ADDR ; Clear any LEDs
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
 	CMP #$76
 	BEQ TEST_INIT_PASS
 	JSR TEST_FAIL
 TEST_INIT_PASS:
+	; For debug, spin watching status
+	JSR WATCH_STATUS
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
@@ -136,8 +144,9 @@ TEST_WRITE_PASS:
 	JSR SUB_I2CSTREAM_STREAM
 
 WATCH_STATUS:
+	PHX
 	; Spin for some clock cycles
-	LDA #$01
+	LDA #$80
 	PHA
 	LDA #$00
 	PHA
@@ -145,7 +154,9 @@ WATCH_STATUS:
 	; Cleanup stack
 	PLA
 	PLA
-
+	PLX
+	STX LED_IO_ADDR ; Show index
+	PHX
 	LDA #$00
 	PHA 
 	LDA PIO_I2C_DATA_STRM_STATUS
@@ -154,7 +165,8 @@ WATCH_STATUS:
 	; Cleanup stack
 	PLA
 	PLA
-
+	PLX
+	INX
 	JMP WATCH_STATUS ; For now just loop forever watching status
 	BRK ; End of test 
 
