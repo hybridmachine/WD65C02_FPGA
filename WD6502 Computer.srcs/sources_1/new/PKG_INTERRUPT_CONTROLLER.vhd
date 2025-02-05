@@ -54,12 +54,11 @@ package INTERRUPT_CONTROLLER is
     end record interrupt_controller_interface_t;
     
     -- Device driver calls this to raise the interrupt
-    -- Interrupt Controller will place the masked status in the out bit
-    -- If set, this means the interrupt was masked and will not be delivered
+    -- Takes the irq_number from the device driver and the outbound irq_vector , will set the appropriate line
+    -- and leave the others untouched
     procedure RaiseInterrupt(signal irq_number : in std_logic_vector(7 downto 0); 
                              signal irq_vector : out std_logic_vector(15 downto 0);
-                             signal irq_mask_vector : in std_logic_vector(15 downto 0);
-                             signal irq_mask_state : out std_logic);
+                            );
 
     -- Memory manager will call this when processor updates an IRQ mask
     -- When set to 1, any interrupts will be masked and the IRQ manager will 
