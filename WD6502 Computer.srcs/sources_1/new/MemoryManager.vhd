@@ -23,6 +23,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.W65C02_DEFINITIONS.ALL;
 use work.MEMORY_MANAGER.ALL;
+use work.INTERRUPT_CONTROLLER.ALL;
 
 --! \author Brian Tabone
 --! @brief Manages the memory map of the computer. 
@@ -38,7 +39,8 @@ entity MemoryManager is
            PIO_7SEG_COMMON : out std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
            PIO_7SEG_SEGMENTS : out std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
            PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
-           PIO_I2C_DATA_STREAMER_SCL : out std_logic;   
+           PIO_I2C_DATA_STREAMER_SCL : out std_logic;
+           IRQ : out std_logic;   
            RESET : in std_logic --! Reset 
            );
 end MemoryManager;
@@ -82,7 +84,21 @@ signal PIO_I2C_DATA_STREAMER_CONTROL : STD_LOGIC_VECTOR (7 downto 0);
 signal PIO_I2C_DATA_STREAMER_ADDRESS : STD_LOGIC_VECTOR (15 downto 0);
 signal PIO_I2C_DATA_STREAMER_DATA : STD_LOGIC_VECTOR (7 downto 0);
 signal PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS : STD_LOGIC_VECTOR(6 downto 0);
-            
+
+signal PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ : STD_LOGIC_VECTOR(7 downto 0);
+signal PIO_INTERRUPT_CONTROLLER_IRQ_ACK : STD_LOGIC_VECTOR(7 downto 0);
+signal PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR : STD_LOGIC_VECTOR(15 downto 0);
+
+COMPONENT PIO_INTERRUPT_CONTROLLER is
+    PORT (
+        clk : in STD_LOGIC;
+        irq_to_cpu : out STD_LOGIC; -- Signal line that routes to CPUs IRQ line
+        irq_request_vec : in STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ, vector index == irq#. Driver should only signal its specific line
+        mem_active_irq : out STD_LOGIC_VECTOR(7 downto 0); -- This is set to the active IRQ being fired, CPU should read this right after IRQ received, value is valid until CPU ack
+        mem_active_irq_ack : in STD_LOGIC_VECTOR(7 downto 0)
+    );
+end COMPONENT;
+          
 COMPONENT RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
@@ -157,6 +173,14 @@ COMPONENT PIO_I2C_DATA_STREAMER is
 end COMPONENT;
 
 begin
+
+PIO_INTERRUPT_CONTROLLER_DEVICE : PIO_INTERRUPT_CONTROLLER port map (
+    clk => MEMORY_CLOCK,
+    irq_to_cpu => IRQ,
+    irq_request_vec => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR,
+    mem_active_irq => PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ,
+    mem_active_irq_ack => PIO_INTERRUPT_CONTROLLER_IRQ_ACK
+);
 
 RAM_DEVICE: RAM port map (
     addra => ram_addra,

@@ -24,7 +24,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use work.PKG_INTERRUPT_CONTROLLER.ALL;
+use work.INTERRUPT_CONTROLLER.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -37,9 +37,14 @@ entity PIO_INTERRUPT_CONTROLLER is
         irq_to_cpu : out STD_LOGIC; -- Signal line that routes to CPUs IRQ line
         irq_request_vec : in STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ, vector index == irq#. Driver should only signal its specific line
         mem_active_irq : out STD_LOGIC_VECTOR(7 downto 0); -- This is set to the active IRQ being fired, CPU should read this right after IRQ received, value is valid until CPU ack
-        mem_active_irq_ack : in STD_LOGIC_VECTOR(7 downto 0); -- CPU should write the value in mem_active_irq into this register to ack that IRQ handling is complete
+        mem_active_irq_ack : in STD_LOGIC_VECTOR(7 downto 0) -- CPU should write the value in mem_active_irq into this register to ack that IRQ handling is complete
     );
 end PIO_INTERRUPT_CONTROLLER;
 
 architecture Behavioral of PIO_INTERRUPT_CONTROLLER is
+    signal irq_controller_state : interrupt_controller_state_t := idle;
+begin
+    irq_fsm : process (clk) 
+    begin
+    end process irq_fsm;
 end Behavioral;

@@ -45,19 +45,14 @@ package INTERRUPT_CONTROLLER is
     constant IRQ_MASKED : std_logic := '1';
     constant IRQ_UNMASKED : std_logic := '0';
 
-    TYPE interrupt_controller_state_type IS (idle, sending_interrupt, waiting_for_ack, interrupt_complete);
-    
-    type interrupt_controller_interface_t is record
-        signal irq_vector : std_logic_vector(15 downto 0);
-        signal irq_mask_vector : std_logic_vector(15 downto 0);
-        signal irq_mask_state : std_logic;
-    end record interrupt_controller_interface_t;
+    TYPE interrupt_controller_state_t IS (idle, sending_interrupt, waiting_for_ack, interrupt_complete);
+   
     
     -- Device driver calls this to raise the interrupt
     -- Takes the irq_number from the device driver and the outbound irq_vector , will set the appropriate line
     -- and leave the others untouched
     procedure RaiseInterrupt(signal irq_number : in std_logic_vector(7 downto 0); 
-                             signal irq_vector : out std_logic_vector(15 downto 0);
+                             signal irq_vector : out std_logic_vector(15 downto 0)
                             );
 
     -- Memory manager will call this when processor updates an IRQ mask
