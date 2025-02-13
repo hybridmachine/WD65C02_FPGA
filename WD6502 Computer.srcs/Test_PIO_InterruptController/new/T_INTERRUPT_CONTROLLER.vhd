@@ -45,6 +45,9 @@ architecture Behavioral of T_INTERRUPT_CONTROLLER is
     signal t_mem_active_irq_ack : STD_LOGIC_VECTOR(7 downto 0) := x"00";
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
+    TYPE interrupt_controller_test_state_t IS (sending_interrupt, expecting_interrupt, interrupt_received, sending_ack);
+    
+    signal interrupt_controller_test_state : interrupt_controller_test_state_t := sending_interrupt; 
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
@@ -59,12 +62,28 @@ Port map (
 
 stimuli_generator: process 
 begin
-
+    t_irq_request_vec <= x"0000";
+    interrupt_controller_test_state <= sending_interrupt;
+    wait for 5 * CLOCK_PERIOD;
+    t_irq_request_vec <= x"0001"; -- Turn on IRQ0
+    interrupt_controller_test_state <= expecting_interrupt;
+    wait for 5 * CLOCK_PERIOD;
+    
 end process stimuli_generator;
 
 interrupt_controller_verifier: process
 begin
-
+    wait on interrupt_controller_test_state;
+    case interrupt_controller_test_state is
+        when sending_interrupt =>
+            assert(t_irq_to_cpu = '0') report "IRQ active during sending phase" severity error;
+        when expecting_interrupt =>
+            wait on t_irq_to_cpu until (t_irq_to_cpu = '1') for (20 * CLOCK_PERIOD);
+            assert(t_irq_to_cpu = '1') report "IRQ not active during expecting phase" severity error;
+        when others =>
+            report "Unexpected state" severity error;
+    end case;
+    
 end process interrupt_controller_verifier;
 
 end Behavioral;
