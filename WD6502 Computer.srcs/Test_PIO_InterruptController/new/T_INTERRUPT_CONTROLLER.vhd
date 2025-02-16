@@ -25,7 +25,7 @@ use work.INTERRUPT_CONTROLLER.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -62,10 +62,10 @@ Port map (
 
 stimuli_generator: process 
 begin
-    t_irq_request_vec <= x"0000";
+    t_irq_request_vec <= x"0000"; -- All IRQ lines off
     interrupt_controller_test_state <= sending_interrupt;
     wait for 5 * CLOCK_PERIOD;
-    t_irq_request_vec <= x"0001"; -- Turn on IRQ0
+    t_irq_request_vec <= x"0001"; -- Trigger IRQ0
     interrupt_controller_test_state <= expecting_interrupt;
     wait for 5 * CLOCK_PERIOD;
     
@@ -80,6 +80,16 @@ begin
         when expecting_interrupt =>
             wait on t_irq_to_cpu until (t_irq_to_cpu = '1') for (20 * CLOCK_PERIOD);
             assert(t_irq_to_cpu = '1') report "IRQ not active during expecting phase" severity error;
+            
+            case t_irq_request_vec is
+                when x"0001" =>
+                    assert(t_mem_active_irq = x"00") report "IRQ identity expected to be 0" severity error;
+                when x"0002" =>
+                    assert(t_mem_active_irq = x"01") report "IRQ identity expected to be 1" severity error;
+                when others =>
+                    report "Untested IRQ sent" severity error;
+            end case;
+            
         when others =>
             report "Unexpected state" severity error;
     end case;
