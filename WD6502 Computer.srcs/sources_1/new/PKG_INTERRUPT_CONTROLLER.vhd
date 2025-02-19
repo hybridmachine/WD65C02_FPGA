@@ -41,9 +41,16 @@ package INTERRUPT_CONTROLLER is
     constant IRQ13 : std_logic_vector(7 downto 0) := x"0D";
     constant IRQ14 : std_logic_vector(7 downto 0) := x"0E";
     constant IRQ15 : std_logic_vector(7 downto 0) := x"0F";
+    constant IRQNONE : std_logic_vector(7 downto 0) := x"FF";
 
     constant IRQ_MASKED : std_logic := '1';
     constant IRQ_UNMASKED : std_logic := '0';
+    
+    constant IRQ_UNTRIGGERED : std_logic := '1'; -- CPU expects IRQ to be high when not triggered
+    constant IRQ_TRIGGERED : std_logic := '0';
+
+    constant IRQ_REQUESTED : std_logic := '1'; -- We expect drivers to raise their line to high when requesting IRQ
+    constant IRQ_STANDBY : std_logic := '0'; -- Drivers pull their lines low when no IRQ requested
 
     TYPE interrupt_controller_state_t IS (idle, sending_interrupt, waiting_for_ack, interrupt_complete);
    
@@ -51,13 +58,13 @@ package INTERRUPT_CONTROLLER is
     -- Device driver calls this to raise the interrupt
     -- Takes the irq_number from the device driver and the outbound irq_vector , will set the appropriate line
     -- and leave the others untouched
-    procedure RaiseInterrupt(signal irq_number : in std_logic_vector(7 downto 0); 
-                             signal irq_vector : out std_logic_vector(15 downto 0)
+    procedure EnqueueHighestPriorityInterrupt(signal irq_number : out std_logic_vector(7 downto 0); 
+                             signal irq_vector : in std_logic_vector(15 downto 0)
                             );
 
     -- Memory manager will call this when processor updates an IRQ mask
     -- When set to 1, any interrupts will be masked and the IRQ manager will 
-    -- notify the driver by setting the is_masked bit on the RaiseInterrupt call
+    -- notify the driver by setting the is_masked bit on the EnqueueHighestPriorityInterrupt call
     procedure SetIRQMask(signal irq_number : in std_logic_vector(7 downto 0); 
                          signal irq_mask_vector : out std_logic_vector(15 downto 0);
                          signal irq_mask_state : in std_logic);
@@ -68,3 +75,47 @@ package INTERRUPT_CONTROLLER is
                          signal irq_mask_state : out std_logic);
 
 end package INTERRUPT_CONTROLLER;
+
+package body INTERRUPT_CONTROLLER is
+    procedure EnqueueHighestPriorityInterrupt(signal irq_number : out std_logic_vector(7 downto 0); 
+                             signal irq_vector : in std_logic_vector(15 downto 0)
+                            ) is
+    begin
+        irq_number <= IRQNONE;
+        
+        if (irq_vector(0) = IRQ_REQUESTED) then
+            irq_number <= IRQ0;
+        elsif (irq_vector(1) = IRQ_REQUESTED) then
+            irq_numver <= IRQ1;
+        elsif (irq_vector(2) = IRQ_REQUESTED) then
+            irq_numver <= IRQ2;
+        elsif (irq_vector(3) = IRQ_REQUESTED) then
+            irq_numver <= IRQ3;
+        elsif (irq_vector(4) = IRQ_REQUESTED) then
+            irq_numver <= IRQ4;
+        elsif (irq_vector(5) = IRQ_REQUESTED) then
+            irq_numver <= IRQ5;
+        elsif (irq_vector(6) = IRQ_REQUESTED) then
+            irq_numver <= IRQ6;
+        elsif (irq_vector(7) = IRQ_REQUESTED) then
+            irq_numver <= IRQ7;
+        elsif (irq_vector(8) = IRQ_REQUESTED) then
+            irq_numver <= IRQ8;
+        elsif (irq_vector(9) = IRQ_REQUESTED) then
+            irq_numver <= IRQ9;
+        elsif (irq_vector(10) = IRQ_REQUESTED) then
+            irq_numver <= IRQ10;
+        elsif (irq_vector(11) = IRQ_REQUESTED) then
+            irq_numver <= IRQ11;
+        elsif (irq_vector(12) = IRQ_REQUESTED) then
+            irq_numver <= IRQ12;
+        elsif (irq_vector(13) = IRQ_REQUESTED) then
+            irq_numver <= IRQ13;
+        elsif (irq_vector(14) = IRQ_REQUESTED) then
+            irq_numver <= IRQ14;
+        elsif (irq_vector(15) = IRQ_REQUESTED) then
+            irq_numver <= IRQ15;
+        end if;
+    end procedure;
+    
+end package body INTERRUPT_CONTROLLER;

@@ -43,8 +43,36 @@ end PIO_INTERRUPT_CONTROLLER;
 
 architecture Behavioral of PIO_INTERRUPT_CONTROLLER is
     signal irq_controller_state : interrupt_controller_state_t := idle;
+    constant IRQ_TRIGGER_HOLD_CYCLES : natural := 20;
 begin
-    irq_fsm : process (clk) 
+    irq_fsm : process (clk)
+    variable irq_trigger_hold_timer : natural := IRQ_TRIGGER_HOLD_CYCLES;
     begin
+        case irq_controller_state is
+            when idle =>
+                mem_active_irq <= IRQNONE;
+                irq_trigger_hold_timer := IRQ_TRIGGER_HOLD_CYCLES;
+                irq_to_cpu <= IRQ_UNTRIGGERED;
+                if (irq_request_vec /= x"00") then
+                    -- One or more lines is requested, move to sending request
+                    EnqueueHighestPriorityInterrupt(mem_active_irq, irq_request_vec);
+                    irq_controller_state <= sending_interrupt;
+                end if;
+            when sending_interrupt =>     
+                if (irq_trigger_hold_timer > 0) then
+                    irq_to_cpu <= IRQ_TRIGGERED;
+                    irq_trigger_hold_timer := irq_trigger_hold_timer - 1;
+                    irq_controller_state <= sending_interrupt;
+                else
+                    irq_to_cpu <= IRQ_UNTRIGGERED;
+                    irq_controller_state <= waiting_for_ack;
+                end if;
+            when waiting_for_ack =>
+                
+            when interrupt_complete =>
+                irq_controller_state <= idle;
+            when others =>
+                irq_controller_state <= idle;
+        end case;
     end process irq_fsm;
 end Behavioral;

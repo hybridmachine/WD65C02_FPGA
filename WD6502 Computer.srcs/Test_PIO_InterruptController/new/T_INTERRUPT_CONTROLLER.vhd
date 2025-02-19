@@ -76,10 +76,10 @@ begin
     wait on interrupt_controller_test_state;
     case interrupt_controller_test_state is
         when sending_interrupt =>
-            assert(t_irq_to_cpu = '0') report "IRQ active during sending phase" severity error;
+            assert(t_irq_to_cpu = IRQ_UNTRIGGERED) report "IRQ active during sending phase" severity error;
         when expecting_interrupt =>
-            wait on t_irq_to_cpu until (t_irq_to_cpu = '1') for (20 * CLOCK_PERIOD);
-            assert(t_irq_to_cpu = '1') report "IRQ not active during expecting phase" severity error;
+            wait on t_irq_to_cpu until (t_irq_to_cpu = IRQ_TRIGGERED) for (20 * CLOCK_PERIOD);
+            assert(t_irq_to_cpu = IRQ_TRIGGERED) report "IRQ not active during expecting phase" severity error;
             
             case t_irq_request_vec is
                 when x"0001" =>
