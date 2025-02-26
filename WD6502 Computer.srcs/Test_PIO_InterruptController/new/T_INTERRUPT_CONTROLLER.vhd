@@ -62,23 +62,31 @@ Port map (
 
 stimuli_generator: process 
 begin
+    wait until t_irq_to_cpu = IRQ_UNTRIGGERED for 100ns;
     t_irq_request_vec <= x"0000"; -- All IRQ lines off
     interrupt_controller_test_state <= sending_interrupt;
-    wait for 5 * CLOCK_PERIOD;
     t_irq_request_vec <= x"0001"; -- Trigger IRQ0
     interrupt_controller_test_state <= expecting_interrupt;
-    wait for 5 * CLOCK_PERIOD;
+    wait until t_irq_to_cpu = IRQ_TRIGGERED;
+    wait until t_irq_to_cpu = IRQ_UNTRIGGERED;
+    t_irq_request_vec <= x"0000";
+    t_mem_active_irq_ack <= x"00";
+    interrupt_controller_test_state <= sending_interrupt;
+    t_irq_request_vec <= x"0002"; -- Trigger IRQ0
+    interrupt_controller_test_state <= expecting_interrupt;
+    wait until t_irq_to_cpu = IRQ_TRIGGERED;
+    wait until t_irq_to_cpu = IRQ_UNTRIGGERED;
+    t_irq_request_vec <= x"0000";
+    t_mem_active_irq_ack <= x"01";
     
 end process stimuli_generator;
 
-interrupt_controller_verifier: process
+interrupt_controller_verifier: process(t_irq_to_cpu)
 begin
-    wait on interrupt_controller_test_state;
     case interrupt_controller_test_state is
         when sending_interrupt =>
             assert(t_irq_to_cpu = IRQ_UNTRIGGERED) report "IRQ active during sending phase" severity error;
         when expecting_interrupt =>
-            wait on t_irq_to_cpu until (t_irq_to_cpu = IRQ_TRIGGERED) for (20 * CLOCK_PERIOD);
             assert(t_irq_to_cpu = IRQ_TRIGGERED) report "IRQ not active during expecting phase" severity error;
             
             case t_irq_request_vec is
@@ -93,7 +101,6 @@ begin
         when others =>
             report "Unexpected state" severity error;
     end case;
-    
 end process interrupt_controller_verifier;
 
 end Behavioral;

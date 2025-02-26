@@ -34,6 +34,7 @@ use work.INTERRUPT_CONTROLLER.ALL;
 entity PIO_INTERRUPT_CONTROLLER is
     generic (
         IRQ_TRIGGER_HOLD_CYCLES : natural := 20;
+        IRQ_TRIGGER_DELAY_CYCLES : natural := 5;
         IRQ_ACK_TIMEOUT_CYCLES  : natural := 50_000_000 -- Give the CPU 1/2 second to ack (assume 100mhz clock
     );
     port(
@@ -61,7 +62,7 @@ begin
                 irq_ack_timeout_timer := IRQ_ACK_TIMEOUT_CYCLES;
                 
                 irq_to_cpu <= IRQ_UNTRIGGERED;
-                if (irq_request_vec /= x"00") then
+                if (irq_request_vec /= x"0000") then
                     -- One or more lines is requested, move to sending request
                     EnqueueHighestPriorityInterrupt(mem_active_irq_signal, irq_request_vec);
                     irq_controller_state <= sending_interrupt;
@@ -69,7 +70,13 @@ begin
             when sending_interrupt =>     
                 if (irq_trigger_hold_timer > 0) then
                     mem_active_irq <= mem_active_irq_signal;
-                    irq_to_cpu <= IRQ_TRIGGERED;
+                    -- Set the active IRQ in memory first, then fire the interrupt a few cycles later
+                    if ((IRQ_TRIGGER_HOLD_CYCLES - irq_trigger_hold_timer) > IRQ_TRIGGER_DELAY_CYCLES) then
+                        irq_to_cpu <= IRQ_TRIGGERED;
+                    else
+                        irq_to_cpu <= IRQ_UNTRIGGERED;
+                    end if;
+                    
                     irq_trigger_hold_timer := irq_trigger_hold_timer - 1;
                     irq_controller_state <= sending_interrupt;
                 else
