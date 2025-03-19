@@ -32,11 +32,6 @@ use work.INTERRUPT_CONTROLLER.ALL;
 --use UNISIM.VComponents.all;
 
 entity PIO_INTERRUPT_CONTROLLER is
-    generic (
-        IRQ_TRIGGER_HOLD_CYCLES : natural := 20;
-        IRQ_TRIGGER_DELAY_CYCLES : natural := 5;
-        IRQ_ACK_TIMEOUT_CYCLES  : natural := 50_000_000 -- Give the CPU 1/2 second to ack (assume 100mhz clock
-    );
     port(
         clk : in STD_LOGIC;
         irq_to_cpu : out STD_LOGIC; -- Signal line that routes to CPUs IRQ line
@@ -48,54 +43,38 @@ end PIO_INTERRUPT_CONTROLLER;
 
 architecture Behavioral of PIO_INTERRUPT_CONTROLLER is
     signal irq_controller_state : interrupt_controller_state_t := idle;
-    signal mem_active_irq_signal : STD_LOGIC_VECTOR(7 downto 0); 
+    signal mem_active_irq_signal : STD_LOGIC_VECTOR(7 downto 0);
+    constant irq_trigger_delay : natural := 50; 
 begin
     irq_fsm : process (clk)
-    variable irq_trigger_hold_timer : natural := IRQ_TRIGGER_HOLD_CYCLES;
-    variable irq_ack_timeout_timer : natural := IRQ_ACK_TIMEOUT_CYCLES;
-    
+    variable irq_trigger_delay_timer : natural := irq_trigger_delay; -- Clock cylces to wait until we pull IRQ low
     begin
         case irq_controller_state is
             when idle =>
                 mem_active_irq <= IRQNONE;
-                irq_trigger_hold_timer := IRQ_TRIGGER_HOLD_CYCLES;
-                irq_ack_timeout_timer := IRQ_ACK_TIMEOUT_CYCLES;
-                
                 irq_to_cpu <= IRQ_UNTRIGGERED;
+                irq_trigger_delay_timer := irq_trigger_delay;
+                
                 if (irq_request_vec /= x"0000") then
                     -- One or more lines is requested, move to sending request
                     EnqueueHighestPriorityInterrupt(mem_active_irq_signal, irq_request_vec);
                     irq_controller_state <= sending_interrupt;
                 end if;
-            when sending_interrupt =>     
-                if (irq_trigger_hold_timer > 0) then
-                    mem_active_irq <= mem_active_irq_signal;
-                    -- Set the active IRQ in memory first, then fire the interrupt a few cycles later
-                    if ((IRQ_TRIGGER_HOLD_CYCLES - irq_trigger_hold_timer) > IRQ_TRIGGER_DELAY_CYCLES) then
-                        irq_to_cpu <= IRQ_TRIGGERED;
-                    else
-                        irq_to_cpu <= IRQ_UNTRIGGERED;
-                    end if;
-                    
-                    irq_trigger_hold_timer := irq_trigger_hold_timer - 1;
+            when sending_interrupt => 
+                mem_active_irq <= mem_active_irq_signal;  
+                if (irq_trigger_delay_timer > 0) then
+                    irq_trigger_delay_timer := irq_trigger_delay_timer - 1;
+                    irq_to_cpu <= IRQ_UNTRIGGERED;
                     irq_controller_state <= sending_interrupt;
                 else
-                    irq_to_cpu <= IRQ_UNTRIGGERED;
+                    irq_to_cpu <= IRQ_TRIGGERED;
                     irq_controller_state <= waiting_for_ack;
-                end if;
+                end if;  
             when waiting_for_ack =>
-                if (irq_ack_timeout_timer > 0) then
-                    irq_ack_timeout_timer := irq_ack_timeout_timer - 1;
-                else
-                    irq_controller_state <= interrupt_expired;
-                end if;
-                
+                irq_to_cpu <= IRQ_TRIGGERED;
                 if (mem_active_irq_ack = mem_active_irq_signal) then
                     irq_controller_state <= interrupt_complete;
-                end if;
-                
-            when interrupt_expired =>
-                irq_controller_state <= interrupt_complete;
+                end if;                
             when interrupt_complete =>
                 irq_controller_state <= idle;
             when others =>

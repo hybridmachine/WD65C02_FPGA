@@ -45,6 +45,9 @@ architecture Behavioral of T_INTERRUPT_CONTROLLER is
     signal t_mem_active_irq_ack : STD_LOGIC_VECTOR(7 downto 0) := x"00";
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
+    constant CPU_CYCLETIME : time := 500ns;
+    constant SIMULATED_IRQ_HANDLER_TIME : time := 20 * CPU_CYCLETIME; 
+    
     TYPE interrupt_controller_test_state_t IS (idle, sending_interrupt, expecting_interrupt, interrupt_received, sending_ack);
     
     signal interrupt_controller_test_state : interrupt_controller_test_state_t := idle; 
@@ -66,23 +69,33 @@ begin
     t_mem_active_irq_ack <= x"FF";
     wait until t_irq_to_cpu = IRQ_UNTRIGGERED for 100ns;
     t_irq_request_vec <= x"0000"; -- All IRQ lines off
+    
     interrupt_controller_test_state <= sending_interrupt;
+    wait for 20ns;
     t_irq_request_vec <= x"0001"; -- Trigger IRQ0
+    wait until t_mem_active_irq /= x"FF" for 5000ns;
+
     interrupt_controller_test_state <= expecting_interrupt;
     wait until t_irq_to_cpu = IRQ_TRIGGERED;
     interrupt_controller_test_state <= idle;
-    wait until t_irq_to_cpu = IRQ_UNTRIGGERED;
+    wait for SIMULATED_IRQ_HANDLER_TIME;
     t_irq_request_vec <= x"0000";
     t_mem_active_irq_ack <= x"00";
+    wait until t_irq_to_cpu = IRQ_UNTRIGGERED;
+
     interrupt_controller_test_state <= sending_interrupt;
     wait for 20ns;
     t_irq_request_vec <= x"0002"; -- Trigger IRQ0
+        wait until t_mem_active_irq /= x"FF" for 100ns;
+
     interrupt_controller_test_state <= expecting_interrupt;
     wait until t_irq_to_cpu = IRQ_TRIGGERED;
     interrupt_controller_test_state <= idle;
-    wait until t_irq_to_cpu = IRQ_UNTRIGGERED;
+    wait for SIMULATED_IRQ_HANDLER_TIME;
     t_irq_request_vec <= x"0000";
     t_mem_active_irq_ack <= x"01";
+    wait until t_irq_to_cpu = IRQ_UNTRIGGERED;
+    
     report "ALL PASS" severity note;
     wait;
 end process stimuli_generator;

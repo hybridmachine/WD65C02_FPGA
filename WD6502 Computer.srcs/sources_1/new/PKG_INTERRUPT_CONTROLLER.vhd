@@ -52,7 +52,7 @@ package INTERRUPT_CONTROLLER is
     constant IRQ_REQUESTED : std_logic := '1'; -- We expect drivers to raise their line to high when requesting IRQ
     constant IRQ_STANDBY : std_logic := '0'; -- Drivers pull their lines low when no IRQ requested
 
-    TYPE interrupt_controller_state_t IS (idle, sending_interrupt, waiting_for_ack, interrupt_complete, interrupt_expired);
+    TYPE interrupt_controller_state_t IS (idle, sending_interrupt, waiting_for_ack, interrupt_complete);
    
     
     -- Device driver calls this to raise the interrupt
