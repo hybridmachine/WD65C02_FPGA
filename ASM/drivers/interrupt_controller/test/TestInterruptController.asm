@@ -60,6 +60,14 @@ CODE
 ;***************************************************************************
 ;
 
+	STACK_BASE:                 equ $0100      ; Stack base address
+    ; These values align with definitions in PKG_TIMER_CONTROL.vhd
+    CTL_TIMER_RESET:            equ %00000001  ; Request timer reset
+    CTL_TIMER_RUN:              equ %00000000  ; Set timer to run
+
+	TIMER_CTL_ADDRESS			equ $0218
+	TIMER_PERIOD_MS_ADDRESS 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
+
 START:
 		sei             ; Ignore maskable interrupts
         clc             ; Clear carry
@@ -73,10 +81,28 @@ START:
 ;***************************************************************************
 ;
 
-        ; TODO
-        ; 1) Program the timer period in MS
+		; 0) Disable the timer
+		LDA #CTL_TIMER_RESET
+		STA TIMER_CTL_ADDRESS
+
+		; 1) Program the timer period in MS (500 == 0x01F4)
+		LDA #F4
+		STA TIMER_PERIOD_MS_ADDRESS
+		
+		LDA #01
+		STA TIMER_PERIOD_MS_ADDRESS+1
+		
+		LDA #00
+		STA TIMER_PERIOD_MS_ADDRESS+2
+		STA TIMER_PERIOD_MS_ADDRESS+3
+
         ; 2) Unmask interrupts
+		cli             ; Allow maskable interrupts
+
         ; 3) Start the timer
+		LDA #CTL_TIMER_RUN
+		STA TIMER_CTL_ADDRESS
+
         ; 4) In interrupt service routine, read timer value on every fired interrupt
         ; 5) Write timer value to seven segment display -- This might be a simple incremented index
         ; 6) Write ACK to IRQ controller, in interrupt handler

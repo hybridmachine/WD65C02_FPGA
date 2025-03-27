@@ -77,23 +77,35 @@ package W65C02_DEFINITIONS is
     
     constant MEM_MAPPED_IO_END          : ADDRESS_65C02_T := x"03FF";
     constant MEM_MAPPED_IO_BASE         : ADDRESS_65C02_T := x"0200";
+    
     constant PIO_LED_ADDR               : ADDRESS_65C02_T := MEM_MAPPED_IO_BASE; -- 1 byte
+    
     constant PIO_7SEG_VAL_LOW           : ADDRESS_65C02_T := x"0201"; -- 1 bytes
     constant PIO_7SEG_VAL_HIGH          : ADDRESS_65C02_T := x"0202"; -- 1 bytes
     constant PIO_7SEG_CONTROL           : ADDRESS_65C02_T := x"0203"; -- 2 byte
-    constant PIO_TIMER_CTL              : ADDRESS_65C02_T := x"0205"; -- 1 byte
-    constant PIO_TIMER_STATUS           : ADDRESS_65C02_T := x"0206"; -- 1 byte
-    constant PIO_TIMER_VAL_MS_1         : ADDRESS_65C02_T := x"0207"; -- 4 bytes
-    constant PIO_TIMER_VAL_MS_2         : ADDRESS_65C02_T := x"0208"; -- 4 bytes
-    constant PIO_TIMER_VAL_MS_3         : ADDRESS_65C02_T := x"0209"; -- 4 bytes
-    constant PIO_TIMER_VAL_MS_4         : ADDRESS_65C02_T := x"0210"; -- 4 bytes
+    
+    constant PIO_ELAPSED_TIMER_CTL      : ADDRESS_65C02_T := x"0205"; -- 1 byte
+    constant PIO_ELAPSED_TIMER_STATUS   : ADDRESS_65C02_T := x"0206"; -- 1 byte
+    constant PIO_ELAPSED_TIMER_VAL_MS   : ADDRESS_65C02_T := x"0207"; -- 4 bytes
+    constant PIO_ELAPSED_TIMER_VAL_MS_1 : ADDRESS_65C02_T := x"0208"; 
+    constant PIO_ELAPSED_TIMER_VAL_MS_2 : ADDRESS_65C02_T := x"0209"; 
+    constant PIO_ELAPSED_TIMER_VAL_MS_3 : ADDRESS_65C02_T := x"0210";
+    
     constant PIO_FIRMWARE_VERSION       : ADDRESS_65C02_T := x"0211"; -- 1 byte (streams one character at a time)
+    
     constant PIO_I2C_DATA_STRM_STATUS   : ADDRESS_65C02_T := x"0212";
     constant PIO_I2C_DATA_STRM_CTRL     : ADDRESS_65C02_T := x"0213";
     constant PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW     : ADDRESS_65C02_T := x"0214";
     constant PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH    : ADDRESS_65C02_T := x"0215";
     constant PIO_I2C_DATA_STRM_DATA         : ADDRESS_65C02_T := x"0216";
     constant PIO_I2C_DATA_STRM_I2C_ADDRESS  : ADDRESS_65C02_T := x"0217"; -- First 7 bits is address, 8th bit is ignored and used internally for read/write mode
+    
+    constant PIO_IRQ_TIMER_CTL          : ADDRESS_65C02_T := x"0218"; -- 1 byte
+    constant PIO_IRQ_TIMER_PERIOD_MS    : ADDRESS_65C02_T := x"0219";
+    constant PIO_IRQ_TIMER_PERIOD_MS_1  : ADDRESS_65C02_T := x"0220";
+    constant PIO_IRQ_TIMER_PERIOD_MS_2  : ADDRESS_65C02_T := x"0221";
+    constant PIO_IRQ_TIMER_PERIOD_MS_3  : ADDRESS_65C02_T := x"0222";
+
     constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
     constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     

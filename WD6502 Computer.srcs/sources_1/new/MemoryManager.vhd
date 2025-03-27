@@ -284,7 +284,7 @@ begin
                 elsif (BUS_ADDRESS = PIO_7SEG_VAL_HIGH) then
                     PIO_7SEG_DISPLAY_VAL(15 downto 8) <= BUS_WRITE_DATA;
                 -- Timer control and status
-                elsif (BUS_ADDRESS = PIO_TIMER_CTL) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_CTL) then
                     -- Set the timer control flags
                     PIO_ELAPSED_TIMER_CONTROL_REG_SIG <= BUS_WRITE_DATA;
                 elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_CTRL) then
@@ -300,15 +300,15 @@ begin
                 end if;
             else
                 -- Read from memory
-                if (BUS_ADDRESS = PIO_TIMER_STATUS) then
+                if (BUS_ADDRESS = PIO_ELAPSED_TIMER_STATUS) then
                      BUS_READ_DATA <= PIO_ELAPSED_TIMER_STATUS_REG_SIG;
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_1) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(7 downto 0);
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_2) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS_1) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(15 downto 8);
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_3) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS_2) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(23 downto 16);
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_4) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS_3) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
                 elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_STATUS) then
                     BUS_READ_DATA <= PIO_I2C_DATA_STREAMER_STATUS;
