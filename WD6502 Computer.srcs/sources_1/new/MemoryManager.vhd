@@ -261,9 +261,7 @@ begin
     if (rising_edge(MEMORY_CLOCK)) then
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
-        if (MemoryRegion(BUS_ADDRESS) = BOOT_VECTOR_REGION) then
-            ReadBootVector(BUS_READ_DATA, BUS_ADDRESS);
-        elsif((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
+        if((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
             ReadROM(BUS_READ_DATA, BUS_ADDRESS, rom_addra, rom_douta);
         elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
             ReadRAM(BUS_READ_DATA, BUS_ADDRESS, ram_addrb, ram_doutb);
