@@ -46,7 +46,7 @@ CODE
    
 START:
 
-    JSR TIMER_START
+    JSR SUB_TIMER_START
     LDY #$FF
 ; Give the timer some time to run
 DELAY_OUTER_LOOP:

@@ -15,7 +15,7 @@ WDC02AS -g -l -DUSING_02 ..\..\..\POST\MemTest\MemTest.asm -O MemTest.obj
 REM build the Intel HEX file then output to VHD ROM file. Note the address for -C must match expected start address
 REM in VHDL pkg_6502.vhd 
 WDCLN -CFC00 -HI TestI2CStreamer I2CStreamer.obj SevenSegmentDisplay.obj MemTest.obj -O .\TestI2CStreamer.hex
-python ..\..\..\HexToVHDLTools\ConvertHexToVHD_ROM.py --hex_file .\TestI2CStreamer.hex --vhd_template "..\..\..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd" --start_address 0xFC00 --end_address 0xFFF9 --output_vhd ROM.vhd
+python ..\..\..\HexToVHDLTools\ConvertHexToVHD_ROM.py --hex_file .\TestI2CStreamer.hex --vhd_template "..\..\..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd" --start_address 0xFC00 --end_address 0xFFFF --output_vhd ROM.vhd
 REM Deploy ROM
 REM cp .\ROM.vhd '..\..\..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd'
 REM
