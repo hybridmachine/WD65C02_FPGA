@@ -36,13 +36,14 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+
+	INCLUDE "../../seven_segment_display/SevenSegmentDisplay.inc"
 
 
 ;***************************************************************************
 ;                              Global Modules
 ;***************************************************************************
-;None
+	
 
 ;***************************************************************************
 ;                              External Modules
@@ -65,9 +66,10 @@ CODE
     CTL_TIMER_RESET:            equ %00000001  ; Request timer reset
     CTL_TIMER_RUN:              equ %00000000  ; Set timer to run
 
-	TIMER_CTL_ADDRESS			equ $0218
-	TIMER_PERIOD_MS_ADDRESS 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
+	TIMER_CTL_ADDRESS:			equ $0218
+	TIMER_PERIOD_MS_ADDRESS: 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
 
+	TIMER_CNT: 					equ $0400 ; -- Two bytes, zero'd on startup, incremented and displayed in IRQB handler
 START:
 		sei             ; Ignore maskable interrupts
         clc             ; Clear carry
@@ -81,15 +83,19 @@ START:
 ;***************************************************************************
 ;
 
+		; Initialize counter memory
+		STZ TIMER_CNT
+		STZ TIMER_CNT+1
+
 		; 0) Disable the timer
 		LDA #CTL_TIMER_RESET
 		STA TIMER_CTL_ADDRESS
 
 		; 1) Program the timer period in MS (500 == 0x01F4)
-		LDA #F4
+		LDA #$F4
 		STA TIMER_PERIOD_MS_ADDRESS
 		
-		LDA #01
+		LDA #$01
 		STA TIMER_PERIOD_MS_ADDRESS+1
 		
 		LDA #00
@@ -103,9 +109,14 @@ START:
 		LDA #CTL_TIMER_RUN
 		STA TIMER_CTL_ADDRESS
 
-        ; 4) In interrupt service routine, read timer value on every fired interrupt
-        ; 5) Write timer value to seven segment display -- This might be a simple incremented index
-        ; 6) Write ACK to IRQ controller, in interrupt handler
+WAIT_FOR_INTERRUPT:
+		WAI
+
+		; 6) Write timer value to seven segment display -- This might be a simple incremented index
+		SEVENSEG_DISPLAY_VALUE TIMER_CNT
+
+		JMP WAIT_FOR_INTERRUPT
+        
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
@@ -119,7 +130,19 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	rti
 
 IRQHandler:
-		pla
+		
+		; 4) In interrupt service routine, increment timer value on every fired interrupt
+		CLC
+		LDA TIMER_CNT
+		INA
+		STA TIMER_CNT
+		LDA TIMER_CNT+1
+		ADC #0 ; Add carry if present
+		STA TIMER_CNT+1
+
+		; Writing the timer value is handled after the wai instruction in the main loop
+
+        ; 5) Write ACK to IRQ controller, in interrupt handler
 		rti
 
 	bits:	db	1
