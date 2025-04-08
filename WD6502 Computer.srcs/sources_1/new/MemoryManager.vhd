@@ -89,6 +89,10 @@ signal PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ : STD_LOGIC_VECTOR(7 downto 0);
 signal PIO_INTERRUPT_CONTROLLER_IRQ_ACK : STD_LOGIC_VECTOR(7 downto 0);
 signal PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR : STD_LOGIC_VECTOR(15 downto 0);
 
+signal R_PIO_IRQ_TIMER_PERIOD_MS : STD_LOGIC_VECTOR(31 downto 0);
+signal R_PIO_IRQ_ACK : STD_LOGIC;
+signal R_PIO_IRQ : STD_LOGIC;
+
 COMPONENT PIO_INTERRUPT_CONTROLLER is
     PORT (
         clk : in STD_LOGIC;
@@ -172,8 +176,26 @@ COMPONENT PIO_I2C_DATA_STREAMER is
             scl                 : out STD_LOGIC);
 end COMPONENT;
 
+COMPONENT PIO_IRQ_TIMER is
+Generic (
+        CLOCK_DIVIDER : natural := 100000 -- Assuming 100MHZ FPGA clock, this gives 1ms resolution
+    );
+    Port ( I_CLK : in STD_LOGIC;
+           I_RST : in STD_LOGIC;
+           I_PIO_IRQ_TIMER_PERIOD_MS : in STD_LOGIC_VECTOR (31 downto 0);
+           I_IRQ_ACK : in STD_LOGIC;
+           O_PIO_IRQ : out STD_LOGIC);
+end COMPONENT;
+
 begin
 
+PIO_IRQ_TIMER_DEVICE : PIO_IRQ_TIMER port map (
+    I_CLK => MEMORY_CLOCK,
+    I_RST => RESET,
+    I_PIO_IRQ_TIMER_PERIOD_MS => R_PIO_IRQ_TIMER_PERIOD_MS,
+    I_IRQ_ACK => R_PIO_IRQ_ACK,
+    O_PIO_IRQ => R_PIO_IRQ
+);
 PIO_INTERRUPT_CONTROLLER_DEVICE : PIO_INTERRUPT_CONTROLLER port map (
     clk => MEMORY_CLOCK,
     irq_to_cpu => IRQ,
