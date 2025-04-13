@@ -62,6 +62,11 @@ package INTERRUPT_CONTROLLER is
                              signal irq_vector : in std_logic_vector(15 downto 0)
                             );
 
+    -- Send the ack back to the device, this is triggered when the CPU marks the interrupt request complete
+    procedure NotifyInterruptComplete(signal irq_number : in std_logic_vector(7 downto 0);
+                            signal irq_ack_vector : out std_logic_vector(15 downto 0)
+                            );
+                            
     -- Memory manager will call this when processor updates an IRQ mask
     -- When set to 1, any interrupts will be masked and the IRQ manager will 
     -- notify the driver by setting the is_masked bit on the EnqueueHighestPriorityInterrupt call
@@ -77,6 +82,50 @@ package INTERRUPT_CONTROLLER is
 end package INTERRUPT_CONTROLLER;
 
 package body INTERRUPT_CONTROLLER is
+    
+    procedure NotifyInterruptComplete(signal irq_number : in std_logic_vector(7 downto 0);
+                            signal irq_ack_vector : out std_logic_vector(15 downto 0)
+                            ) is
+    begin
+        irq_ack_vector <= x"0000"; 
+        case irq_number is 
+            when IRQ0 =>
+               irq_ack_vector(0) <= '1'; 
+            when IRQ1 =>
+               irq_ack_vector(1) <= '1'; 
+            when IRQ2 =>
+               irq_ack_vector(2) <= '1'; 
+            when IRQ3 =>
+               irq_ack_vector(3) <= '1';
+            when IRQ4 =>
+               irq_ack_vector(4) <= '1';
+            when IRQ5 =>
+               irq_ack_vector(5) <= '1';   
+            when IRQ6 =>
+               irq_ack_vector(6) <= '1';
+            when IRQ7 =>
+               irq_ack_vector(7) <= '1';
+            when IRQ8 =>
+               irq_ack_vector(8) <= '1';
+            when IRQ9 =>
+               irq_ack_vector(9) <= '1';
+            when IRQ10 =>
+               irq_ack_vector(10) <= '1';
+            when IRQ11 =>
+               irq_ack_vector(11) <= '1';
+            when IRQ12 =>
+               irq_ack_vector(12) <= '1';
+            when IRQ13 =>
+               irq_ack_vector(13) <= '1';
+            when IRQ14 =>
+               irq_ack_vector(14) <= '1';      
+            when IRQ15 =>
+               irq_ack_vector(15) <= '1';
+            when others =>
+               irq_ack_vector <= x"0000";                           
+        end case;
+    end procedure;
+    
     procedure EnqueueHighestPriorityInterrupt(signal irq_number : out std_logic_vector(7 downto 0); 
                              signal irq_vector : in std_logic_vector(15 downto 0)
                             ) is

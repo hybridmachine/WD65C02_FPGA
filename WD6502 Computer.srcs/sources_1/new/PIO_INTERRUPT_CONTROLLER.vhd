@@ -36,6 +36,7 @@ entity PIO_INTERRUPT_CONTROLLER is
         clk : in STD_LOGIC;
         irq_to_cpu : out STD_LOGIC; -- Signal line that routes to CPUs IRQ line
         irq_request_vec : in STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ, vector index == irq#. Driver should only signal its specific line
+        irq_acknowledge_vec : out STD_LOGIC_VECTOR(15 downto 0); --One line per IRQ, each device should listen for the ack on its line on this bus
         mem_active_irq : out STD_LOGIC_VECTOR(7 downto 0); -- This is set to the active IRQ being fired, CPU should read this right after IRQ received, value is valid until CPU ack
         mem_active_irq_ack : in STD_LOGIC_VECTOR(7 downto 0) -- CPU should write the value in mem_active_irq into this register to ack that IRQ handling is complete
     );
@@ -53,6 +54,7 @@ begin
             when idle =>
                 mem_active_irq <= IRQNONE;
                 irq_to_cpu <= IRQ_UNTRIGGERED;
+                irq_acknowledge_vec <= x"0000";
                 irq_trigger_delay_timer := irq_trigger_delay;
                 
                 if (irq_request_vec /= x"0000") then
@@ -73,6 +75,7 @@ begin
             when waiting_for_ack =>
                 irq_to_cpu <= IRQ_TRIGGERED;
                 if (mem_active_irq_ack = mem_active_irq_signal) then
+                    NotifyInterruptComplete(mem_active_irq_ack,irq_acknowledge_vec);
                     irq_controller_state <= interrupt_complete;
                 end if;                
             when interrupt_complete =>
