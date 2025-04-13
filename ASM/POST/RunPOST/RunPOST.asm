@@ -1,7 +1,7 @@
 ;***************************************************************************
-;  FILE_NAME: TestTimer.asm
+;  FILE_NAME: RunPOST.asm
 ;
-;	Copyright (c) 2024 Brian Tabone
+;	Copyright (c) 2025 Brian Tabone
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -21,12 +21,13 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 ;
-;  DESCRIPTION: Test driver for FPGA hosted millisecond resolution timer
+;  DESCRIPTION: <Description>
 ;
-;  
 ;
-;***************************************************************************   
+;***************************************************************************    
+
 CODE
+; Build as relocatable, specify start address in linker options, see make.bat for start address
     CHIP	65C02
     LONGI	OFF
     LONGA	OFF
@@ -34,34 +35,46 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-    INCLUDE "Timer.inc"    ; Macro definitions
+;None
+
+
+;***************************************************************************
+;                              Global Modules
+;***************************************************************************
+;None
 
 ;***************************************************************************
 ;                              External Modules
 ;***************************************************************************
+	XREF POST_MEMORY_TEST
 
-; Constants
-    TIMER_READ_VALUE:   equ $10 ; 4 byte value returned by timer, low byte at $10, high byte at $13
+;***************************************************************************
+;                              External Variables
+;***************************************************************************
+;None
 
-   
+
+;***************************************************************************
+;                               Local Constants
+;***************************************************************************
+;
+
 START:
+		sei             ; Ignore maskable interrupts
+        clc             ; Clear carry
+    	cld             ; Clear decimal mode
 
-    JSR SUB_TIMER_START
-    LDY #$FF
-; Give the timer some time to run
-DELAY_OUTER_LOOP:
-    LDX #$FF
-    ; If Y == 0 read timer
-    DEY
-    BEQ READ_TIMER
-DELAY_INNER_LOOP:
-    DEX
-    ; If X > 0 repeat X--
-    BNE DELAY_INNER_LOOP
-    JMP DELAY_OUTER_LOOP
-READ_TIMER:
-    TIMER_READ TIMER_READ_VALUE
-    BRK
+		ldx	#$ff		; Initialize the stack pointer
+		txs
+
+;***************************************************************************
+;                               Application Code
+;***************************************************************************
+;
+
+MAIN_LOOP:
+	jsr POST_MEMORY_TEST
+	jmp MAIN_LOOP ; Just for testing, run the loop forever
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
@@ -83,35 +96,16 @@ IRQHandler:
 	wraps:	dw	0
 	delay:	db	10
 
-;***************************************************************************
-;***************************************************************************
-; New for WDCMON V1.04
-;  Needed to move Shadow Vectors into proper area
-;***************************************************************************
-;***************************************************************************
-SH_vectors:	section
-Shadow_VECTORS	SECTION OFFSET $7EFA
-        ;65C02 Interrupt Vectors
-        ; Common 8 bit Vectors for all CPUs
-
-		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
-		dw	START				; $FFFC -  RESET (ALL)
-		dw	IRQHandler			; $FFFE -  IRQBRK (ALL)
-
-ends
-
 
 ;***************************************************************************
-
 vectors	SECTION OFFSET $FFFA
-        ;65C02 Interrupt Vectors
-        ; Common 8 bit Vectors for all CPUs
+		;65C02 Interrupt Vectors
+		; Common 8 bit Vectors for all CPUs
 
 		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
-		dw	START		; $FFFC -  RESET (ALL)
-		dw	IRQHandler	; $FFFE -  IRQBRK (ALL)
+		dw	START		        ; $FFFC -  RESET (ALL)
+		dw	IRQHandler      	; $FFFE -  IRQBRK (ALL)
 
     ends
-end ; SH_vectors 
 
 END ; CODE

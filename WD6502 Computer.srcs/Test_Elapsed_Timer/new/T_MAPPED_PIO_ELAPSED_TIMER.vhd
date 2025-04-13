@@ -93,11 +93,11 @@ begin
 T_TIMER_CTL_VALUE := "00000000";
 T_TIMER_CTL_VALUE(CTL_BIT_RESET) := CTL_TIMER_RESET;
 T_WRITE_FLAG <= '1';
-T_BUS_ADDRESS <= PIO_TIMER_CTL;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_CTL;
 T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
 wait for 1ms;
 T_TIMER_CTL_VALUE(CTL_BIT_RESET) := CTL_TIMER_RUN;
-T_BUS_ADDRESS <= PIO_TIMER_CTL;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_CTL;
 T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
 
 -- Let timer run for 20ms
@@ -105,30 +105,30 @@ wait for 20ms;
 
 -- Verify nothing on data lines yet
 T_WRITE_FLAG <= '0';
-T_BUS_ADDRESS <= PIO_TIMER_VAL_MS;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_VAL_MS;
 wait for 3000ns;
 assert(T_BUS_READ_DATA = x"00") report "Unexpected data on timer bus" severity error;
 
-T_BUS_ADDRESS <= std_logic_vector(to_unsigned(to_integer(unsigned(PIO_TIMER_VAL_MS))+1, T_BUS_ADDRESS'length));
+T_BUS_ADDRESS <= std_logic_vector(to_unsigned(to_integer(unsigned(PIO_ELAPSED_TIMER_VAL_MS))+1, T_BUS_ADDRESS'length));
 assert(T_BUS_READ_DATA = x"00") report "Unexpected data on timer bus" severity error;
 
-T_BUS_ADDRESS <= std_logic_vector(to_unsigned(to_integer(unsigned(PIO_TIMER_VAL_MS))+2, T_BUS_ADDRESS'length));
+T_BUS_ADDRESS <= std_logic_vector(to_unsigned(to_integer(unsigned(PIO_ELAPSED_TIMER_VAL_MS))+2, T_BUS_ADDRESS'length));
 assert(T_BUS_READ_DATA = x"00") report "Unexpected data on timer bus" severity error;
 
-T_BUS_ADDRESS <= std_logic_vector(to_unsigned(to_integer(unsigned(PIO_TIMER_VAL_MS))+3, T_BUS_ADDRESS'length));
+T_BUS_ADDRESS <= std_logic_vector(to_unsigned(to_integer(unsigned(PIO_ELAPSED_TIMER_VAL_MS))+3, T_BUS_ADDRESS'length));
 assert(T_BUS_READ_DATA = x"00") report "Unexpected data on timer bus" severity error;
 
 -- Tell timer we want to read
 T_TIMER_CTL_VALUE := "00000000";
 T_TIMER_CTL_VALUE(CTL_BIT_READREQ) := CTL_TIMER_RUN or READ_REQUESTED;
 T_WRITE_FLAG <= '1';
-T_BUS_ADDRESS <= PIO_TIMER_CTL;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_CTL;
 T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
 
 -- Verify data on data lines
 wait for 3000ns;
 T_WRITE_FLAG <= '0';
-T_BUS_ADDRESS <= PIO_TIMER_VAL_MS;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_VAL_MS;
 wait for 3000ns;
 assert(T_BUS_READ_DATA > x"00") report "Unexpected data on timer bus" severity error;
 T_TIMER_LAST_READ_VALUE(7 downto 0) := T_BUS_READ_DATA;
@@ -137,13 +137,13 @@ T_TIMER_LAST_READ_VALUE(7 downto 0) := T_BUS_READ_DATA;
 T_TIMER_CTL_VALUE := "00000000";
 T_TIMER_CTL_VALUE(CTL_BIT_READREQ) := CTL_TIMER_RUN or READ_CLEAR;
 T_WRITE_FLAG <= '1';
-T_BUS_ADDRESS <= PIO_TIMER_CTL;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_CTL;
 T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
 
 -- Verify same data on data lines
 wait for 3000ns;
 T_WRITE_FLAG <= '0';
-T_BUS_ADDRESS <= PIO_TIMER_VAL_MS;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_VAL_MS;
 wait for 3000ns;
 assert(T_BUS_READ_DATA = T_TIMER_LAST_READ_VALUE(7 downto 0)) report "Unexpected data on timer bus" severity error;
 -- Tell timer we want to read again
@@ -151,13 +151,13 @@ wait for 5ms;
 T_TIMER_CTL_VALUE := "00000000";
 T_TIMER_CTL_VALUE(CTL_BIT_READREQ) := CTL_TIMER_RUN or READ_REQUESTED;
 T_WRITE_FLAG <= '1';
-T_BUS_ADDRESS <= PIO_TIMER_CTL;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_CTL;
 T_BUS_WRITE_DATA <= T_TIMER_CTL_VALUE;
 
 -- Verify new data on data lines
 wait for 3000ns;
 T_WRITE_FLAG <= '0';
-T_BUS_ADDRESS <= PIO_TIMER_VAL_MS;
+T_BUS_ADDRESS <= PIO_ELAPSED_TIMER_VAL_MS;
 wait for 5ms;
 assert(T_BUS_READ_DATA > T_TIMER_LAST_READ_VALUE(7 downto 0)) report "Unexpected data on timer bus" severity error;
 report "Test completed successfully!";

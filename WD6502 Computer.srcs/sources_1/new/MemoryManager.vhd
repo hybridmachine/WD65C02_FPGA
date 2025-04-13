@@ -23,6 +23,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.W65C02_DEFINITIONS.ALL;
 use work.MEMORY_MANAGER.ALL;
+use work.INTERRUPT_CONTROLLER.ALL;
 
 --! \author Brian Tabone
 --! @brief Manages the memory map of the computer. 
@@ -38,7 +39,8 @@ entity MemoryManager is
            PIO_7SEG_COMMON : out std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
            PIO_7SEG_SEGMENTS : out std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
            PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
-           PIO_I2C_DATA_STREAMER_SCL : out std_logic;   
+           PIO_I2C_DATA_STREAMER_SCL : out std_logic;
+           IRQ : out std_logic;   
            RESET : in std_logic --! Reset 
            );
 end MemoryManager;
@@ -82,7 +84,24 @@ signal PIO_I2C_DATA_STREAMER_CONTROL : STD_LOGIC_VECTOR (7 downto 0);
 signal PIO_I2C_DATA_STREAMER_ADDRESS : STD_LOGIC_VECTOR (15 downto 0);
 signal PIO_I2C_DATA_STREAMER_DATA : STD_LOGIC_VECTOR (7 downto 0);
 signal PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS : STD_LOGIC_VECTOR(6 downto 0);
-            
+
+signal PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ : STD_LOGIC_VECTOR(7 downto 0);
+signal PIO_INTERRUPT_CONTROLLER_IRQ_ACK : STD_LOGIC_VECTOR(7 downto 0);
+signal PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR : STD_LOGIC_VECTOR(15 downto 0);
+
+signal R_PIO_IRQ_TIMER_PERIOD_MS : STD_LOGIC_VECTOR(31 downto 0);
+signal R_PIO_IRQ_ACK : STD_LOGIC;
+
+COMPONENT PIO_INTERRUPT_CONTROLLER is
+    PORT (
+        clk : in STD_LOGIC;
+        irq_to_cpu : out STD_LOGIC; -- Signal line that routes to CPUs IRQ line
+        irq_request_vec : in STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ, vector index == irq#. Driver should only signal its specific line
+        mem_active_irq : out STD_LOGIC_VECTOR(7 downto 0); -- This is set to the active IRQ being fired, CPU should read this right after IRQ received, value is valid until CPU ack
+        mem_active_irq_ack : in STD_LOGIC_VECTOR(7 downto 0)
+    );
+end COMPONENT;
+          
 COMPONENT RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
@@ -156,7 +175,33 @@ COMPONENT PIO_I2C_DATA_STREAMER is
             scl                 : out STD_LOGIC);
 end COMPONENT;
 
+COMPONENT PIO_IRQ_TIMER is
+Generic (
+        CLOCK_DIVIDER : natural := 100000 -- Assuming 100MHZ FPGA clock, this gives 1ms resolution
+    );
+    Port ( I_CLK : in STD_LOGIC;
+           I_RST : in STD_LOGIC;
+           I_PIO_IRQ_TIMER_PERIOD_MS : in STD_LOGIC_VECTOR (31 downto 0);
+           I_IRQ_ACK : in STD_LOGIC;
+           O_PIO_IRQ : out STD_LOGIC);
+end COMPONENT;
+
 begin
+
+PIO_IRQ_TIMER_DEVICE : PIO_IRQ_TIMER port map (
+    I_CLK => MEMORY_CLOCK,
+    I_RST => RESET,
+    I_PIO_IRQ_TIMER_PERIOD_MS => R_PIO_IRQ_TIMER_PERIOD_MS,
+    I_IRQ_ACK => R_PIO_IRQ_ACK,
+    O_PIO_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(0)
+);
+PIO_INTERRUPT_CONTROLLER_DEVICE : PIO_INTERRUPT_CONTROLLER port map (
+    clk => MEMORY_CLOCK,
+    irq_to_cpu => IRQ,
+    irq_request_vec => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR,
+    mem_active_irq => PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ,
+    mem_active_irq_ack => PIO_INTERRUPT_CONTROLLER_IRQ_ACK
+);
 
 RAM_DEVICE: RAM port map (
     addra => ram_addra,
@@ -237,9 +282,7 @@ begin
     if (rising_edge(MEMORY_CLOCK)) then
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
-        if (MemoryRegion(BUS_ADDRESS) = BOOT_VECTOR_REGION) then
-            ReadBootVector(BUS_READ_DATA, BUS_ADDRESS);
-        elsif((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
+        if((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
             ReadROM(BUS_READ_DATA, BUS_ADDRESS, rom_addra, rom_douta);
         elsif((MemoryRegion(BUS_ADDRESS) = RAM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
             ReadRAM(BUS_READ_DATA, BUS_ADDRESS, ram_addrb, ram_doutb);
@@ -260,7 +303,7 @@ begin
                 elsif (BUS_ADDRESS = PIO_7SEG_VAL_HIGH) then
                     PIO_7SEG_DISPLAY_VAL(15 downto 8) <= BUS_WRITE_DATA;
                 -- Timer control and status
-                elsif (BUS_ADDRESS = PIO_TIMER_CTL) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_CTL) then
                     -- Set the timer control flags
                     PIO_ELAPSED_TIMER_CONTROL_REG_SIG <= BUS_WRITE_DATA;
                 elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_CTRL) then
@@ -276,15 +319,15 @@ begin
                 end if;
             else
                 -- Read from memory
-                if (BUS_ADDRESS = PIO_TIMER_STATUS) then
+                if (BUS_ADDRESS = PIO_ELAPSED_TIMER_STATUS) then
                      BUS_READ_DATA <= PIO_ELAPSED_TIMER_STATUS_REG_SIG;
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_1) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(7 downto 0);
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_2) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS_1) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(15 downto 8);
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_3) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS_2) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(23 downto 16);
-                elsif (BUS_ADDRESS = PIO_TIMER_VAL_MS_4) then
+                elsif (BUS_ADDRESS = PIO_ELAPSED_TIMER_VAL_MS_3) then
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
                 elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_STATUS) then
                     BUS_READ_DATA <= PIO_I2C_DATA_STREAMER_STATUS;

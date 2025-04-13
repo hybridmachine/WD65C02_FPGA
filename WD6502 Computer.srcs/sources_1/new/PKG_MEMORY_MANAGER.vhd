@@ -30,8 +30,6 @@ package MEMORY_MANAGER is
 
     function MemoryRegion(signal address : ADDRESS_65C02_T) return MEMORY_REGION;
     
-    procedure ReadBootVector(signal data_out : out DATA_65C02_T; 
-                             signal address : in ADDRESS_65C02_T);
     procedure ReadROM(signal memory_data_out : out DATA_65C02_T; 
                       signal memory_address : in ADDRESS_65C02_T;
                       signal rom_address : out ADDRESS_65C02_T;
@@ -56,9 +54,6 @@ package body MEMORY_MANAGER is
     variable MEMORY_ADDRESS : unsigned(15 downto 0);
     begin
         MEMORY_ADDRESS := unsigned(address);
-        if (unsigned(BOOT_VEC_ADDRESS_LOW) = MEMORY_ADDRESS or unsigned(BOOT_VEC_ADDRESS_HIGH) = MEMORY_ADDRESS) then
-            return BOOT_VECTOR_REGION;
-        end if;
         
         if (unsigned(RAM_BASE) <= MEMORY_ADDRESS and unsigned(RAM_END) >= MEMORY_ADDRESS) then
             if (unsigned(MEM_MAPPED_IO_BASE) <= MEMORY_ADDRESS and unsigned(MEM_MAPPED_IO_END) >= MEMORY_ADDRESS) then
@@ -73,16 +68,6 @@ package body MEMORY_MANAGER is
         
         return OUT_OF_RANGE;
     end function;
-    
-    procedure ReadBootVector(signal data_out : out DATA_65C02_T; 
-                             signal address : in ADDRESS_65C02_T) is
-    begin
-        if (BOOT_VEC_ADDRESS_LOW = address) then
-                data_out <= BOOT_VEC(7 downto 0);
-            elsif (BOOT_VEC_ADDRESS_HIGH = address) then
-                data_out <= BOOT_VEC(15 downto 8);
-        end if;
-    end procedure;
     
     procedure ReadROM(signal memory_data_out : out DATA_65C02_T; 
                       signal memory_address : in ADDRESS_65C02_T;

@@ -20,6 +20,6 @@ REM Link for simulator
 WDCLN -CFC00 -G -SZ -T -V -HZ -J GameOfLife_BitBoard.obj Multiply.obj Divide.obj BitBoard.obj Timer.obj SevenSegmentDisplay.obj r_pentomino.obj -O GameOfLife_BitBoard.bin
 REM Link for FPGA
 WDCLN -CFC00 -HI GameOfLife_BitBoard.obj Multiply.obj Divide.obj BitBoard.obj Timer.obj SevenSegmentDisplay.obj r_pentomino.obj -O .\GameOfLife.hex
-python ..\HexToVHDLTools\ConvertHexToVHD_ROM.py --hex_file .\GameOfLife.hex --vhd_template "..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd" --start_address 0xFC00 --end_address 0xFFF9 --output_vhd ROM.vhd
+python ..\HexToVHDLTools\ConvertHexToVHD_ROM.py --hex_file .\GameOfLife.hex --vhd_template "..\..\WD6502 Computer.srcs\sources_1\new\ROM.vhd" --start_address 0xFC00 --end_address 0xFFFF --output_vhd ROM.vhd
 
 REM WDCDB.exe

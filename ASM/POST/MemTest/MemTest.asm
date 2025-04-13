@@ -41,12 +41,11 @@ CODE
 ;***************************************************************************
 ;                              Global Modules
 ;***************************************************************************
-;None
+	GLOBAL POST_MEMORY_TEST
 
 ;***************************************************************************
 ;                              External Modules
 ;***************************************************************************
-;None
 ; Driver functions
     XREF SUB_SEVENSEG_DISPLAY_VALUE
     XREF SUB_SEVENSEG_DISABLE
@@ -62,25 +61,21 @@ CODE
 ;***************************************************************************
 ;
 	ADDRESS_PTR:    		equ $02
+	ADDRESS_LOW:			equ ADDRESS_PTR
+	ADDRESS_HIGH:			equ ADDRESS_PTR+1
+	MEM_TO_TEST_START:		equ ADDRESS_HIGH+1
 	MEM_MAPPED_IO_END: 		equ $03FF
     MEM_MAPPED_IO_BASE: 	equ $0200
 	RAM_END:				equ $FBFF
 	LED_IO_ADDR:	    	equ	$0200
 
-START:
-		sei             ; Ignore maskable interrupts
-        clc             ; Clear carry
-    	cld             ; Clear decimal mode
-
-		ldx	#$ff		; Initialize the stack pointer
-		txs
 
 ;***************************************************************************
-;                               Application Code
+;                               Library Code
 ;***************************************************************************
 ;
 
-		
+POST_MEMORY_TEST:
 		; Load a test pattern on 00 and 01, make sure nothing changes this pattern, if it does,
 		; the FPGA memory manager is accidentally writing to the 0 address when it wasn't requested
 		lda #$ED
@@ -88,18 +83,18 @@ START:
 		lda #$FE
 		sta $01 
 
-		; Load starting address
-		lda #$04
-		sta ADDRESS_PTR
+		; Load starting address (first byte after our address pointer bytes)
+		lda #MEM_TO_TEST_START
+		sta ADDRESS_LOW
 		lda #$00
-		sta ADDRESS_PTR+1
+		sta ADDRESS_HIGH
 
 
 		ldx #$00
-		ldy #$00
-		sty LED_IO_ADDR
 
 WRITE_LOOP:
+		lda ADDRESS_HIGH
+		sta LED_IO_ADDR ; Display the high byte of the address on the LEDs
 		inx
 		txa
 		sta (ADDRESS_PTR)
@@ -110,70 +105,53 @@ WRITE_LOOP:
 INCREMENT_ADDRESS:	
 		; Increment the address
 		clc
-		lda ADDRESS_PTR
+		lda ADDRESS_LOW
 		adc #$01
-		sta ADDRESS_PTR
-		lda ADDRESS_PTR+1
+		sta ADDRESS_LOW
+		lda ADDRESS_HIGH
 		adc #$00 ; Add in any carry flag
-		sta ADDRESS_PTR+1
+		sta ADDRESS_HIGH
 
 SKIP_STACK:
-		lda ADDRESS_PTR+1
+		lda ADDRESS_HIGH
 		cmp #$01
 		bne SKIP_MEMMAPPEDIO_LOW
 		jmp INCREMENT_ADDRESS ; If high byte is 01, we are in the stack zone, keep incrementing
 
 SKIP_MEMMAPPEDIO_LOW:
-		lda ADDRESS_PTR+1
+		lda ADDRESS_HIGH
 		cmp #$02
 		bne SKIP_MEMMAPPEDIO_HIGH
 		jmp INCREMENT_ADDRESS ; If high byte is 02, we are in low end of mem mapped IO
 
 SKIP_MEMMAPPEDIO_HIGH:
-		lda ADDRESS_PTR+1
+		lda ADDRESS_HIGH
 		cmp #$03
 		bne IF_AT_END_OF_RAM
 		jmp INCREMENT_ADDRESS ; If high byte is 03, we are in high end of mem mapped IO
 
 IF_AT_END_OF_RAM:
-		lda ADDRESS_PTR+1
+		lda ADDRESS_HIGH
 		cmp #(RAM_END>>8)
  		beq IF_AT_END_OF_RAM_2
 		jmp WRITE_LOOP ; Not at end of RAM
 
 IF_AT_END_OF_RAM_2:
 		; High byte matches, check low byte
-		lda ADDRESS_PTR
+		lda ADDRESS_LOW
 		cmp #RAM_END ; Gets low byte
-		beq RESET_ADDRESS_PTR
+		beq RETURN_TO_CALLER
 		jmp WRITE_LOOP ; Not at end of RAM
 
-RESET_ADDRESS_PTR:
-		; Write last byte
-		txa
-		sta (ADDRESS_PTR)
-		cpa (ADDRESS_PTR)
-		bne ERROR_FAIL
-
-		; Make sure page zero remains untouched
-		jsr SUB_TEST_PAGE_ZERO
-
-		iny
-		sty LED_IO_ADDR
-
-		; Load starting address
-		lda #$04
-		sta ADDRESS_PTR
-		lda #$00
-		sta ADDRESS_PTR+1
-		jmp WRITE_LOOP
+RETURN_TO_CALLER:
+		rts
 
 ERROR_FAIL:
 		; Display the address
 		; Load hi then low on to stack, call display function
-		lda ADDRESS_PTR+1
+		lda ADDRESS_HIGH
 		pha
-		lda ADDRESS_PTR
+		lda ADDRESS_LOW
 		pha
 		jsr SUB_SEVENSEG_DISPLAY_VALUE
 		; Cleanup stack
@@ -212,9 +190,9 @@ RETURN_DELAY:
 SUB_TEST_PAGE_ZERO:
 		; Expectation is caller will set ADDRESS_PTR if we return successfully
 		lda #$00
-		sta ADDRESS_PTR
+		sta ADDRESS_LOW
 		lda #$00
-		sta ADDRESS_PTR+1
+		sta ADDRESS_HIGH
 
 		lda #$ED
 		cmp (ADDRESS_PTR)
@@ -222,43 +200,12 @@ SUB_TEST_PAGE_ZERO:
 		
 		clc
 		lda #$01
-		sta ADDRESS_PTR
+		sta ADDRESS_LOW
 
 		lda #$FE
 		cmp (ADDRESS_PTR) 
 		bne ERROR_FAIL
 
 		rts
-;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
-unexpectedInt:		; $FFE0 - IRQRVD2(134)
-	php
-	pha
-	lda #$FF
-	
-	;clear Irq
-	pla
-	plp
-	rti
-
-IRQHandler:
-		pla
-		rti
-
-	bits:	db	1
-	cnt:	db	0
-	wraps:	dw	0
-	delay:	db	10
-
-
-;***************************************************************************
-vectors	SECTION OFFSET $FFFA
-					;65C02 Interrupt Vectors
-					; Common 8 bit Vectors for all CPUs
-
-		dw	unexpectedInt		; $FFFA -  NMIRQ (ALL)
-		dw	START		        ; $FFFC -  RESET (ALL)
-		dw	IRQHandler      	; $FFFE -  IRQBRK (ALL)
-
-    ends
 
 END ; CODE
