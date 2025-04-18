@@ -22,6 +22,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.TIMER_CONTROL.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -34,6 +35,7 @@ entity PIO_IRQ_TIMER is
     );
     Port ( I_CLK : in STD_LOGIC;
            I_RST : in STD_LOGIC;
+           I_PIO_IRQ_TIMER_CTL : in STD_LOGIC_VECTOR(7 downto 0);
            I_PIO_IRQ_TIMER_PERIOD_MS : in STD_LOGIC_VECTOR (31 downto 0);
            I_IRQ_ACK : in STD_LOGIC;
            O_PIO_IRQ : out STD_LOGIC);
@@ -44,6 +46,8 @@ architecture Behavioral of PIO_IRQ_TIMER is
 TYPE timer_state_t IS (reset, running, sending_interrupt, waiting_for_ack);
 signal R_PIO_IRQ_TIMER_PERIOD_MS : natural := 10;
 signal R_TIMER_STATE : timer_state_t := reset;
+signal R_PIO_IRQ_TIMER_CTL : STD_LOGIC_VECTOR(7 downto 0) := IRQ_TIMER_CTL_RST;
+
 begin
     
     timer_fsm : process (I_CLK)
@@ -54,14 +58,20 @@ begin
             R_PIO_IRQ_TIMER_PERIOD_MS <= to_integer(unsigned(I_PIO_IRQ_TIMER_PERIOD_MS));
             R_TIMER_STATE <= reset;
             O_PIO_IRQ <= '0';
+            R_PIO_IRQ_TIMER_CTL <= I_PIO_IRQ_TIMER_CTL;
         else
             if (I_CLK'event and I_CLK = '1') then
                 case R_TIMER_STATE is
                     when reset =>
-                        R_TIMER_STATE <= running;
                         O_PIO_IRQ <= '0';
                         v_clock_ticks := CLOCK_DIVIDER;
                         v_milliseconds := 0;
+                        
+                        if (R_PIO_IRQ_TIMER_CTL = IRQ_TIMER_CTL_RUN) then
+                            R_TIMER_STATE <= running;   
+                        else
+                            R_TIMER_STATE <= reset;
+                        end if;
                     when running =>
                         R_TIMER_STATE <= running;
                         O_PIO_IRQ <= '0';
