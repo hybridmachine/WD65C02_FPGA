@@ -50,7 +50,7 @@ signal R_PIO_IRQ_TIMER_CTL : STD_LOGIC_VECTOR(7 downto 0) := IRQ_TIMER_CTL_RST;
 
 begin
     
-    timer_fsm : process (I_CLK)
+    timer_fsm : process (I_CLK,I_RST)
     variable v_clock_ticks : natural := CLOCK_DIVIDER;
     variable v_milliseconds : natural := 0;
     begin
@@ -73,7 +73,6 @@ begin
                             R_TIMER_STATE <= reset;
                         end if;
                     when running =>
-                        R_TIMER_STATE <= running;
                         O_PIO_IRQ <= '0';
                         if (v_clock_ticks = 0) then
                             v_clock_ticks := CLOCK_DIVIDER;
