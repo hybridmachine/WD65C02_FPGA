@@ -106,6 +106,10 @@ package W65C02_DEFINITIONS is
     constant PIO_IRQ_TIMER_PERIOD_MS_2  : ADDRESS_65C02_T := x"0221";
     constant PIO_IRQ_TIMER_PERIOD_MS_3  : ADDRESS_65C02_T := x"0222";
 
+    -- Which IRQ the controller just signaled for
+    constant PIO_IRQ_CONTROLLER_IRQNUM  : ADDRESS_65C02_T := x"0223";
+    constant PIO_IRQ_CONTROLLER_IRQACK  : ADDRESS_65C02_T := x"0224";
+    
     constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
     constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     

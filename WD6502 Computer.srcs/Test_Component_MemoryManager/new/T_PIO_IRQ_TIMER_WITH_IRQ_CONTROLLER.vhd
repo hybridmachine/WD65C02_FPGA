@@ -48,10 +48,12 @@ architecture Behavioral of T_PIO_IRQ_TIMER_WITH_IRQ_CONTROLLER is
     constant address_hold_time : time := tAH * 1 ns;
     constant MODE_WRITE : std_logic := '1';
     constant MODE_READ : std_logic := not MODE_WRITE;
+    constant IRQ_UNTRIGGERED : std_logic := '1';
+    constant IRQ_TRIGGERED : std_logic := not IRQ_UNTRIGGERED;
     
-    TYPE pio_irq_timer_state IS (idle, expecting_interrupt, handling_interrupt);
+    TYPE pio_irq_timer_state IS (idle, expecting_interrupt, request_irqnum, read_irqnum_wait_for_mem, read_irqnum, acknowledge_irq, wait_for_irq_clear);
     signal TEST_NEXT_STATE : pio_irq_timer_state := idle;
-    signal IRQ_STATE : std_logic := '1';
+    signal IRQ_STATE : std_logic := IRQ_UNTRIGGERED;
     
 begin
 
@@ -73,32 +75,53 @@ dut: entity work.MemoryManager
         RESET => T_RESET );
       
       
-
-manage_timer: process(T_MEMORY_CLOCK, T_IRQ)
-    
+watch_irq: process(T_IRQ)
 begin
     if (falling_edge(T_IRQ)) then
-        IRQ_STATE <= '0';
+        IRQ_STATE <= IRQ_TRIGGERED;
     end if;
     
+    if (rising_edge(T_IRQ)) then
+        IRQ_STATE <= IRQ_UNTRIGGERED;
+    end if;
+end process;
+
+manage_timer: process(T_MEMORY_CLOCK, IRQ_STATE)   
+begin    
     if (rising_edge(T_MEMORY_CLOCK)) then
         case TEST_NEXT_STATE is
             when idle =>    
-                IRQ_STATE <= '1';
                 T_WRITE_FLAG <= MODE_WRITE;
                 T_BUS_ADDRESS <= PIO_IRQ_TIMER_CTL;
                 T_BUS_WRITE_DATA <= IRQ_TIMER_CTL_RUN;
                 TEST_NEXT_STATE <= expecting_interrupt;
             when expecting_interrupt =>
                 TEST_NEXT_STATE <= expecting_interrupt;
-                if (IRQ_STATE = '0') then
-                    TEST_NEXT_STATE <= handling_interrupt;
+                if (IRQ_STATE = IRQ_TRIGGERED) then
+                    TEST_NEXT_STATE <= request_irqnum;
                 end if;
-            when handling_interrupt =>
+            when request_irqnum =>
                 T_WRITE_FLAG <= MODE_READ;
+                T_BUS_ADDRESS <= PIO_IRQ_CONTROLLER_IRQNUM;
+                TEST_NEXT_STATE <= read_irqnum_wait_for_mem;
                 -- TODO read which IRQ is active, should be 0 for timer
                 -- TODO send ack
-            when others =>
+            when read_irqnum_wait_for_mem =>
+                TEST_NEXT_STATE <= read_irqnum;
+            when read_irqnum =>
+                assert (T_BUS_READ_DATA = x"00") report "IRQ identity expected to be 0" severity failure;
+                TEST_NEXT_STATE <= acknowledge_irq;
+            when acknowledge_irq =>
+                T_WRITE_FLAG <= MODE_WRITE;
+                T_BUS_ADDRESS <= PIO_IRQ_CONTROLLER_IRQACK;
+                T_BUS_WRITE_DATA <= x"00";
+                TEST_NEXT_STATE <= wait_for_irq_clear;
+            when wait_for_irq_clear =>
+                TEST_NEXT_STATE <= wait_for_irq_clear;
+                if (IRQ_STATE = IRQ_UNTRIGGERED) then
+                    TEST_NEXT_STATE <= idle;
+                end if;
+            when others => 
                 TEST_NEXT_STATE <= idle;
         end case;        
     end if;

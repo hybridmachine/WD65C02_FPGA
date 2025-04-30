@@ -349,6 +349,8 @@ begin
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
                 elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_STATUS) then
                     BUS_READ_DATA <= PIO_I2C_DATA_STREAMER_STATUS;
+                elsif (BUS_ADDRESS = PIO_IRQ_CONTROLLER_IRQNUM) then
+                    BUS_READ_DATA <= PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ;
                 end if;
             end if;
         else
