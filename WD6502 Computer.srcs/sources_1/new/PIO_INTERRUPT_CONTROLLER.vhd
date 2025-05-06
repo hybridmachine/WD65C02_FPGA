@@ -57,7 +57,7 @@ begin
                 irq_acknowledge_vec <= x"0000";
                 irq_trigger_delay_timer := irq_trigger_delay;
                 
-                if (irq_request_vec /= x"0000") then
+                if ((irq_request_vec xor x"FFFF") /= x"FFFF") then
                     -- One or more lines is requested, move to sending request
                     EnqueueHighestPriorityInterrupt(mem_active_irq_signal, irq_request_vec);
                     irq_controller_state <= sending_interrupt;
