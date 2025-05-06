@@ -51,7 +51,7 @@ architecture Behavioral of T_PIO_IRQ_TIMER_WITH_IRQ_CONTROLLER is
     constant IRQ_UNTRIGGERED : std_logic := '1';
     constant IRQ_TRIGGERED : std_logic := not IRQ_UNTRIGGERED;
     
-    TYPE pio_irq_timer_state IS (idle, expecting_interrupt, request_irqnum, read_irqnum_wait_for_mem, read_irqnum, acknowledge_irq, wait_for_irq_clear);
+    TYPE pio_irq_timer_state IS (idle, write_timeout_ms_0, write_timeout_ms_1, write_timeout_ms_2, write_timeout_ms_3, start_timer, expecting_interrupt, request_irqnum, read_irqnum_wait_for_mem, read_irqnum, acknowledge_irq, wait_for_irq_clear);
     signal TEST_NEXT_STATE : pio_irq_timer_state := idle;
     signal IRQ_STATE : std_logic := IRQ_UNTRIGGERED;
     
@@ -92,10 +92,30 @@ begin
         case TEST_NEXT_STATE is
             when idle =>    
                 T_WRITE_FLAG <= MODE_WRITE;
+                TEST_NEXT_STATE <= write_timeout_ms_0;
+            when write_timeout_ms_0 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS;
+                T_BUS_WRITE_DATA <= x"00";            
+                TEST_NEXT_STATE <= write_timeout_ms_1;
+            when write_timeout_ms_1 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_1;
+                T_BUS_WRITE_DATA <= x"00";            
+                TEST_NEXT_STATE <= write_timeout_ms_2;
+            when write_timeout_ms_2 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_2;
+                T_BUS_WRITE_DATA <= x"00";            
+                TEST_NEXT_STATE <= write_timeout_ms_3;
+            when write_timeout_ms_3 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_3;
+                T_BUS_WRITE_DATA <= x"0A"; -- 10ms timer cycle            
+                TEST_NEXT_STATE <= start_timer;
+            when start_timer =>
+                T_WRITE_FLAG <= MODE_WRITE;
                 T_BUS_ADDRESS <= PIO_IRQ_TIMER_CTL;
                 T_BUS_WRITE_DATA <= IRQ_TIMER_CTL_RUN;
                 TEST_NEXT_STATE <= expecting_interrupt;
             when expecting_interrupt =>
+                T_WRITE_FLAG <= MODE_READ;
                 TEST_NEXT_STATE <= expecting_interrupt;
                 if (IRQ_STATE = IRQ_TRIGGERED) then
                     TEST_NEXT_STATE <= request_irqnum;
