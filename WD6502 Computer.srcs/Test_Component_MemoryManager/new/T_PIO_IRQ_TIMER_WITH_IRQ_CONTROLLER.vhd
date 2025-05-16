@@ -95,7 +95,7 @@ begin
                 TEST_NEXT_STATE <= write_timeout_ms_0;
             when write_timeout_ms_0 =>
                 T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS;
-                T_BUS_WRITE_DATA <= x"00";            
+                T_BUS_WRITE_DATA <= x"0A";            
                 TEST_NEXT_STATE <= write_timeout_ms_1;
             when write_timeout_ms_1 =>
                 T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_1;
@@ -107,7 +107,7 @@ begin
                 TEST_NEXT_STATE <= write_timeout_ms_3;
             when write_timeout_ms_3 =>
                 T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_3;
-                T_BUS_WRITE_DATA <= x"0A"; -- 10ms timer cycle            
+                T_BUS_WRITE_DATA <= x"00"; -- 10ms timer cycle            
                 TEST_NEXT_STATE <= start_timer;
             when start_timer =>
                 T_WRITE_FLAG <= MODE_WRITE;

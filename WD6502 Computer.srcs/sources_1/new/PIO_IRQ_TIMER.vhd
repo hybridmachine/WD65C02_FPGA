@@ -59,8 +59,8 @@ begin
             R_TIMER_STATE <= reset;
             O_PIO_IRQ <= '0';
             R_PIO_IRQ_TIMER_CTL <= I_PIO_IRQ_TIMER_CTL;
-        else
-            if (I_CLK'event and I_CLK = '1') then
+        else 
+                if (rising_edge(I_CLK)) then
                 case R_TIMER_STATE is
                     when reset =>
                         O_PIO_IRQ <= '0';

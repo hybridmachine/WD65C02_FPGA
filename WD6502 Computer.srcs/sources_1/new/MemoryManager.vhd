@@ -96,7 +96,8 @@ signal R_PIO_IRQ_TIMER_CTL : STD_LOGIC_VECTOR(7 downto 0);
 
 COMPONENT PIO_INTERRUPT_CONTROLLER is
     PORT (
-        clk : in STD_LOGIC;
+        i_clk : in STD_LOGIC;
+        i_rst : in STD_LOGIC;
         irq_to_cpu : out STD_LOGIC; -- Signal line that routes to CPUs IRQ line
         irq_request_vec : in STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ, vector index == irq#. Driver should only signal its specific line
         irq_acknowledge_vec : out STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ being acknowledged
@@ -201,7 +202,8 @@ PIO_IRQ_TIMER_DEVICE : PIO_IRQ_TIMER port map (
     O_PIO_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(0)
 );
 PIO_INTERRUPT_CONTROLLER_DEVICE : PIO_INTERRUPT_CONTROLLER port map (
-    clk => MEMORY_CLOCK,
+    i_clk => MEMORY_CLOCK,
+    i_rst => R_PIO_IRQ_RST,
     irq_to_cpu => IRQ,
     irq_request_vec => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR,
     irq_acknowledge_vec => PIO_INTERRUPT_CONTROLLER_ACK_VECTOR,
