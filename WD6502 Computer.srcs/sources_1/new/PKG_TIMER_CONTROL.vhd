@@ -53,4 +53,8 @@ package TIMER_CONTROL is
     constant READ_REQUESTED : std_logic := '1';
     constant READ_READY     : std_logic := '1';
     constant READ_CLEAR     : std_logic := '0';
+
+    constant IRQ_TIMER_CTL_RUN  : std_logic_vector := x"FF";
+    constant IRQ_TIMER_CTL_RST  : std_logic_vector := x"00";
+    
 end package TIMER_CONTROL;

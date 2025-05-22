@@ -87,16 +87,20 @@ signal PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS : STD_LOGIC_VECTOR(6 downto 0);
 
 signal PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ : STD_LOGIC_VECTOR(7 downto 0);
 signal PIO_INTERRUPT_CONTROLLER_IRQ_ACK : STD_LOGIC_VECTOR(7 downto 0);
-signal PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR : STD_LOGIC_VECTOR(15 downto 0);
+signal PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR : STD_LOGIC_VECTOR(15 downto 0) := x"0000";
+signal PIO_INTERRUPT_CONTROLLER_ACK_VECTOR : STD_LOGIC_VECTOR(15 downto 0);
 
 signal R_PIO_IRQ_TIMER_PERIOD_MS : STD_LOGIC_VECTOR(31 downto 0);
-signal R_PIO_IRQ_ACK : STD_LOGIC;
+signal R_PIO_IRQ_RST : STD_LOGIC;
+signal R_PIO_IRQ_TIMER_CTL : STD_LOGIC_VECTOR(7 downto 0);
 
 COMPONENT PIO_INTERRUPT_CONTROLLER is
     PORT (
-        clk : in STD_LOGIC;
+        i_clk : in STD_LOGIC;
+        i_rst : in STD_LOGIC;
         irq_to_cpu : out STD_LOGIC; -- Signal line that routes to CPUs IRQ line
         irq_request_vec : in STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ, vector index == irq#. Driver should only signal its specific line
+        irq_acknowledge_vec : out STD_LOGIC_VECTOR(15 downto 0); -- One line per IRQ being acknowledged
         mem_active_irq : out STD_LOGIC_VECTOR(7 downto 0); -- This is set to the active IRQ being fired, CPU should read this right after IRQ received, value is valid until CPU ack
         mem_active_irq_ack : in STD_LOGIC_VECTOR(7 downto 0)
     );
@@ -181,6 +185,7 @@ Generic (
     );
     Port ( I_CLK : in STD_LOGIC;
            I_RST : in STD_LOGIC;
+           I_PIO_IRQ_TIMER_CTL : in STD_LOGIC_VECTOR (7 downto 0);
            I_PIO_IRQ_TIMER_PERIOD_MS : in STD_LOGIC_VECTOR (31 downto 0);
            I_IRQ_ACK : in STD_LOGIC;
            O_PIO_IRQ : out STD_LOGIC);
@@ -190,15 +195,18 @@ begin
 
 PIO_IRQ_TIMER_DEVICE : PIO_IRQ_TIMER port map (
     I_CLK => MEMORY_CLOCK,
-    I_RST => RESET,
+    I_RST => R_PIO_IRQ_RST,
+    I_PIO_IRQ_TIMER_CTL => R_PIO_IRQ_TIMER_CTL,
     I_PIO_IRQ_TIMER_PERIOD_MS => R_PIO_IRQ_TIMER_PERIOD_MS,
-    I_IRQ_ACK => R_PIO_IRQ_ACK,
+    I_IRQ_ACK => PIO_INTERRUPT_CONTROLLER_ACK_VECTOR(0),
     O_PIO_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(0)
 );
 PIO_INTERRUPT_CONTROLLER_DEVICE : PIO_INTERRUPT_CONTROLLER port map (
-    clk => MEMORY_CLOCK,
+    i_clk => MEMORY_CLOCK,
+    i_rst => R_PIO_IRQ_RST,
     irq_to_cpu => IRQ,
     irq_request_vec => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR,
+    irq_acknowledge_vec => PIO_INTERRUPT_CONTROLLER_ACK_VECTOR,
     mem_active_irq => PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ,
     mem_active_irq_ack => PIO_INTERRUPT_CONTROLLER_IRQ_ACK
 );
@@ -280,6 +288,7 @@ variable MEMORY_ADDRESS : unsigned(15 downto 0);
 variable SHIFTED_ADDRESS : unsigned(15 downto 0);
 begin    
     if (rising_edge(MEMORY_CLOCK)) then
+        R_PIO_IRQ_RST <= '1'; -- Hold this hight unless the control location is written
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
         if((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
@@ -290,9 +299,9 @@ begin
             WriteRAM(BUS_WRITE_DATA, BUS_ADDRESS, ram_addra, ram_dina);
         elsif((MemoryRegion(BUS_ADDRESS) = MEMORY_MAPPED_IO_REGION)) then
             if (DATA_DIRECTION = WRITE_TO_MEMORY) then
-                if (PIO_LED_ADDR = BUS_ADDRESS) then
+                if (BUS_ADDRESS = PIO_LED_ADDR) then
                     pio_led_data <= BUS_WRITE_DATA;
-                elsif (PIO_7SEG_CONTROL = BUS_ADDRESS) then
+                elsif (BUS_ADDRESS = PIO_7SEG_CONTROL) then
                     if (BUS_WRITE_DATA /= x"00") then -- Any non zero value will activate the displays
                         PIO_7SEG_ACTIVE <= '1';
                     else
@@ -316,6 +325,20 @@ begin
                     PIO_I2C_DATA_STREAMER_DATA <= BUS_WRITE_DATA;
                 elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_I2C_ADDRESS) then
                     PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS <= BUS_WRITE_DATA(7 downto 1); 
+                elsif (BUS_ADDRESS = PIO_IRQ_TIMER_PERIOD_MS) then
+                    R_PIO_IRQ_TIMER_PERIOD_MS(7 downto 0) <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_IRQ_TIMER_PERIOD_MS_1) then
+                    R_PIO_IRQ_TIMER_PERIOD_MS(15 downto 8) <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_IRQ_TIMER_PERIOD_MS_2) then
+                    R_PIO_IRQ_TIMER_PERIOD_MS(23 downto 16) <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_IRQ_TIMER_PERIOD_MS_3) then
+                    R_PIO_IRQ_TIMER_PERIOD_MS(31 downto 24) <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_IRQ_TIMER_CTL) then
+                    R_PIO_IRQ_RST <= '0';
+                    R_PIO_IRQ_TIMER_CTL <= BUS_WRITE_DATA;
+                    PIO_INTERRUPT_CONTROLLER_IRQ_ACK <= x"FF";
+                elsif (BUS_ADDRESS = PIO_IRQ_CONTROLLER_IRQACK) then
+                    PIO_INTERRUPT_CONTROLLER_IRQ_ACK <= BUS_WRITE_DATA;
                 end if;
             else
                 -- Read from memory
@@ -331,6 +354,8 @@ begin
                     BUS_READ_DATA <= PIO_ELAPSED_TIMER_TICKS_MS_SIG(31 downto 24);
                 elsif (BUS_ADDRESS = PIO_I2C_DATA_STRM_STATUS) then
                     BUS_READ_DATA <= PIO_I2C_DATA_STREAMER_STATUS;
+                elsif (BUS_ADDRESS = PIO_IRQ_CONTROLLER_IRQNUM) then
+                    BUS_READ_DATA <= PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ;
                 end if;
             end if;
         else
