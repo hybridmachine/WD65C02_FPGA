@@ -336,6 +336,9 @@ begin
                 elsif (BUS_ADDRESS = PIO_IRQ_TIMER_CTL) then
                     R_PIO_IRQ_RST <= '0';
                     R_PIO_IRQ_TIMER_CTL <= BUS_WRITE_DATA;
+                    PIO_INTERRUPT_CONTROLLER_IRQ_ACK <= x"FF";
+                elsif (BUS_ADDRESS = PIO_IRQ_CONTROLLER_IRQACK) then
+                    PIO_INTERRUPT_CONTROLLER_IRQ_ACK <= BUS_WRITE_DATA;
                 end if;
             else
                 -- Read from memory
