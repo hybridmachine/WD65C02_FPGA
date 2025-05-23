@@ -68,7 +68,8 @@ CODE
 
 	TIMER_CTL_ADDRESS:			equ $0218
 	TIMER_PERIOD_MS_ADDRESS: 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
-
+	PIO_IRQ_CONTROLLER_IRQNUM:  equ $0223
+    PIO_IRQ_CONTROLLER_IRQACK:  equ $0224
 	TIMER_CNT: 					equ $0400 ; -- Two bytes, zero'd on startup, incremented and displayed in IRQB handler
 START:
 		sei             ; Ignore maskable interrupts
@@ -109,13 +110,12 @@ START:
 		LDA #CTL_TIMER_RUN
 		STA TIMER_CTL_ADDRESS
 
-WAIT_FOR_INTERRUPT:
-		WAI
+DISPLAY_COUNTER:
 
 		; 6) Write timer value to seven segment display -- This might be a simple incremented index
 		SEVENSEG_DISPLAY_VALUE TIMER_CNT
 
-		JMP WAIT_FOR_INTERRUPT
+		JMP DISPLAY_COUNTER
         
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
@@ -132,6 +132,9 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 IRQHandler:
 		
 		; 4) In interrupt service routine, increment timer value on every fired interrupt
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		BNE SEND_IRQ_ACK
+		; If we get here, this is IRQ 0, our timer
 		CLC
 		LDA TIMER_CNT
 		INA
@@ -142,8 +145,12 @@ IRQHandler:
 
 		; Writing the timer value is handled after the wai instruction in the main loop
 
+SEND_IRQ_ACK:
         ; 5) Write ACK to IRQ controller, in interrupt handler
-		rti
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		STA PIO_IRQ_CONTROLLER_IRQACK
+
+		RTI
 
 	bits:	db	1
 	cnt:	db	0
