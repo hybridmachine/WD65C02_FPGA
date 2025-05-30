@@ -84,6 +84,7 @@ COMPONENT MemoryManager is
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
            PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
+           IRQ : out STD_LOGIC;
            RESET : in STD_LOGIC
            );
 end COMPONENT;
@@ -126,7 +127,6 @@ signal READ_WRITE_MODE :  STD_LOGIC := READ_MODE;
 begin -- Begin architecture definition
 
 --SOB <= '1'; -- Not really used, spec says to keep it high
-IRQB <= '1'; -- Not using interrupts just yet, will connect this later
 --BE <= '1'; -- For now bus is always on
 NMIB <= '1'; -- Not currently using, keep high for now.
 
@@ -141,6 +141,7 @@ MemoryManagement : MemoryManager port map (
     PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
     PIO_I2C_DATA_STREAMER_SCL => PIO_I2C_DATA_STREAMER_SCL,
     PIO_I2C_DATA_STREAMER_SDA => PIO_I2C_DATA_STREAMER_SDA,
+    IRQ => IRQB,
     RESET => RESET
 );
 

@@ -143,7 +143,7 @@ IRQHandler:
 		ADC #0 ; Add carry if present
 		STA TIMER_CNT+1
 
-		; Writing the timer value is handled after the wai instruction in the main loop
+		; Writing the timer value is handled in the main loop
 
 SEND_IRQ_ACK:
         ; 5) Write ACK to IRQ controller, in interrupt handler
