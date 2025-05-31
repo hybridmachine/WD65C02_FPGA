@@ -75,6 +75,14 @@ dut: entity work.MemoryManager
         RESET => T_RESET );
       
       
+send_reset: process
+begin
+    T_RESET <= '0'; -- Reset
+    wait for 5ms;
+    T_RESET <= '1'; -- Running
+    wait;
+end process;
+
 watch_irq: process(T_IRQ)
 begin
     if (falling_edge(T_IRQ)) then
@@ -139,7 +147,7 @@ begin
             when wait_for_irq_clear =>
                 TEST_NEXT_STATE <= wait_for_irq_clear;
                 if (IRQ_STATE = IRQ_UNTRIGGERED) then
-                    TEST_NEXT_STATE <= idle;
+                    TEST_NEXT_STATE <= expecting_interrupt;
                 end if;
             when others => 
                 TEST_NEXT_STATE <= idle;

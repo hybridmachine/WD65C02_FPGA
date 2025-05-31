@@ -63,9 +63,10 @@ CODE
 
 	STACK_BASE:                 equ $0100      ; Stack base address
     ; These values align with definitions in PKG_TIMER_CONTROL.vhd
-    CTL_TIMER_RESET:            equ %00000001  ; Request timer reset
-    CTL_TIMER_RUN:              equ %00000000  ; Set timer to run
+    CTL_TIMER_RESET:            equ $00  ; Request timer reset
+    CTL_TIMER_RUN:              equ $FF  ; Set timer to run
 
+	LED_IO_ADDR:	equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 	TIMER_CTL_ADDRESS:			equ $0218
 	TIMER_PERIOD_MS_ADDRESS: 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
 	PIO_IRQ_CONTROLLER_IRQNUM:  equ $0223
@@ -107,12 +108,19 @@ START:
 		cli             ; Allow maskable interrupts
 
         ; 3) Start the timer
+		LDA #$FF
+		STA PIO_IRQ_CONTROLLER_IRQACK ; Set this to no ack
+
 		LDA #CTL_TIMER_RUN
 		STA TIMER_CTL_ADDRESS
 
+		LDA #$FF
 DISPLAY_COUNTER:
 
 		; 6) Write timer value to seven segment display -- This might be a simple incremented index
+		CMP TIMER_CNT
+		BEQ DISPLAY_COUNTER ; If TIMER_CNT is unchanged, don't push new data to the 7 seg display
+		LDA TIMER_CNT
 		SEVENSEG_DISPLAY_VALUE TIMER_CNT
 
 		JMP DISPLAY_COUNTER
@@ -131,13 +139,14 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 
 IRQHandler:
 		
+		PHA
 		; 4) In interrupt service routine, increment timer value on every fired interrupt
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		BNE SEND_IRQ_ACK
 		; If we get here, this is IRQ 0, our timer
 		CLC
 		LDA TIMER_CNT
-		INA
+		ADC #01
 		STA TIMER_CNT
 		LDA TIMER_CNT+1
 		ADC #0 ; Add carry if present
@@ -149,7 +158,12 @@ SEND_IRQ_ACK:
         ; 5) Write ACK to IRQ controller, in interrupt handler
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		STA PIO_IRQ_CONTROLLER_IRQACK
-
+		
+		; Reset ack lines
+		LDA #$FF
+		STA PIO_IRQ_CONTROLLER_IRQACK
+		
+		PLA
 		RTI
 
 	bits:	db	1

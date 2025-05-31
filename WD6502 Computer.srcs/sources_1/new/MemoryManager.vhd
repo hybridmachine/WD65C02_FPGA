@@ -288,7 +288,7 @@ variable MEMORY_ADDRESS : unsigned(15 downto 0);
 variable SHIFTED_ADDRESS : unsigned(15 downto 0);
 begin    
     if (rising_edge(MEMORY_CLOCK)) then
-        R_PIO_IRQ_RST <= '1'; -- Hold this low (running) unless the control location is written
+        R_PIO_IRQ_RST <= '1'; -- Hold this high (running) unless the control location is written
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
         if((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
