@@ -36,38 +36,47 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity PIO_SWITCHES is
     generic (
-        BUFFER_DEPTH : natural := 8;
-        MAX_SWITCH_IDX : natural : 32
+        MAX_SWITCH_IDX : natural := 32
     );
     Port ( I_CLK : in STD_LOGIC;
            I_RST : in STD_LOGIC;
            I_SWITCHES : in STD_LOGIC_VECTOR ((MAX_SWITCH_IDX-1) downto 0);
-           O_SWITCH_ID : out STD_LOGIC_VECTOR (7 downto 0);
-           O_STATUS : out STD_LOGIC_VECTOR (7 downto 0);
+           O_UPDATED_SWITCH_VEC : out STD_LOGIC_VECTOR ((MAX_SWITCH_IDX-1) downto 0);
+           O_PREVIOUS_SWITCH_STATE_VEC : out STD_LOGIC_VECTOR((MAX_SWITCH_IDX-1) downto 0);
            O_IRQ : out STD_LOGIC
-           );
+    );
 end PIO_SWITCHES;
 
 architecture Behavioral of PIO_SWITCHES is
-    type buffer_contents_type is array (natural range<>) of std_logic_vector(7 downto 0);
+    signal r_current_switch_state_vector : STD_LOGIC_VECTOR ((MAX_SWITCH_IDX - 1) downto 0);
+    signal r_updated_switch_state_vector : STD_LOGIC_VECTOR ((MAX_SWITCH_IDX - 1) downto 0);
+    signal r_irq : STD_LOGIC;
 begin
 
 switch_fsm : process(I_CLK,I_RST)
-    variable buffer_contents: buffer_contents_type (0 to (BUFFER_DEPTH - 1));
-    variable buffer_idx : natural := 0;
-    variable status : STD_LOGIC_VECTOR (7 downto 0) := (others => 0);
-    signal switch_vector : STD_LOGIC_VECTOR ((MAX_SWITCH_IDX - 1) downto 0);
-    variable changed_switches_vector : STD_LOGIC_VECTOR((MAX_SWITCH_IDX - 1) downto 0) := (others => 0);
+    variable all_unchanged : STD_LOGIC_VECTOR((MAX_SWITCH_IDX-1) downto 0) := (others => '0'); -- Ref value for all switches unchanged
 begin
-    if (I_RST = '0')
-        buffer_idx := 0;
-        status := (others => 0);
-        switch_vector <= (others => 0);
-    elsif(rising_edge(I_CLK))
-        -- Any transition will cause the corresponding bit to become 1 after the XOR
-        -- Unchanged switches will return 0 during an xor regardless of state.
-        changed_switches_vector := switch_vector xor I_SWITCHES;
-        
+    if (I_RST = '0') then
+        r_current_switch_state_vector <= (others => '0');
+        O_IRQ <= '0';
+        r_irq <= '0';
+        O_UPDATED_SWITCH_VEC <= (others => '0');
+        r_current_switch_state_vector <= (others => '0');
+    elsif(rising_edge(I_CLK)) then
+        O_IRQ <= r_irq;
+        r_updated_switch_state_vector <= r_updated_switch_state_vector and (r_current_switch_state_vector xor I_SWITCHES);
+        -- We may update this to a state machine and keep raising interrupts until no more switch changes detected
+        -- For now if a switch goes high during IRQ servicing, and doesn't persist that processing period of time, we'll lose that change event
+        if (r_irq = '0') then
+            -- Any transition will cause the corresponding bit to become 1 after the XOR
+            -- Unchanged switches will return 0 during an xor regardless of state.
+            O_UPDATED_SWITCH_VEC <=  r_updated_switch_state_vector; -- See what's changed
+            O_PREVIOUS_SWITCH_STATE_VEC <= r_current_switch_state_vector; -- Output our current state
+            r_current_switch_state_vector <= I_SWITCHES; -- Update this on the next clock cycle
+            if (r_current_switch_state_vector /= all_unchanged) then
+                r_irq <= '1';
+            end if;
+        end if;
     end if;
 end process;
 
