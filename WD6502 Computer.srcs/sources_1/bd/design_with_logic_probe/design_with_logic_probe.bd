@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xA551FD389A8790B",
+      "boundary_crc": "0x46538F8B1EEB462B",
       "device": "xc7a35tcpg236-1",
       "gen_directory": "../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe",
       "name": "design_with_logic_probe",
@@ -123,6 +123,11 @@
             "value_src": "default"
           }
         }
+      },
+      "I_SWITCHES": {
+        "direction": "I",
+        "left": "15",
+        "right": "0"
       }
     },
     "components": {
@@ -239,11 +244,22 @@
           },
           "PIO_I2C_DATA_STREAMER_SCL": {
             "direction": "O"
+          },
+          "I_SWITCH_VECTOR": {
+            "direction": "I",
+            "left": "15",
+            "right": "0"
           }
         }
       }
     },
     "nets": {
+      "I_SWITCHES_1": {
+        "ports": [
+          "I_SWITCHES",
+          "WDC65C02_Interface/I_SWITCH_VECTOR"
+        ]
+      },
       "Net": {
         "ports": [
           "ADDRESS_IN",

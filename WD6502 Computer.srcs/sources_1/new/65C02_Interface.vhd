@@ -66,7 +66,8 @@ entity WDC65C02_Interface is
            PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0); --! 7 Segment common drivers
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
            PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
-           PIO_I2C_DATA_STREAMER_SCL : out std_logic
+           PIO_I2C_DATA_STREAMER_SCL : out std_logic;
+           I_SWITCH_VECTOR : in STD_LOGIC_VECTOR(15 downto 0)
            );                    
             
 end WDC65C02_Interface;
@@ -84,6 +85,7 @@ COMPONENT MemoryManager is
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
            PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
+           I_SWITCH_VECTOR : in std_logic_vector(15 downto 0);
            IRQ : out STD_LOGIC;
            RESET : in STD_LOGIC
            );
@@ -141,6 +143,7 @@ MemoryManagement : MemoryManager port map (
     PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
     PIO_I2C_DATA_STREAMER_SCL => PIO_I2C_DATA_STREAMER_SCL,
     PIO_I2C_DATA_STREAMER_SDA => PIO_I2C_DATA_STREAMER_SDA,
+    I_SWITCH_VECTOR => I_SWITCH_VECTOR,
     IRQ => IRQB,
     RESET => RESET
 );

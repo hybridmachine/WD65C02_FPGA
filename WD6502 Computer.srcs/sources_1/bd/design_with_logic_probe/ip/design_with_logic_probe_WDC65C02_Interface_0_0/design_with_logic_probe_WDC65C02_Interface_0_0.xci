@@ -55,7 +55,8 @@
         "PIO_7SEG_COMMON": [ { "direction": "out", "size_left": "3", "size_right": "0" } ],
         "PIO_7SEG_SEGMENTS": [ { "direction": "out", "size_left": "7", "size_right": "0" } ],
         "PIO_I2C_DATA_STREAMER_SDA": [ { "direction": "inout" } ],
-        "PIO_I2C_DATA_STREAMER_SCL": [ { "direction": "out" } ]
+        "PIO_I2C_DATA_STREAMER_SCL": [ { "direction": "out" } ],
+        "I_SWITCH_VECTOR": [ { "direction": "in", "size_left": "15", "size_right": "0" } ]
       },
       "interfaces": {
         "RESET": {

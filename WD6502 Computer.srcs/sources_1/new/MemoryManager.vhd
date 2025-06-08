@@ -40,6 +40,7 @@ entity MemoryManager is
            PIO_7SEG_SEGMENTS : out std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
            PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
+           I_SWITCH_VECTOR : in std_logic_vector(15 downto 0);
            IRQ : out std_logic;   
            RESET : in std_logic --! Reset 
            );
@@ -93,6 +94,9 @@ signal PIO_INTERRUPT_CONTROLLER_ACK_VECTOR : STD_LOGIC_VECTOR(15 downto 0);
 signal R_PIO_IRQ_TIMER_PERIOD_MS : STD_LOGIC_VECTOR(31 downto 0);
 signal R_PIO_IRQ_RST : STD_LOGIC;
 signal R_PIO_IRQ_TIMER_CTL : STD_LOGIC_VECTOR(7 downto 0);
+
+signal R_UPDATED_SWITCH_VEC : STD_LOGIC_VECTOR(15 downto 0);
+signal R_PREVIOUS_SWITCH_STATE_VEC : STD_LOGIC_VECTOR(15 downto 0);
 
 COMPONENT PIO_INTERRUPT_CONTROLLER is
     PORT (
@@ -191,8 +195,29 @@ Generic (
            O_PIO_IRQ : out STD_LOGIC);
 end COMPONENT;
 
+COMPONENT PIO_SWITCHES is
+    generic (
+        MAX_SWITCH_IDX : natural := 16
+    );
+    Port ( I_CLK : in STD_LOGIC;
+           I_RST : in STD_LOGIC;
+           I_SWITCHES : in STD_LOGIC_VECTOR ((MAX_SWITCH_IDX-1) downto 0);
+           O_UPDATED_SWITCH_VEC : out STD_LOGIC_VECTOR ((MAX_SWITCH_IDX-1) downto 0);
+           O_PREVIOUS_SWITCH_STATE_VEC : out STD_LOGIC_VECTOR((MAX_SWITCH_IDX-1) downto 0);
+           O_IRQ : out STD_LOGIC
+    );
+end COMPONENT;
+
 begin
 
+PIO_SWITCHES_DEVICE : PIO_SWITCHES port map (
+    I_CLK => MEMORY_CLOCK,
+    I_RST => R_PIO_IRQ_RST,
+    I_SWITCHES => I_SWITCH_VECTOR,
+    O_UPDATED_SWITCH_VEC => R_UPDATED_SWITCH_VEC,
+    O_PREVIOUS_SWITCH_STATE_VEC => R_PREVIOUS_SWITCH_STATE_VEC,
+    O_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(1) 
+);
 PIO_IRQ_TIMER_DEVICE : PIO_IRQ_TIMER port map (
     I_CLK => MEMORY_CLOCK,
     I_RST => R_PIO_IRQ_RST,

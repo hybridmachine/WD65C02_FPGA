@@ -1,7 +1,7 @@
 {
    "ActiveEmotionalView":"Default View",
    "Default View_ScaleFactor":"1.90671",
-   "Default View_TopLeft":"-166,-46",
+   "Default View_TopLeft":"-166,-49",
    "ExpandedHierarchyInLayout":"",
    "PinnedBlocks":"",
    "PinnedPorts":"",
@@ -10,40 +10,42 @@
 preplace port port-id_Reset -pg 1 -lvl 0 -x -10 -y 110 -defaultsOSRD
 preplace port port-id_RWB -pg 1 -lvl 0 -x -10 -y 210 -defaultsOSRD
 preplace port port-id_CLOCK -pg 1 -lvl 0 -x -10 -y 50 -defaultsOSRD
-preplace port port-id_RDY -pg 1 -lvl 3 -x 730 -y 160 -defaultsOSRD
-preplace port port-id_RESB -pg 1 -lvl 3 -x 730 -y 190 -defaultsOSRD
+preplace port port-id_RDY -pg 1 -lvl 3 -x 780 -y 160 -defaultsOSRD
+preplace port port-id_RESB -pg 1 -lvl 3 -x 780 -y 190 -defaultsOSRD
 preplace port port-id_SingleStep -pg 1 -lvl 0 -x -10 -y 150 -defaultsOSRD
-preplace port port-id_PHI2 -pg 1 -lvl 3 -x 730 -y 130 -defaultsOSRD
+preplace port port-id_PHI2 -pg 1 -lvl 3 -x 780 -y 130 -defaultsOSRD
 preplace port port-id_SYNC -pg 1 -lvl 0 -x -10 -y 240 -defaultsOSRD
-preplace port port-id_IRQB -pg 1 -lvl 3 -x 730 -y 100 -defaultsOSRD
-preplace port port-id_PIO_I2C_DATA_STREAMER_SDA -pg 1 -lvl 3 -x 730 -y 310 -defaultsOSRD
-preplace port port-id_PIO_I2C_DATA_STREAMER_SCL -pg 1 -lvl 3 -x 730 -y 340 -defaultsOSRD
+preplace port port-id_IRQB -pg 1 -lvl 3 -x 780 -y 100 -defaultsOSRD
+preplace port port-id_PIO_I2C_DATA_STREAMER_SDA -pg 1 -lvl 3 -x 780 -y 310 -defaultsOSRD
+preplace port port-id_PIO_I2C_DATA_STREAMER_SCL -pg 1 -lvl 3 -x 780 -y 340 -defaultsOSRD
 preplace portBus ADDRESS_IN -pg 1 -lvl 0 -x -10 -y 180 -defaultsOSRD
-preplace portBus LED_OUT -pg 1 -lvl 3 -x 730 -y 220 -defaultsOSRD
-preplace portBus DATA -pg 1 -lvl 3 -x 730 -y 60 -defaultsOSRD
-preplace portBus PIO_7SEG_COMMON -pg 1 -lvl 3 -x 730 -y 250 -defaultsOSRD
-preplace portBus PIO_7SEG_SEGMENTS -pg 1 -lvl 3 -x 730 -y 280 -defaultsOSRD
+preplace portBus LED_OUT -pg 1 -lvl 3 -x 780 -y 220 -defaultsOSRD
+preplace portBus DATA -pg 1 -lvl 3 -x 780 -y 60 -defaultsOSRD
+preplace portBus PIO_7SEG_COMMON -pg 1 -lvl 3 -x 780 -y 250 -defaultsOSRD
+preplace portBus PIO_7SEG_SEGMENTS -pg 1 -lvl 3 -x 780 -y 280 -defaultsOSRD
+preplace portBus I_SWITCHES -pg 1 -lvl 0 -x -10 -y 280 -defaultsOSRD
 preplace inst invert_reset_signal -pg 1 -lvl 1 -x 160 -y 110 -defaultsOSRD
-preplace inst WDC65C02_Interface -pg 1 -lvl 2 -x 500 -y 180 -defaultsOSRD
-preplace netloc Net 1 0 2 NJ 180 310J
+preplace inst WDC65C02_Interface -pg 1 -lvl 2 -x 530 -y 180 -defaultsOSRD
+preplace netloc Net 1 0 2 NJ 180 NJ
 preplace netloc Net1 1 2 1 NJ 60
-preplace netloc Net2 1 2 1 700J 280n
-preplace netloc RWB_PIN_1 1 0 2 NJ 210 NJ
+preplace netloc Net2 1 2 1 750J 280n
+preplace netloc RWB_PIN_1 1 0 2 NJ 210 300J
 preplace netloc Reset_1 1 0 1 NJ 110
 preplace netloc SYNC_1 1 0 2 NJ 240 300J
-preplace netloc SingleStep_1 1 0 2 10J 170 NJ
-preplace netloc WD6502_Interface_0_PHI2 1 2 1 700J 130n
+preplace netloc SingleStep_1 1 0 2 10J 170 310J
+preplace netloc WD6502_Interface_0_PHI2 1 2 1 750J 130n
 preplace netloc WD6502_Interface_0_PIO_LED_OUT 1 2 1 NJ 220
-preplace netloc WDC65C02_Interface_0_IRQB 1 2 1 700J 100n
-preplace netloc WDC65C02_Interface_0_PIO_7SEG_COMMON 1 2 1 710J 240n
-preplace netloc WDC65C02_Interface_0_PIO_7SEG_SEGMENTS 1 2 1 710J 260n
-preplace netloc WDC65C02_Interface_0_RDY 1 2 1 710J 160n
-preplace netloc WDC65C02_Interface_0_RESB 1 2 1 700J 190n
-preplace netloc WDC65C02_Interface_PIO_I2C_DATA_STREAMER_SCL 1 2 1 690J 300n
+preplace netloc WDC65C02_Interface_0_IRQB 1 2 1 750J 100n
+preplace netloc WDC65C02_Interface_0_PIO_7SEG_COMMON 1 2 1 760J 240n
+preplace netloc WDC65C02_Interface_0_PIO_7SEG_SEGMENTS 1 2 1 760J 260n
+preplace netloc WDC65C02_Interface_0_RDY 1 2 1 760J 160n
+preplace netloc WDC65C02_Interface_0_RESB 1 2 1 750J 190n
+preplace netloc WDC65C02_Interface_PIO_I2C_DATA_STREAMER_SCL 1 2 1 740J 300n
 preplace netloc clk_wiz_0_clk_out1 1 0 2 NJ 50 310J
 preplace netloc invert_reset_signal_Res 1 1 1 300J 110n
-levelinfo -pg 1 -10 160 500 730
-pagesize -pg 1 -db -bbox -sgen -180 0 980 360
+preplace netloc I_SWITCHES_1 1 0 2 NJ 280 310
+levelinfo -pg 1 -10 160 530 780
+pagesize -pg 1 -db -bbox -sgen -180 -20 1030 530
 "
 }
 {
