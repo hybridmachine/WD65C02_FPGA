@@ -36,7 +36,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity PIO_SWITCHES is
     generic (
-        MAX_SWITCH_IDX : natural := 32
+        MAX_SWITCH_IDX : natural := 32;
+        DEBOUNCE_CLOCK_CYCLES : natural := 1000000 -- 10 ms at 100mhz
     );
     Port ( I_CLK : in STD_LOGIC;
            I_RST : in STD_LOGIC;
@@ -55,6 +56,7 @@ begin
 
 switch_fsm : process(I_CLK,I_RST)
     variable all_unchanged : STD_LOGIC_VECTOR((MAX_SWITCH_IDX-1) downto 0) := (others => '0'); -- Ref value for all switches unchanged
+    variable debounce_counter : natural := DEBOUNCE_CLOCK_CYCLES;
 begin
     if (I_RST = '0') then
         r_current_switch_state_vector <= (others => '0');
@@ -62,6 +64,7 @@ begin
         r_irq <= '0';
         O_UPDATED_SWITCH_VEC <= (others => '0');
         r_current_switch_state_vector <= (others => '0');
+        debounce_counter := DEBOUNCE_CLOCK_CYCLES;
     elsif(rising_edge(I_CLK)) then
         O_IRQ <= r_irq;
         r_updated_switch_state_vector <= r_updated_switch_state_vector and (r_current_switch_state_vector xor I_SWITCHES);
@@ -73,8 +76,17 @@ begin
             O_UPDATED_SWITCH_VEC <=  r_updated_switch_state_vector; -- See what's changed
             O_PREVIOUS_SWITCH_STATE_VEC <= r_current_switch_state_vector; -- Output our current state
             r_current_switch_state_vector <= I_SWITCHES; -- Update this on the next clock cycle
-            if (r_current_switch_state_vector /= all_unchanged) then
+            
+            -- If a change is detected, and we haven't started the counter, start the counter
+            -- otherwise if the counter is running, keep running the counter
+            -- at the end, once the counter is at 0, if a change is still detected, fire the IRQ and reset the counter
+            if ((r_current_switch_state_vector /= all_unchanged) and (debounce_counter = DEBOUNCE_CLOCK_CYCLES)) then
+                debounce_counter := debounce_counter - 1;
+            elsif ((debounce_counter > 0) and (debounce_counter /= DEBOUNCE_CLOCK_CYCLES)) then
+                debounce_counter := debounce_counter - 1;
+            elsif ((r_current_switch_state_vector /= all_unchanged) and (debounce_counter = 0)) then
                 r_irq <= '1';
+                debounce_counter := DEBOUNCE_CLOCK_CYCLES;
             end if;
         end if;
     end if;
