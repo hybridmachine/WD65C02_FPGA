@@ -76,7 +76,7 @@ begin
             O_UPDATED_SWITCH_VEC <=  r_updated_switch_state_vector; -- See what's changed
             O_PREVIOUS_SWITCH_STATE_VEC <= r_current_switch_state_vector; -- Output our current state
             r_current_switch_state_vector <= I_SWITCHES; -- Update this on the next clock cycle
-            
+                
             -- If a change is detected, and we haven't started the counter, start the counter
             -- otherwise if the counter is running, keep running the counter
             -- at the end, once the counter is at 0, if a change is still detected, fire the IRQ and reset the counter
@@ -86,7 +86,7 @@ begin
                 debounce_counter := debounce_counter - 1;
             elsif ((r_current_switch_state_vector /= all_unchanged) and (debounce_counter = 0)) then
                 r_irq <= '1';
-                debounce_counter := DEBOUNCE_CLOCK_CYCLES;
+                debounce_counter := DEBOUNCE_CLOCK_CYCLES;   
             end if;
         end if;
     end if;
