@@ -52,9 +52,9 @@ begin
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
 
 dut: entity work.PIO_SWITCHES
-Generic (
-    MAX_SWITCH_IDX : natural => 16;
-);
+Generic map (
+    MAX_SWITCH_IDX => 16
+)
 Port map (
     I_CLK => T_CLK,
     I_RST => T_RST,
@@ -65,21 +65,41 @@ Port map (
 );
 
 test_fsm: process(T_CLK)
+    variable bounce_cycles : natural := 1000;
+    variable steady_cycles : natural := 3000;
+    variable switch_state : std_logic := '0';
 begin
     case test_present_state is
         when start =>
             T_RST <= '1';
+            T_SWITCHES <= x"0000";
             test_next_state <= bounce_switch_1;
         when bounce_switch_1 =>
-            test_next_state <= bounce_switch_2;
-        when bounce_switch_2 =>
-            test_next_state <= bounce_switch_3;
-        when bounce_switch_3 =>
-            test_next_state <= steady_switch;
+            T_SWITCHES(0) <= switch_state;
+            if (bounce_cycles > 0) then
+                test_next_state <= bounce_switch_1; 
+                bounce_cycles := bounce_cycles - 1;            
+                if (0 = (bounce_cycles mod 300)) then
+                    switch_state := not switch_state;
+                end if;
+            else
+                steady_cycles := 3000;
+                T_SWITCHES(0) <= '1';
+                test_next_state <= steady_switch;            
+            end if;
         when steady_switch =>
-            test_next_state <= wait_for_irq;
+            if (steady_cycles > 0) then
+                steady_cycles := steady_cycles - 1;
+                test_next_state <= steady_switch;
+            else
+                test_next_state <= wait_for_irq;
+            end if;
         when wait_for_irq =>
-            test_next_state <= reset;
+            if (T_IRQ = '1') then
+                test_next_state <= reset;
+            else
+                test_next_state <= wait_for_irq;
+            end if;
         when reset =>
             T_RST <= '0';
             test_next_state <= start;

@@ -42,6 +42,7 @@ architecture Behavioral of T_PIO_IRQ_TIMER_WITH_IRQ_CONTROLLER is
     signal T_PIO_I2C_DATA_STREAMER_SCL : std_logic;   
     signal T_RESET : std_logic;
     signal T_IRQ : std_logic;
+    signal T_SWITCH_VECTOR : std_logic_vector(15 downto 0);
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
     constant address_setup_ns : time := tADS * 1 ns;
@@ -71,6 +72,7 @@ dut: entity work.MemoryManager
         PIO_7SEG_SEGMENTS => T_PIO_7SEG_SEGMENTS,
         PIO_I2C_DATA_STREAMER_SDA => T_PIO_I2C_DATA_STREAMER_SDA,
         PIO_I2C_DATA_STREAMER_SCL => T_PIO_I2C_DATA_STREAMER_SCL,
+        I_SWITCH_VECTOR => T_SWITCH_VECTOR,
         IRQ => T_IRQ,
         RESET => T_RESET );
       
