@@ -38,7 +38,7 @@ end T_PIO_SWITCH_DRIVER;
 
 architecture Behavioral of T_PIO_SWITCH_DRIVER is
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock  
-    type test_state is (start, bounce_switch_1, bounce_switch_2, bounce_switch_3, steady_switch, wait_for_irq, reset);
+    type test_state is (start, bounce_switch, steady_switch, wait_for_irq, reset);
     
     signal T_CLK : std_logic := '0';
     signal T_IRQ : std_logic;
@@ -53,7 +53,8 @@ t_clk <= not t_clk after (CLOCK_PERIOD / 2);
 
 dut: entity work.PIO_SWITCHES
 Generic map (
-    MAX_SWITCH_IDX => 16
+    MAX_SWITCH_IDX => 16,
+    DEBOUNCE_CLOCK_CYCLES => 5000
 )
 Port map (
     I_CLK => T_CLK,
@@ -66,20 +67,23 @@ Port map (
 
 test_fsm: process(T_CLK)
     variable bounce_cycles : natural := 1000;
-    variable steady_cycles : natural := 3000;
+    variable steady_cycles : natural := 5000;
     variable switch_state : std_logic := '0';
 begin
     case test_present_state is
         when start =>
-            T_RST <= '1';
+            T_RST <= '0';
             T_SWITCHES <= x"0000";
-            test_next_state <= bounce_switch_1;
-        when bounce_switch_1 =>
+            test_next_state <= bounce_switch;
+            switch_state := '0';
+        when bounce_switch =>
+            T_RST <= '1';
             T_SWITCHES(0) <= switch_state;
             if (bounce_cycles > 0) then
-                test_next_state <= bounce_switch_1; 
+                test_next_state <= bounce_switch; 
                 bounce_cycles := bounce_cycles - 1;            
                 if (0 = (bounce_cycles mod 300)) then
+                    -- Simulate a bouncing switch
                     switch_state := not switch_state;
                 end if;
             else
@@ -96,6 +100,9 @@ begin
             end if;
         when wait_for_irq =>
             if (T_IRQ = '1') then
+                assert (T_UPDATED_SWITCH_VEC = x"0001") report "Updated switch state incorrect" severity error;
+                assert (T_PREVIOUS_SWITCH_STATE_VEC = x"0000") report "Previous switch state incorrect" severity error;
+                assert ((T_UPDATED_SWITCH_VEC xor T_PREVIOUS_SWITCH_STATE_VEC) = x"0001") report "Switch state masking incorrect" severity error;
                 test_next_state <= reset;
             else
                 test_next_state <= wait_for_irq;

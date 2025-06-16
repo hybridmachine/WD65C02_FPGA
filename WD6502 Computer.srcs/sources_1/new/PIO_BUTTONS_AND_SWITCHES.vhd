@@ -51,6 +51,7 @@ end PIO_SWITCHES;
 architecture Behavioral of PIO_SWITCHES is
     signal r_current_switch_state_vector : STD_LOGIC_VECTOR ((MAX_SWITCH_IDX - 1) downto 0);
     signal r_updated_switch_state_vector : STD_LOGIC_VECTOR ((MAX_SWITCH_IDX - 1) downto 0);
+    signal r_previous_switch_state_vector : STD_LOGIC_VECTOR ((MAX_SWITCH_IDX - 1) downto 0);
     signal r_irq : STD_LOGIC;
 begin
 
@@ -64,17 +65,18 @@ begin
         r_irq <= '0';
         O_UPDATED_SWITCH_VEC <= (others => '0');
         r_current_switch_state_vector <= (others => '0');
+        r_previous_switch_state_vector <= (others => '0');
+        r_updated_switch_state_vector <= (others => '0');
         debounce_counter := DEBOUNCE_CLOCK_CYCLES;
     elsif(rising_edge(I_CLK)) then
         O_IRQ <= r_irq;
-        r_updated_switch_state_vector <= r_updated_switch_state_vector and (r_current_switch_state_vector xor I_SWITCHES);
+        r_updated_switch_state_vector <= r_updated_switch_state_vector or (r_previous_switch_state_vector xor I_SWITCHES);
         -- We may update this to a state machine and keep raising interrupts until no more switch changes detected
         -- For now if a switch goes high during IRQ servicing, and doesn't persist that processing period of time, we'll lose that change event
         if (r_irq = '0') then
             -- Any transition will cause the corresponding bit to become 1 after the XOR
             -- Unchanged switches will return 0 during an xor regardless of state.
-            O_UPDATED_SWITCH_VEC <=  r_updated_switch_state_vector; -- See what's changed
-            O_PREVIOUS_SWITCH_STATE_VEC <= r_current_switch_state_vector; -- Output our current state
+            O_UPDATED_SWITCH_VEC <=  r_updated_switch_state_vector; -- See what's changed            
             r_current_switch_state_vector <= I_SWITCHES; -- Update this on the next clock cycle
                 
             -- If a change is detected, and we haven't started the counter, start the counter
@@ -86,6 +88,8 @@ begin
                 debounce_counter := debounce_counter - 1;
             elsif ((r_current_switch_state_vector /= all_unchanged) and (debounce_counter = 0)) then
                 r_irq <= '1';
+                O_PREVIOUS_SWITCH_STATE_VEC <= r_previous_switch_state_vector; -- Output our current state
+                r_previous_switch_state_vector <= r_current_switch_state_vector;
                 debounce_counter := DEBOUNCE_CLOCK_CYCLES;   
             end if;
         end if;
