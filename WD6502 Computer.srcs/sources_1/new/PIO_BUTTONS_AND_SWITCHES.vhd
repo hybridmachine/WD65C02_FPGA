@@ -42,6 +42,7 @@ entity PIO_SWITCHES is
     Port ( I_CLK : in STD_LOGIC;
            I_RST : in STD_LOGIC;
            I_SWITCHES : in STD_LOGIC_VECTOR ((MAX_SWITCH_IDX-1) downto 0);
+           I_IRQ_ACK : in STD_LOGIC;
            O_UPDATED_SWITCH_VEC : out STD_LOGIC_VECTOR ((MAX_SWITCH_IDX-1) downto 0);
            O_PREVIOUS_SWITCH_STATE_VEC : out STD_LOGIC_VECTOR((MAX_SWITCH_IDX-1) downto 0);
            O_IRQ : out STD_LOGIC
@@ -91,6 +92,12 @@ begin
                 O_PREVIOUS_SWITCH_STATE_VEC <= r_previous_switch_state_vector; -- Output our current state
                 r_previous_switch_state_vector <= r_current_switch_state_vector;
                 debounce_counter := DEBOUNCE_CLOCK_CYCLES;   
+            end if;
+        else
+            -- If IRQ Is raised, wait for the ack
+            if (I_IRQ_ACK = '1') then
+                r_updated_switch_state_vector <= (others => '0');
+                r_irq <= '0';
             end if;
         end if;
     end if;
