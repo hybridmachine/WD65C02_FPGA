@@ -38,7 +38,7 @@ end T_PIO_SWITCH_DRIVER;
 
 architecture Behavioral of T_PIO_SWITCH_DRIVER is
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock  
-    type test_state is (initialize, start, bounce_switch, steady_switch, wait_for_irq, reset);
+    type test_state_t is (initialize, start, bounce_switch, steady_switch, wait_for_irq, reset);
     
     signal T_CLK : std_logic := '0';
     signal T_IRQ : std_logic;
@@ -47,7 +47,7 @@ architecture Behavioral of T_PIO_SWITCH_DRIVER is
     signal T_SWITCHES : STD_LOGIC_VECTOR (15 downto 0);
     signal T_UPDATED_SWITCH_VEC : STD_LOGIC_VECTOR (15 downto 0);
     signal T_PREVIOUS_SWITCH_STATE_VEC : STD_LOGIC_VECTOR(15 downto 0);
-    signal test_present_state, test_next_state: test_state := initialize;
+    signal test_state : test_state_t := initialize;
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
@@ -72,27 +72,28 @@ test_fsm: process(T_CLK)
     variable bounce_cycles : natural := 1000;
     variable steady_cycles : natural := 5000;
     variable switch_state : std_logic := '0';
+    variable target_switch_state: std_logic := '0';
 begin
-    case test_present_state is
+    case test_state is
         when initialize =>
             T_RST <= '0';
             if (initialize_cycles > 0) then
                 initialize_cycles := initialize_cycles - 1;
-                test_next_state <= initialize;
+                test_state <= initialize;
             else
                 T_RST <= '1';
-                test_next_state <= start;
+                test_state <= start;
             end if;
-        when start =>
-            T_IRQ_ACK <= '0';
+        when start =>         
             T_SWITCHES <= x"0000";
-            test_next_state <= bounce_switch;
+            test_state <= bounce_switch;
             switch_state := '0';
+            target_switch_state := not target_switch_state;
         when bounce_switch =>
             T_RST <= '1';
             T_SWITCHES(0) <= switch_state;
             if (bounce_cycles > 0) then
-                test_next_state <= bounce_switch; 
+                test_state <= bounce_switch; 
                 bounce_cycles := bounce_cycles - 1;            
                 if (0 = (bounce_cycles mod 300)) then
                     -- Simulate a bouncing switch
@@ -100,15 +101,15 @@ begin
                 end if;
             else
                 steady_cycles := 3000;
-                T_SWITCHES(0) <= '1';
-                test_next_state <= steady_switch;            
+                T_SWITCHES(0) <= target_switch_state;
+                test_state <= steady_switch;            
             end if;
         when steady_switch =>
             if (steady_cycles > 0) then
                 steady_cycles := steady_cycles - 1;
-                test_next_state <= steady_switch;
+                test_state <= steady_switch;
             else
-                test_next_state <= wait_for_irq;
+                test_state <= wait_for_irq;
             end if;
         when wait_for_irq =>
             if (T_IRQ = '1') then
@@ -116,17 +117,16 @@ begin
                 assert (T_PREVIOUS_SWITCH_STATE_VEC = x"0000") report "Previous switch state incorrect" severity error;
                 assert ((T_UPDATED_SWITCH_VEC xor T_PREVIOUS_SWITCH_STATE_VEC) = x"0001") report "Switch state masking incorrect" severity error;
                 T_IRQ_ACK <= '1';
-                test_next_state <= reset;
+                test_state <= reset;
             else
-                test_next_state <= wait_for_irq;
+                test_state <= wait_for_irq;
             end if;
         when reset =>
-            test_next_state <= start;
+            T_IRQ_ACK <= '0';
+            test_state <= start;
         when others =>
-            test_next_state <= reset;
+            test_state <= reset;
     end case;
-    
-    test_present_state <= test_next_state;
 end process test_fsm;
 
 end Behavioral;

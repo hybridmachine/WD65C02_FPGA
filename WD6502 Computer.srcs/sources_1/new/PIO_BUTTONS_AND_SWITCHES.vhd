@@ -71,7 +71,7 @@ begin
         debounce_counter := DEBOUNCE_CLOCK_CYCLES;
     elsif(rising_edge(I_CLK)) then
         O_IRQ <= r_irq;
-        r_updated_switch_state_vector <= r_updated_switch_state_vector or (r_previous_switch_state_vector xor I_SWITCHES);
+        r_updated_switch_state_vector <= r_previous_switch_state_vector xor I_SWITCHES;
         -- We may update this to a state machine and keep raising interrupts until no more switch changes detected
         -- For now if a switch goes high during IRQ servicing, and doesn't persist that processing period of time, we'll lose that change event
         if (r_irq = '0') then
@@ -83,15 +83,17 @@ begin
             -- If a change is detected, and we haven't started the counter, start the counter
             -- otherwise if the counter is running, keep running the counter
             -- at the end, once the counter is at 0, if a change is still detected, fire the IRQ and reset the counter
-            if ((r_current_switch_state_vector /= all_unchanged) and (debounce_counter = DEBOUNCE_CLOCK_CYCLES)) then
+            if ((r_updated_switch_state_vector /= all_unchanged) and (debounce_counter = DEBOUNCE_CLOCK_CYCLES)) then
                 debounce_counter := debounce_counter - 1;
             elsif ((debounce_counter > 0) and (debounce_counter /= DEBOUNCE_CLOCK_CYCLES)) then
                 debounce_counter := debounce_counter - 1;
-            elsif ((r_current_switch_state_vector /= all_unchanged) and (debounce_counter = 0)) then
+            elsif ((r_updated_switch_state_vector /= all_unchanged) and (debounce_counter = 0)) then
                 r_irq <= '1';
                 O_PREVIOUS_SWITCH_STATE_VEC <= r_previous_switch_state_vector; -- Output our current state
                 r_previous_switch_state_vector <= r_current_switch_state_vector;
                 debounce_counter := DEBOUNCE_CLOCK_CYCLES;   
+            else
+                debounce_counter := DEBOUNCE_CLOCK_CYCLES;   -- Spurious signal, reset the debounce counter
             end if;
         else
             -- If IRQ Is raised, wait for the ack
