@@ -221,6 +221,7 @@ PIO_SWITCHES_DEVICE : PIO_SWITCHES port map (
     O_PREVIOUS_SWITCH_STATE_VEC => R_PREVIOUS_SWITCH_STATE_VEC,
     O_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(1) 
 );
+
 PIO_IRQ_TIMER_DEVICE : PIO_IRQ_TIMER port map (
     I_CLK => MEMORY_CLOCK,
     I_RST => R_PIO_IRQ_RST,
@@ -384,6 +385,14 @@ begin
                     BUS_READ_DATA <= PIO_I2C_DATA_STREAMER_STATUS;
                 elsif (BUS_ADDRESS = PIO_IRQ_CONTROLLER_IRQNUM) then
                     BUS_READ_DATA <= PIO_INTERRUPT_CONTROLLER_ACTIVE_IRQ;
+                elsif (BUS_ADDRESS = PIO_SWITCHES_PREV_STATEVEC_L) then
+                    BUS_READ_DATA <= R_PREVIOUS_SWITCH_STATE_VEC(7 downto 0);
+                elsif (BUS_ADDRESS = PIO_SWITCHES_PREV_STATEVEC_H) then
+                    BUS_READ_DATA <= R_PREVIOUS_SWITCH_STATE_VEC(15 downto 8);  
+                elsif (BUS_ADDRESS = PIO_SWITCHES_UPDATED_VEC_L) then
+                    BUS_READ_DATA <= R_UPDATED_SWITCH_VEC(7 downto 0);               
+                elsif (BUS_ADDRESS = PIO_SWITCHES_UPDATED_VEC_H) then
+                    BUS_READ_DATA <= R_UPDATED_SWITCH_VEC(15 downto 8);                                     
                 end if;
             end if;
         else

@@ -109,7 +109,12 @@ package W65C02_DEFINITIONS is
     -- Which IRQ the controller just signaled for
     constant PIO_IRQ_CONTROLLER_IRQNUM  : ADDRESS_65C02_T := x"0223";
     constant PIO_IRQ_CONTROLLER_IRQACK  : ADDRESS_65C02_T := x"0224";
-    
+
+    constant PIO_SWITCHES_PREV_STATEVEC_L : ADDRESS_65C02_T := x"0225";
+    constant PIO_SWITCHES_PREV_STATEVEC_H : ADDRESS_65C02_T := x"0226";
+    constant PIO_SWITCHES_UPDATED_VEC_L : ADDRESS_65C02_T := x"0227";
+    constant PIO_SWITCHES_UPDATED_VEC_H : ADDRESS_65C02_T := x"0228";
+
     constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
     constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     
