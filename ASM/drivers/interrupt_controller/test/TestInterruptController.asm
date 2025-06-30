@@ -133,15 +133,28 @@ START:
 		STA TIMER_CTL_ADDRESS
 
 		LDA #$FF
-DISPLAY_COUNTER:
+		
+APPLICATION_LOOP:
 
 		; 6) Write timer value to seven segment display -- This might be a simple incremented index
 		CMP TIMER_CNT
-		BEQ DISPLAY_COUNTER ; If TIMER_CNT is unchanged, don't push new data to the 7 seg display
+		BEQ DISPLAY_SWITCH_STATE ; If TIMER_CNT is unchanged, don't push new data to the 7 seg display
 		LDA TIMER_CNT
 		SEVENSEG_DISPLAY_VALUE TIMER_CNT
 
-		JMP DISPLAY_COUNTER
+DISPLAY_SWITCH_STATE:
+		; prev state vec xor updated vec gives current switch state
+		LDA SWITCHES_PREV_STATEVEC_L
+		EOR SWITCHES_UPDATED_VEC_L
+		;Button mappings per the constraints file
+		;set_property PACKAGE_PIN W19 [get_ports {I_SWITCHES[0]}] # BTN Left
+		;set_property PACKAGE_PIN T17 [get_ports {I_SWITCHES[1]}] # BTN Right
+		;set_property PACKAGE_PIN T18 [get_ports {I_SWITCHES[2]}] # BTN Up
+		;set_property PACKAGE_PIN U17 [get_ports {I_SWITCHES[3]}] # BTN Down
+		;set_property PACKAGE_PIN U18 [get_ports {I_SWITCHES[4]}] # BTN Center
+		STA LED_IO_ADDR ; Just show the switch states on the LEDs for now
+
+		JMP APPLICATION_LOOP
         
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
