@@ -71,7 +71,25 @@ CODE
 	TIMER_PERIOD_MS_ADDRESS: 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
 	PIO_IRQ_CONTROLLER_IRQNUM:  equ $0223
     PIO_IRQ_CONTROLLER_IRQACK:  equ $0224
+
+	PIO_SWITCHES_PREV_STATEVEC_L: equ $0225
+    PIO_SWITCHES_PREV_STATEVEC_H: equ $0226
+    PIO_SWITCHES_UPDATED_VEC_L: equ $0227
+    PIO_SWITCHES_UPDATED_VEC_H: equ $0228
+
 	TIMER_CNT: 					equ $0400 ; -- Two bytes, zero'd on startup, incremented and displayed in IRQB handler
+
+	IRQ_CHANNEL_TIMER:			equ $00 ; Timer fires on IRQ 0
+	IRQ_CHANNEL_BUTTON:			equ $01 ; Buttons come in on IRQ 1
+
+	; Interrupt handler will copy current values from device to these locations, 
+	; main work thread will then write status LEDs based on state
+	SWITCHES_PREV_STATEVEC_L:			equ $08 ; Previous switch state vector
+	SWITCHES_PREV_STATEVEC_H:			equ $09 
+
+	SWITCHES_UPDATED_VEC_L:		equ $10 ; Which switches have changed, to get current state, xor this against PREV_SWITCH_STATE_*
+	SWITCHES_UPDATED_VEC_H:		equ $11 
+
 START:
 		sei             ; Ignore maskable interrupts
         clc             ; Clear carry
@@ -142,7 +160,15 @@ IRQHandler:
 		PHA
 		; 4) In interrupt service routine, increment timer value on every fired interrupt
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
-		BNE SEND_IRQ_ACK
+		; Not used since timer is IRQ 0, so A would be 0
+		; CMP #IRQ_CHANNEL_TIMER
+		BEQ HANDLE_TIMER
+		CMP #IRQ_CHANNEL_BUTTON
+		BEQ HANDLE_BUTTON
+		; Unhandled IRQ, just send back ACK
+		JMP SEND_IRQ_ACK
+		
+HANDLE_TIMER:
 		; If we get here, this is IRQ 0, our timer
 		CLC
 		LDA TIMER_CNT
@@ -151,8 +177,23 @@ IRQHandler:
 		LDA TIMER_CNT+1
 		ADC #0 ; Add carry if present
 		STA TIMER_CNT+1
+		JMP SEND_IRQ_ACK
 
-		; Writing the timer value is handled in the main loop
+HANDLE_BUTTON:
+		; Transfer the button state vector and update vector from device to working memory
+		LDA PIO_SWITCHES_PREV_STATEVEC_L
+		STA SWITCHES_PREV_STATEVEC_L
+
+    	LDA PIO_SWITCHES_PREV_STATEVEC_H
+		STA SWITCHES_PREV_STATEVEC_H
+
+    	LDA PIO_SWITCHES_UPDATED_VEC_L
+		STA SWITCHES_UPDATED_VEC_L
+
+    	LDA PIO_SWITCHES_UPDATED_VEC_H
+		STA SWITCHES_UPDATED_VEC_H
+
+		JMP SEND_IRQ_ACK ; Not really needed but here for when we add the next IRQ handled
 
 SEND_IRQ_ACK:
         ; 5) Write ACK to IRQ controller, in interrupt handler
