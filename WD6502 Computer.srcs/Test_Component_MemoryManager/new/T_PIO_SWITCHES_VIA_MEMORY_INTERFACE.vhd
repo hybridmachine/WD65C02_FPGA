@@ -74,4 +74,60 @@ dut: entity work.MemoryManager
         IRQ => T_IRQ,
         RESET => T_RESET );
 
+send_reset: process
+begin
+    T_RESET <= '0'; -- Reset
+    wait for 5ms;
+    T_RESET <= '1'; -- Running
+    wait;
+end process;
+
+watch_irq: process(T_IRQ)
+begin
+    if (falling_edge(T_IRQ)) then
+        IRQ_STATE <= IRQ_TRIGGERED;
+    end if;
+    
+    if (rising_edge(T_IRQ)) then
+        IRQ_STATE <= IRQ_UNTRIGGERED;
+    end if;
+end process;
+
+-- TYPE pio_switch_state IS (idle, switch_triggered, switch_untriggered, expecting_interrupt, request_irqnum, read_irqnum_wait_for_mem, read_irqnum, acknowledge_irq, wait_for_irq_clear);
+    
+test_buttons: process(T_MEMORY_CLOCK)   
+begin  
+    if (rising_edge(T_MEMORY_CLOCK)) then
+        case TEST_NEXT_STATE is
+            when idle =>
+                T_SWITCH_VECTOR <= x"0000";
+                TEST_NEXT_STATE <= switch_triggered;
+            when switch_triggered =>
+                T_SWITCH_VECTOR <= x"0001";
+                TEST_NEXT_STATE <= expecting_interrupt;
+            when switch_untriggered =>
+                T_SWITCH_VECTOR <= x"0000";
+            when expecting_interrupt =>
+                T_WRITE_FLAG <= MODE_READ;
+                TEST_NEXT_STATE <= expecting_interrupt;
+                if (IRQ_STATE = IRQ_TRIGGERED) then
+                    TEST_NEXT_STATE <= request_irqnum;
+                end if;
+            when request_irqnum =>
+                T_WRITE_FLAG <= MODE_READ;
+                T_BUS_ADDRESS <= PIO_IRQ_CONTROLLER_IRQNUM;
+                TEST_NEXT_STATE <= read_irqnum_wait_for_mem;
+            when read_irqnum_wait_for_mem =>
+                TEST_NEXT_STATE <= read_irqnum;
+            when read_irqnum =>
+                assert (T_BUS_READ_DATA = x"01") report "IRQ identity expected to be 1" severity failure;
+                TEST_NEXT_STATE <= acknowledge_irq;
+            when acknowledge_irq =>
+            when wait_for_irq_clear =>
+            when others =>
+                TEST_NEXT_STATE <= idle;
+        end case;        
+    end if;
+end process;
+
 end Behavioral;
