@@ -100,13 +100,18 @@ begin
     if (rising_edge(T_MEMORY_CLOCK)) then
         case TEST_NEXT_STATE is
             when idle =>
-                T_SWITCH_VECTOR <= x"0000";
-                TEST_NEXT_STATE <= switch_triggered;
+                if (T_RESET = '1') then
+                    T_SWITCH_VECTOR <= x"0000";
+                    TEST_NEXT_STATE <= switch_triggered;
+                else
+                    TEST_NEXT_STATE <= idle;
+                end if;
             when switch_triggered =>
                 T_SWITCH_VECTOR <= x"0001";
                 TEST_NEXT_STATE <= expecting_interrupt;
             when switch_untriggered =>
                 T_SWITCH_VECTOR <= x"0000";
+                TEST_NEXT_STATE <= expecting_interrupt;
             when expecting_interrupt =>
                 T_WRITE_FLAG <= MODE_READ;
                 TEST_NEXT_STATE <= expecting_interrupt;
@@ -123,7 +128,15 @@ begin
                 assert (T_BUS_READ_DATA = x"01") report "IRQ identity expected to be 1" severity failure;
                 TEST_NEXT_STATE <= acknowledge_irq;
             when acknowledge_irq =>
+                T_WRITE_FLAG <= MODE_WRITE;
+                T_BUS_ADDRESS <= PIO_IRQ_CONTROLLER_IRQACK;
+                T_BUS_WRITE_DATA <= x"01";
+                TEST_NEXT_STATE <= wait_for_irq_clear;
             when wait_for_irq_clear =>
+                TEST_NEXT_STATE <= wait_for_irq_clear;
+                if (IRQ_STATE = IRQ_UNTRIGGERED) then
+                    TEST_NEXT_STATE <= switch_untriggered;
+                end if;
             when others =>
                 TEST_NEXT_STATE <= idle;
         end case;        

@@ -216,7 +216,7 @@ PIO_SWITCHES_DEVICE : PIO_SWITCHES port map (
     I_CLK => MEMORY_CLOCK,
     I_RST => R_PIO_IRQ_RST,
     I_SWITCHES => I_SWITCH_VECTOR,
-    I_IRQ_ACK => R_SWITCHES_IRQ_ACK,
+    I_IRQ_ACK => PIO_INTERRUPT_CONTROLLER_ACK_VECTOR(1),
     O_UPDATED_SWITCH_VEC => R_UPDATED_SWITCH_VEC,
     O_PREVIOUS_SWITCH_STATE_VEC => R_PREVIOUS_SWITCH_STATE_VEC,
     O_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(1) 
@@ -317,7 +317,7 @@ variable MEMORY_ADDRESS : unsigned(15 downto 0);
 variable SHIFTED_ADDRESS : unsigned(15 downto 0);
 begin    
     if (rising_edge(MEMORY_CLOCK)) then
-        R_PIO_IRQ_RST <= '1'; -- Hold this high (running) unless the control location is written
+        R_PIO_IRQ_RST <= RESET;
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
         if((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then

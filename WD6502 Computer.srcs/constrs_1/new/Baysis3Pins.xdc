@@ -60,11 +60,14 @@ set_property PACKAGE_PIN U4 [get_ports {PIO_7SEG_COMMON[1]}]
 set_property PACKAGE_PIN V4 [get_ports {PIO_7SEG_COMMON[2]}]
 set_property PACKAGE_PIN W4 [get_ports {PIO_7SEG_COMMON[3]}]
 
-set_property PACKAGE_PIN W19 [get_ports {I_SWITCHES[0]}] # BTN Left
-set_property PACKAGE_PIN T17 [get_ports {I_SWITCHES[1]}] # BTN Right
-set_property PACKAGE_PIN T18 [get_ports {I_SWITCHES[2]}] # BTN Up
-set_property PACKAGE_PIN U17 [get_ports {I_SWITCHES[3]}] # BTN Down
-set_property PACKAGE_PIN U18 [get_ports {I_SWITCHES[4]}] # BTN Center
+# BTN Left
+set_property PACKAGE_PIN W19 [get_ports {I_SWITCHES[0]}]
+# BTN Right 
+set_property PACKAGE_PIN T17 [get_ports {I_SWITCHES[1]}]
+# BTN Up
+set_property PACKAGE_PIN T18 [get_ports {I_SWITCHES[2]}]
+# BTN Down
+set_property PACKAGE_PIN U17 [get_ports {I_SWITCHES[3]}]
 
 # All ports 3.3volt
 # FPGA 100mhz clock
