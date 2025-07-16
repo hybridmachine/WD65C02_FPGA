@@ -66,8 +66,21 @@ set_property PACKAGE_PIN W19 [get_ports {I_SWITCHES[0]}]
 set_property PACKAGE_PIN T17 [get_ports {I_SWITCHES[1]}]
 # BTN Up
 set_property PACKAGE_PIN T18 [get_ports {I_SWITCHES[2]}]
-# BTN Down
+# BTN Dow
 set_property PACKAGE_PIN U17 [get_ports {I_SWITCHES[3]}]
+# Slide switches
+set_property PACKAGE_PIN V17 [get_ports {I_SWITCHES[4]}]
+set_property PACKAGE_PIN V16 [get_ports {I_SWITCHES[5]}]
+set_property PACKAGE_PIN W16 [get_ports {I_SWITCHES[6]}]
+set_property PACKAGE_PIN W17 [get_ports {I_SWITCHES[7]}]
+set_property PACKAGE_PIN W15 [get_ports {I_SWITCHES[8]}]
+set_property PACKAGE_PIN V15 [get_ports {I_SWITCHES[9]}]
+set_property PACKAGE_PIN W14 [get_ports {I_SWITCHES[10]}]
+set_property PACKAGE_PIN W13 [get_ports {I_SWITCHES[11]}]
+set_property PACKAGE_PIN V2 [get_ports {I_SWITCHES[12]}]
+set_property PACKAGE_PIN T3 [get_ports {I_SWITCHES[13]}]
+set_property PACKAGE_PIN T2 [get_ports {I_SWITCHES[14]}]
+set_property PACKAGE_PIN R3 [get_ports {I_SWITCHES[15]}]
 
 # All ports 3.3volt
 # FPGA 100mhz clock
@@ -111,6 +124,10 @@ set_property IOSTANDARD LVCMOS33 [get_ports SingleStep]
 
 # Status LEDs on FPGA board
 set_property IOSTANDARD LVCMOS33 [get_ports {LED_OUT[*]}]
+
+# Status LEDs on FPGA board
+set_property IOSTANDARD LVCMOS33 [get_ports {I_SWITCHES[*]}]
+set_property PULLTYPE PULLDOWN [get_ports {I_SWITCHES[*]}]
 
 # 7 segment display common anodes
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_COMMON[*]}]

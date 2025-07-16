@@ -26,6 +26,7 @@ preplace portBus PIO_7SEG_SEGMENTS -pg 1 -lvl 3 -x 780 -y 280 -defaultsOSRD
 preplace portBus I_SWITCHES -pg 1 -lvl 0 -x -10 -y 280 -defaultsOSRD
 preplace inst invert_reset_signal -pg 1 -lvl 1 -x 160 -y 110 -defaultsOSRD
 preplace inst WDC65C02_Interface -pg 1 -lvl 2 -x 530 -y 180 -defaultsOSRD
+preplace netloc I_SWITCHES_1 1 0 2 NJ 280 310
 preplace netloc Net 1 0 2 NJ 180 NJ
 preplace netloc Net1 1 2 1 NJ 60
 preplace netloc Net2 1 2 1 750J 280n
@@ -43,7 +44,6 @@ preplace netloc WDC65C02_Interface_0_RESB 1 2 1 750J 190n
 preplace netloc WDC65C02_Interface_PIO_I2C_DATA_STREAMER_SCL 1 2 1 740J 300n
 preplace netloc clk_wiz_0_clk_out1 1 0 2 NJ 50 310J
 preplace netloc invert_reset_signal_Res 1 1 1 300J 110n
-preplace netloc I_SWITCHES_1 1 0 2 NJ 280 310
 levelinfo -pg 1 -10 160 530 780
 pagesize -pg 1 -db -bbox -sgen -180 -20 1030 530
 "
