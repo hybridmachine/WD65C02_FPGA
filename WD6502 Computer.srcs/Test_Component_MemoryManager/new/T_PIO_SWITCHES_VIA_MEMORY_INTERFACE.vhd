@@ -23,6 +23,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use WORK.W65C02_DEFINITIONS.ALL;
+use WORK.TIMER_CONTROL.ALL;
 
 entity T_PIO_SWITCHES_VIA_MEMORY_INTERFACE is
 --  Port ( );
@@ -51,8 +52,22 @@ architecture Behavioral of T_PIO_SWITCHES_VIA_MEMORY_INTERFACE is
     constant IRQ_UNTRIGGERED : std_logic := '1';
     constant IRQ_TRIGGERED : std_logic := not IRQ_UNTRIGGERED;
     
-    TYPE pio_switch_state IS (idle, switch_triggered, switch_untriggered, expecting_interrupt, request_irqnum, read_irqnum_wait_for_mem, read_irqnum, acknowledge_irq, wait_for_irq_clear);
-    signal TEST_NEXT_STATE : pio_switch_state := idle;
+    TYPE pio_switch_state IS (  startup, 
+                                write_timeout_ms_0,
+                                write_timeout_ms_1,
+                                write_timeout_ms_2,
+                                write_timeout_ms_3,
+                                start_timer,
+                                idle, 
+                                switch_triggered, 
+                                switch_untriggered, 
+                                expecting_interrupt, 
+                                request_irqnum, 
+                                read_irqnum_wait_for_mem, 
+                                read_irqnum, 
+                                acknowledge_irq,
+                                 wait_for_irq_clear);
+    signal TEST_NEXT_STATE : pio_switch_state := startup;
     signal IRQ_STATE : std_logic := IRQ_UNTRIGGERED;
 begin
 
@@ -96,9 +111,34 @@ end process;
 -- TYPE pio_switch_state IS (idle, switch_triggered, switch_untriggered, expecting_interrupt, request_irqnum, read_irqnum_wait_for_mem, read_irqnum, acknowledge_irq, wait_for_irq_clear);
     
 test_buttons: process(T_MEMORY_CLOCK)   
+variable received_irq : STD_LOGIC_VECTOR(7 downto 0); 
 begin  
     if (rising_edge(T_MEMORY_CLOCK)) then
         case TEST_NEXT_STATE is
+            when startup =>
+                T_WRITE_FLAG <= MODE_WRITE;
+                TEST_NEXT_STATE <= write_timeout_ms_0;
+            when write_timeout_ms_0 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS;
+                T_BUS_WRITE_DATA <= x"0A";            
+                TEST_NEXT_STATE <= write_timeout_ms_1;
+            when write_timeout_ms_1 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_1;
+                T_BUS_WRITE_DATA <= x"00";            
+                TEST_NEXT_STATE <= write_timeout_ms_2;
+            when write_timeout_ms_2 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_2;
+                T_BUS_WRITE_DATA <= x"00";            
+                TEST_NEXT_STATE <= write_timeout_ms_3;
+            when write_timeout_ms_3 =>
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_PERIOD_MS_3;
+                T_BUS_WRITE_DATA <= x"00"; -- 10ms timer cycle            
+                TEST_NEXT_STATE <= start_timer;
+            when start_timer =>
+                T_WRITE_FLAG <= MODE_WRITE;
+                T_BUS_ADDRESS <= PIO_IRQ_TIMER_CTL;
+                T_BUS_WRITE_DATA <= IRQ_TIMER_CTL_RUN;
+                TEST_NEXT_STATE <= idle; -- trigger switches too
             when idle =>
                 if (T_RESET = '1') then
                     T_SWITCH_VECTOR <= x"0000";
@@ -125,17 +165,23 @@ begin
             when read_irqnum_wait_for_mem =>
                 TEST_NEXT_STATE <= read_irqnum;
             when read_irqnum =>
-                assert (T_BUS_READ_DATA = x"01") report "IRQ identity expected to be 1" severity failure;
+                -- Make sure either of the interrupts are fired, no unexpected IDs
+                assert (T_BUS_READ_DATA = x"01" or T_BUS_READ_DATA = x"00" ) report "IRQ identity expected to be 1" severity failure;
+                received_irq := T_BUS_READ_DATA;
                 TEST_NEXT_STATE <= acknowledge_irq;
             when acknowledge_irq =>
                 T_WRITE_FLAG <= MODE_WRITE;
                 T_BUS_ADDRESS <= PIO_IRQ_CONTROLLER_IRQACK;
-                T_BUS_WRITE_DATA <= x"01";
+                T_BUS_WRITE_DATA <= received_irq;
                 TEST_NEXT_STATE <= wait_for_irq_clear;
             when wait_for_irq_clear =>
                 TEST_NEXT_STATE <= wait_for_irq_clear;
-                if (IRQ_STATE = IRQ_UNTRIGGERED) then
+                if (IRQ_STATE = IRQ_UNTRIGGERED and received_irq = x"01") then
                     TEST_NEXT_STATE <= switch_untriggered;
+                end if; 
+                if (IRQ_STATE = IRQ_UNTRIGGERED and received_irq = x"00") then
+                    -- Timer fired, we expect to be getting an 01 interrupt next(ish)
+                    TEST_NEXT_STATE <= expecting_interrupt;
                 end if;
             when others =>
                 TEST_NEXT_STATE <= idle;
