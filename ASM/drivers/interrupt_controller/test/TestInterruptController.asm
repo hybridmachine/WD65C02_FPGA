@@ -151,7 +151,6 @@ DISPLAY_SWITCH_STATE:
 		;set_property PACKAGE_PIN T17 [get_ports {I_SWITCHES[1]}] # BTN Right
 		;set_property PACKAGE_PIN T18 [get_ports {I_SWITCHES[2]}] # BTN Up
 		;set_property PACKAGE_PIN U17 [get_ports {I_SWITCHES[3]}] # BTN Down
-		;set_property PACKAGE_PIN U18 [get_ports {I_SWITCHES[4]}] # BTN Center
 		STA LED_IO_ADDR ; Just show the switch states on the LEDs for now
 
 		JMP APPLICATION_LOOP

@@ -1,6 +1,7 @@
 # This Python script reads intel hex and outputs into VHD ROM
 # This script was created in collaboration with ChatGPT 4 Sep 25,2023 version
 import argparse
+import datetime
 
 def parse_intel_hex(hex_lines):
     """Parse Intel HEX format lines and return a dictionary of address to data bytes."""
@@ -50,7 +51,9 @@ def replace_vhd_data(vhd_template, new_data, source_filename, pad_length=256):
     pad_count = pad_length - len(new_data)
     padding = [f'x"00", x"00", x"00", x"00"' for _ in range(pad_count)]
     padded_data = new_data + padding
-    new_vhd_content = header + '\n' + '-- Source File: ' + source_filename + '\n' + ',\n'.join(padded_data) + '\n' + footer
+    current_date = datetime.datetime.now()
+    date_string = current_date.strftime("%Y-%m-%d %H:%M:%S")
+    new_vhd_content = header + '\n' + '-- Source File: ' + source_filename + ' ' + date_string + '\n' + ',\n'.join(padded_data) + '\n' + footer
     return new_vhd_content
 
 
