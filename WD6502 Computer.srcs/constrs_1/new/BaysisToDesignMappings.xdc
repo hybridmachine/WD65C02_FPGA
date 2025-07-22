@@ -2,15 +2,6 @@
 set_property PACKAGE_PIN $CLOCK_PIN [get_ports CLOCK]
 set_property PACKAGE_PIN $PMOD_JXADC10 [get_ports PHI2]
 
-set_property PACKAGE_PIN $SEVSEG_CATHODE_A [get_ports {PIO_7SEG_SEGMENTS[0]}]
-set_property PACKAGE_PIN $SEVSEG_CATHODE_B [get_ports {PIO_7SEG_SEGMENTS[1]}]
-set_property PACKAGE_PIN $SEVSEG_CATHODE_C [get_ports {PIO_7SEG_SEGMENTS[2]}]
-set_property PACKAGE_PIN $SEVSEG_CATHODE_D [get_ports {PIO_7SEG_SEGMENTS[3]}]
-set_property PACKAGE_PIN $SEVSEG_CATHODE_E [get_ports {PIO_7SEG_SEGMENTS[4]}]
-set_property PACKAGE_PIN $SEVSEG_CATHODE_F [get_ports {PIO_7SEG_SEGMENTS[5]}]
-set_property PACKAGE_PIN $SEVSEG_CATHODE_G [get_ports {PIO_7SEG_SEGMENTS[6]}]
-set_property PACKAGE_PIN $SEVSEG_CATHODE_DOT [get_ports {PIO_7SEG_SEGMENTS[7]}]
-
 set_property PACKAGE_PIN $LED0 [get_ports {LED_OUT[0]}]
 set_property PACKAGE_PIN $LED1 [get_ports {LED_OUT[1]}]
 set_property PACKAGE_PIN $LED2 [get_ports {LED_OUT[2]}]
@@ -56,19 +47,25 @@ set_property PACKAGE_PIN $PMOD_JXADC7 [get_ports PIO_I2C_DATA_STREAMER_SDA]
 set_property PACKAGE_PIN $BTN_C [get_ports Reset]
 set_property PACKAGE_PIN $SW15 [get_ports SingleStep]
 
+set_property PACKAGE_PIN $SEVSEG_CATHODE_A [get_ports {PIO_7SEG_SEGMENTS[0]}]
+set_property PACKAGE_PIN $SEVSEG_CATHODE_B [get_ports {PIO_7SEG_SEGMENTS[1]}]
+set_property PACKAGE_PIN $SEVSEG_CATHODE_C [get_ports {PIO_7SEG_SEGMENTS[2]}]
+set_property PACKAGE_PIN $SEVSEG_CATHODE_D [get_ports {PIO_7SEG_SEGMENTS[3]}]
+set_property PACKAGE_PIN $SEVSEG_CATHODE_E [get_ports {PIO_7SEG_SEGMENTS[4]}]
+set_property PACKAGE_PIN $SEVSEG_CATHODE_F [get_ports {PIO_7SEG_SEGMENTS[5]}]
+set_property PACKAGE_PIN $SEVSEG_CATHODE_G [get_ports {PIO_7SEG_SEGMENTS[6]}]
+set_property PACKAGE_PIN $SEVSEG_CATHODE_DOT [get_ports {PIO_7SEG_SEGMENTS[7]}]
 set_property PACKAGE_PIN $SEVSEG_ANODE0 [get_ports {PIO_7SEG_COMMON[0]}]
 set_property PACKAGE_PIN $SEVSEG_ANODE1 [get_ports {PIO_7SEG_COMMON[1]}]
 set_property PACKAGE_PIN $SEVSEG_ANODE2 [get_ports {PIO_7SEG_COMMON[2]}]
 set_property PACKAGE_PIN $SEVSEG_ANODE3 [get_ports {PIO_7SEG_COMMON[3]}]
 
-# BTN Left
+# Buttons
 set_property PACKAGE_PIN $BTN_L [get_ports {I_SWITCHES[0]}]
-# BTN Right 
 set_property PACKAGE_PIN $BTN_R [get_ports {I_SWITCHES[1]}]
-# BTN Up
 set_property PACKAGE_PIN $BTN_U [get_ports {I_SWITCHES[2]}]
-# BTN Dow
 set_property PACKAGE_PIN $BTN_D [get_ports {I_SWITCHES[3]}]
+
 # Slide switches
 set_property PACKAGE_PIN $SW0 [get_ports {I_SWITCHES[4]}]
 set_property PACKAGE_PIN $SW1 [get_ports {I_SWITCHES[5]}]
@@ -82,58 +79,3 @@ set_property PACKAGE_PIN $SW8 [get_ports {I_SWITCHES[12]}]
 set_property PACKAGE_PIN $SW9 [get_ports {I_SWITCHES[13]}]
 set_property PACKAGE_PIN $SW10 [get_ports {I_SWITCHES[14]}]
 set_property PACKAGE_PIN $SW11 [get_ports {I_SWITCHES[15]}]
-
-# All ports 3.3volt
-# FPGA 100mhz clock
-set_property IOSTANDARD LVCMOS33 [get_ports CLOCK]
-
-# Address ports on the right of the board (when VGA port to the top of board)
-set_property IOSTANDARD LVCMOS33 [get_ports {ADDRESS_IN[*]}]
-
-# Data port on top left of Basys board
-set_property IOSTANDARD LVCMOS33 [get_ports {DATA[*]}]
-set_property PULLTYPE PULLDOWN [get_ports {DATA[*]}]
-
-# 65C02 clock
-set_property IOSTANDARD LVCMOS33 [get_ports PHI2]
-
-# 65C02 Control Pins
-# BE is tied manually to high for now, not used in design at this time
-# set_property PACKAGE_PIN $LED15 [get_ports BE]
-# set_property IOSTANDARD LVCMOS33 [get_ports BE]
-set_property IOSTANDARD LVCMOS33 [get_ports RESB]
-
-set_property IOSTANDARD LVCMOS33 [get_ports SYNC]
-
-set_property IOSTANDARD LVCMOS33 [get_ports RWB]
-
-set_property IOSTANDARD LVCMOS33 [get_ports RDY]
-
-# Processor interrupt controls
-set_property IOSTANDARD LVCMOS33 [get_ports IRQB]
-
-set_property IOSTANDARD LVCMOS33 [get_ports PIO_I2C_DATA_STREAMER_SDA]
-set_property PULLTYPE PULLUP [get_ports PIO_I2C_DATA_STREAMER_SDA]
-
-set_property IOSTANDARD LVCMOS33 [get_ports PIO_I2C_DATA_STREAMER_SCL]
-
-# Set to center directional button on board
-set_property IOSTANDARD LVCMOS33 [get_ports Reset]
-
-# Connected to SW15 (Bottom left of board when VGA port is facing top)
-set_property IOSTANDARD LVCMOS33 [get_ports SingleStep]
-
-# Status LEDs on FPGA board
-set_property IOSTANDARD LVCMOS33 [get_ports {LED_OUT[*]}]
-
-# Status LEDs on FPGA board
-set_property IOSTANDARD LVCMOS33 [get_ports {I_SWITCHES[*]}]
-set_property PULLTYPE PULLDOWN [get_ports {I_SWITCHES[*]}]
-
-# 7 segment display common anodes
-set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_COMMON[*]}]
-
-# 7 segment display segment cathondes
-# CA - Top
-set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_SEGMENTS[*]}]
-
