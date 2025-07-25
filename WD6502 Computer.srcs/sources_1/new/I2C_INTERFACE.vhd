@@ -95,122 +95,138 @@ begin
     ------ Bus & Data clocks -----------------------------
     -- Frequency = 100khz for default params
 
-    process(auxiliary_clock)
+    process(clk)
         variable count: INTEGER RANGE 0 to 3 := 0;
+        variable auxclock_last_state : std_logic := '0';
     begin
-        if (rising_edge(auxiliary_clock)) then
-            count := count + 1;
-            -- Simulator wasn't honoring limit so forcing it
-            if (count > 3) then
-                count := 0;
-            end if;
-            if (count = 0) then
-                bus_clock <= '0';
-            elsif(count = 1) then
-                data_clock <= '1';
-            elsif(count = 2) then
-                bus_clock <= '1';
-            else
-                data_clock <= '0';
+        if (rising_edge(clk)) then
+            if (auxclock_last_state /= auxiliary_clock) then
+                auxclock_last_state := auxiliary_clock;
+                if (auxiliary_clock = '1') then
+                    count := count + 1;
+                    -- Simulator wasn't honoring limit so forcing it
+                    if (count > 3) then
+                        count := 0;
+                    end if;
+                    if (count = 0) then
+                        bus_clock <= '0';
+                    elsif(count = 1) then
+                        data_clock <= '1';
+                    elsif(count = 2) then
+                        bus_clock <= '1';
+                    else
+                        data_clock <= '0';
+                    end if;
+                end if;
             end if;
         end if;
     end process;
 
     ------ Lower section of FSM: -----------------------------
-    process(data_clock)
+    process(clk)
+        variable data_clock_last_state : std_logic := '0';
     begin
-        if (rising_edge(data_clock)) then
-            if (rst = '1') then
-                present_state <= idle;
-                idx := 0;
-            else
-                if (idx = timer-1) then
-                    present_state <= next_state;
-                    idx := 0;
-                else
-                    idx := idx + 1;
+        if (rising_edge(clk)) then
+            if (data_clock_last_state /= data_clock) then
+                data_clock_last_state := data_clock;
+                if (data_clock = '1') then
+                    if (rst = '1') then
+                        present_state <= idle;
+                        idx := 0;
+                    else
+                        if (idx = timer-1) then
+                            present_state <= next_state;
+                            idx := 0;
+                        else
+                            idx := idx + 1;
+                        end if;
+                    end if;
                 end if;
-            end if;
+                if (data_clock = '0') then
+                    if (present_state = idle) then
+                        wr_flag <= read_write_mode;
+                        rd_flag <= not read_write_mode;
+                    end if;
+                    -- Store ACK signals during writing:
+                    if (present_state = ack1) then
+                        ack(0) <= sda;
+                    elsif(present_state = ack2) then
+                        ack(1) <= sda;
+                    elsif(present_state = ack3) then
+                        ack(2) <= sda;
+                    end if;
+        
+                    -- Store data read from memory:
+                    if (present_state = rd_data) then
+                        data_in(7-idx) <= sda;
+                    end if;
+                end if; 
+            end if;  
         end if;
-        if (falling_edge(data_clock)) then
-            if (present_state = idle) then
-                wr_flag <= read_write_mode;
-                rd_flag <= not read_write_mode;
-            end if;
-            -- Store ACK signals during writing:
-            if (present_state = ack1) then
-                ack(0) <= sda;
-            elsif(present_state = ack2) then
-                ack(1) <= sda;
-            elsif(present_state = ack3) then
-                ack(2) <= sda;
-            end if;
-
-            -- Store data read from memory:
-            if (present_state = rd_data) then
-                data_in(7-idx) <= sda;
-            end if;
-        end if;   
     end process;
 
     ----Upper section of FSM:---------------------
-    process(present_state, bus_clock, data_clock, wr_flag, rd_flag, data_out, sda)
+    --process(present_state, bus_clock, data_clock, wr_flag, rd_flag, data_out, sda)
+    -- We get warnings from Vivado, attempting to clear by wrapping in clock, we'll see if this still passes the tests
+    process(clk)
     begin
-        case present_state is
-            when idle =>
-                scl <= '1';
-                sda <= '1';
-                timer <= delay;
-                if (wr_flag = '1' or rd_flag = '1') then
-                    next_state <= start_wr;
-                else
-                    next_state <= idle;
-                end if;
-            when start_wr =>
-                scl <= '1';
-                sda <= data_clock;
-                timer <= 1;
-                next_state <= dev_addr_wr;
-            when dev_addr_wr => 
-                scl <= bus_clock;
-                sda <= i2c_target_address(6-idx);
-                timer <= 7;
-                next_state <= send_read_write_mode;
-            when send_read_write_mode =>
-                scl <= bus_clock;
-                sda <= not wr_flag; -- 0 means we write back to client
-                timer <= 1;
-                next_state <= ack1;
-            when ack1 =>
-                scl <= bus_clock;
-                sda <= 'Z';
-                timer <= 1;
-                next_state <= wr_data;
-            when wr_data =>
-                scl <= bus_clock;
-                sda <= data_out(7-idx);
-                timer <= 8;
-                next_state <= ack3;
-            when ack3 =>
-                scl <= bus_clock;
-                sda <= 'Z';
-                timer <= 1;
-                if (stream_complete = '0') then
+        if (rising_edge(clk)) then
+            case present_state is
+                when idle =>
+                    scl <= '1';
+                    sda <= '1';
+                    timer <= delay;
+                    if (wr_flag = '1' or rd_flag = '1') then
+                        next_state <= start_wr;
+                    else
+                        next_state <= idle;
+                    end if;
+                when start_wr =>
+                    scl <= '1';
+                    sda <= data_clock;
+                    timer <= 1;
+                    next_state <= dev_addr_wr;
+                when dev_addr_wr => 
+                    scl <= bus_clock;
+                    sda <= i2c_target_address(6-idx);
+                    timer <= 7;
+                    next_state <= send_read_write_mode;
+                when send_read_write_mode =>
+                    scl <= bus_clock;
+                    sda <= not wr_flag; -- 0 means we write back to client
+                    timer <= 1;
+                    next_state <= ack1;
+                when ack1 =>
+                    scl <= bus_clock;
+                    sda <= 'Z';
+                    timer <= 1;
                     next_state <= wr_data;
-                else
-                    next_state <= stop;
-                end if;
-            when stop =>
-                scl <= '1';
-                sda <= NOT data_clock;
-                timer <= 1;
-                next_state <= idle;
-            when others =>
-                scl <= '1';
-                sda <= '1';
-                timer <= delay;
-                next_state <= idle;  
-        end case;
+                when wr_data =>
+                    scl <= bus_clock;
+                    sda <= data_out(7-idx);
+                    timer <= 8;
+                    next_state <= ack3;
+                when ack3 =>
+                    scl <= bus_clock;
+                    sda <= 'Z';
+                    timer <= 1;
+                    if (stream_complete = '0') then
+                        next_state <= wr_data;
+                    else
+                        next_state <= stop;
+                    end if;
+                when stop =>
+                    scl <= '1';
+                    sda <= NOT data_clock;
+                    timer <= 1;
+                    next_state <= idle;
+                when others =>
+                    scl <= '1';
+                    sda <= '1';
+                    timer <= delay;
+                    next_state <= idle;  
+            end case;
+        end if;
     end process;
     
 end finite_state_machine;
