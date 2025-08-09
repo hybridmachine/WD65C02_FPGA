@@ -61,7 +61,7 @@ signal que_for_send_sig : STD_LOGIC := '1';
 
 shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
-TYPE state_type IS (idle, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, send_read_write_mode, ack1, ack2, ack3, ack4);
+TYPE state_type IS (idle, send_start, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, send_read_write_mode, ack1, ack2, ack3, ack4);
 signal present_state, next_state: state_type;
 
 begin
@@ -85,7 +85,7 @@ begin
                 data_out <= data;
             end if;
                         
-            if (count = scl_divider) then
+            if (count >= scl_divider) then
                 auxiliary_clock <= NOT auxiliary_clock;
                 count := 0;
             end if;
@@ -105,7 +105,7 @@ begin
                 if (auxiliary_clock = '1') then
                     count := count + 1;
                     -- Simulator wasn't honoring limit so forcing it
-                    if (count > 3) then
+                    if (count >= 3) then
                         count := 0;
                     end if;
                     if (count = 0) then
@@ -122,7 +122,7 @@ begin
         end if;
     end process;
 
-    ------ Lower section of FSM: -----------------------------
+    ------ FSM: -----------------------------
     process(clk)
         variable data_clock_last_state : std_logic := '0';
     begin
@@ -132,13 +132,22 @@ begin
                 if (data_clock = '1') then
                     if (rst = '1') then
                         present_state <= idle;
+                        next_state <= idle;
                         idx := 0;
                     else
-                        if (idx = timer-1) then
-                            present_state <= next_state;
-                            idx := 0;
+                        if (next_state /= present_state) then
+                            if (idx = timer-1) then
+                                present_state <= next_state;
+                                idx := 0;
+                            else
+                                if (idx < delay) then
+                                    idx := idx + 1;
+                                else
+                                    idx := 0;
+                                end if;
+                            end if;
                         else
-                            idx := idx + 1;
+                            idx := 0;
                         end if;
                     end if;
                 end if;
@@ -162,28 +171,28 @@ begin
                     end if;
                 end if; 
             end if;  
-        end if;
-    end process;
-
-    ----Upper section of FSM:---------------------
-    --process(present_state, bus_clock, data_clock, wr_flag, rd_flag, data_out, sda)
-    -- We get warnings from Vivado, attempting to clear by wrapping in clock, we'll see if this still passes the tests
-    process(clk)
-    begin
-        if (rising_edge(clk)) then
+        
             case present_state is
                 when idle =>
-                    scl <= '1';
-                    sda <= '1';
+                    -- Assumption is scl and sda have pullup resisters, don't drive the bus in idle
+                    scl <= 'Z';
+                    sda <= 'Z';
                     timer <= delay;
-                    if (wr_flag = '1' or rd_flag = '1') then
+                    if (wr_flag = '1') then
                         next_state <= start_wr;
+                    elsif(rd_flag = '1') then
+                        next_state <= start_rd;
                     else
                         next_state <= idle;
                     end if;
                 when start_wr =>
+                    sda <= '1';
                     scl <= '1';
-                    sda <= data_clock;
+                    timer <= 1;
+                    next_state <= send_start;
+                when send_start =>
+                    sda <= '0';
+                    scl <= '1';
                     timer <= 1;
                     next_state <= dev_addr_wr;
                 when dev_addr_wr => 
@@ -205,7 +214,11 @@ begin
                     scl <= bus_clock;
                     sda <= data_out(7-idx);
                     timer <= 8;
-                    next_state <= ack3;
+                    if (idx = 7) then
+                        next_state <= wr_data;
+                    else
+                        next_state <= ack3;
+                    end if;
                 when ack3 =>
                     scl <= bus_clock;
                     sda <= 'Z';

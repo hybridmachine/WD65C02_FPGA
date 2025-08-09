@@ -55,7 +55,7 @@ architecture Behavioral of T_I2C_INTERFACE is
     constant RESET : std_logic := '1';
     constant RUN : std_logic := '0';
     type i2c_state_type is (idle, starting, addressing, ack, master_reading, master_writing, stop);
-    signal present_state, next_state: i2c_state_type := idle;
+    signal present_state : i2c_state_type := idle;
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
@@ -107,35 +107,28 @@ stimuli_generator: process begin
     wait; -- For now just wait, we'll add continue conditions later
 end process stimuli_generator;
 
-i2c_state_propogation: process(t_clk)
-begin
-    if (rising_edge(t_clk)) then
-        present_state <= next_state;
-    end if;
-end process;
-
 i2c_test_client: process(t_scl, t_sda)
     variable frame_bit_idx : natural range 0 to 8 := 8;
     variable target_address : std_logic_vector(6 downto 0);
     variable read_write_mode : std_logic;
     variable received_data : std_logic_vector(7 downto 0);
 begin
-    --next_state <= present_state; -- In case no assignment
+    --present_state <= present_state; -- In case no assignment
     t_client_to_master_write <= '0';
     if (falling_edge(t_sda)) then
         case present_state is
             when idle =>  
                 if (t_scl = '1') then
-                    next_state <= starting;
+                    present_state <= starting;
                 end if;
             when others =>
-                --next_state <= next_state;
+                --present_state <= present_state;
         end case;
     end if;
     
     if (rising_edge(t_sda)) then
         if (t_scl = '1') then
-            next_state <= stop;
+            present_state <= stop;
         end if;
     end if;
     
@@ -143,7 +136,7 @@ begin
         case present_state is
             when starting =>
                 frame_bit_idx := 8;
-                next_state <= addressing;
+                present_state <= addressing;
             when ack =>
                 frame_bit_idx := 8;
                 
@@ -151,12 +144,12 @@ begin
                 t_client_to_master_write <= '1';
                 
                 if (read_write_mode = '0') then
-                    next_state <= master_writing;
+                    present_state <= master_writing;
                 else
-                    next_state <= master_reading;
+                    present_state <= master_reading;
                 end if;
             when others =>
-                --next_state <= next_state;
+                --present_state <= present_state;
         end case;
     end if;
     
@@ -169,7 +162,7 @@ begin
                     assert (target_address = t_i2c_target_address) report "Target address mismatch" severity error;
                     read_write_mode := t_master_to_client_sda;
                 else
-                    next_state <= ack;
+                    present_state <= ack;
                 end if;
                 frame_bit_idx := frame_bit_idx - 1;
             when master_writing =>
@@ -177,19 +170,19 @@ begin
                 if (frame_bit_idx = 0) then
                     assert (t_data_inflight = received_data) report "Data received mismatch" severity error;
                     if (t_stream_complete = '0') then
-                        next_state <= ack;
+                        present_state <= ack;
                         -- The master should send the stop signal and we'll check that in the stop state
                     end if;
                 else
                     received_data(frame_bit_idx - 1) := t_master_to_client_sda;
                     t_client_received_data(frame_bit_idx - 1) <= t_master_to_client_sda;
                     frame_bit_idx := frame_bit_idx - 1;
-                    next_state <= master_writing;
+                    present_state <= master_writing;
                 end if;
             when stop =>
-                next_state <= idle;
+                present_state <= idle;
             when others =>
-                --next_state <= present_state;
+                --present_state <= present_state;
         end case;
     end if;
 end process i2c_test_client;
