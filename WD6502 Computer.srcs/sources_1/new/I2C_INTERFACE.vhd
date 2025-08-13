@@ -105,7 +105,7 @@ begin
                 if (auxiliary_clock = '1') then
                     count := count + 1;
                     -- Simulator wasn't honoring limit so forcing it
-                    if (count >= 3) then
+                    if (count > 3) then
                         count := 0;
                     end if;
                     if (count = 0) then
