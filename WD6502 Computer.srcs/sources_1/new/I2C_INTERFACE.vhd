@@ -76,15 +76,7 @@ begin
         VARIABLE count: INTEGER RANGE 0 to scl_divider := 0;
     begin
         if (rising_edge(clk)) then
-            count := count + 1;
-            -- We've drained the queue, pull in the data then we'll signal the caller to send the next byte
-            if (present_state = wr_data or present_state = idle) then
-                que_for_send_sig <= '1'; -- Tell the caller to queue the next byte
-            elsif (que_for_send_sig = '1') then
-                que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
-                data_out <= data;
-            end if;
-                        
+            count := count + 1;                        
             if (count >= scl_divider) then
                 auxiliary_clock <= NOT auxiliary_clock;
                 count := 0;
@@ -178,6 +170,7 @@ begin
                     scl <= 'Z';
                     sda <= 'Z';
                     timer <= delay;
+                    que_for_send_sig <= '1'; -- Tell the caller to queue the next byte
                     if (wr_flag = '1') then
                         next_state <= start_wr;
                     elsif(rd_flag = '1') then
@@ -212,6 +205,7 @@ begin
                     next_state <= wr_data;
                 when wr_data =>
                     scl <= bus_clock;
+                    que_for_send_sig <= '1'; 
                     sda <= data_out(7-idx);
                     timer <= 8;
                     if (idx = 7) then
@@ -220,14 +214,24 @@ begin
                         next_state <= ack3;
                     end if;
                 when ack3 =>
+                    -- Todo after write is complete. run the clock 
+                    -- for once cycle waiting for ack 
+                    -- Then hold clock low for one cycle then 
+                    -- start clock back up
                     scl <= bus_clock;
                     sda <= 'Z';
                     timer <= 1;
                     if (stream_complete = '0') then
-                        next_state <= wr_data;
+                        next_state <= ack4;
                     else
                         next_state <= stop;
                     end if;
+                when ack4 =>
+                    scl <= '0';
+                    timer <= 1;
+                    que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
+                    data_out <= data;
+                    next_state <= wr_data;
                 when stop =>
                     scl <= '1';
                     sda <= NOT data_clock;

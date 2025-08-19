@@ -54,7 +54,7 @@ architecture Behavioral of T_I2C_INTERFACE is
     constant READ_WRITE_MODE_READ : std_logic := '0';
     constant RESET : std_logic := '1';
     constant RUN : std_logic := '0';
-    type i2c_state_type is (idle, starting, addressing, ack, master_reading, master_writing, stop);
+    type i2c_state_type is (idle, starting, addressing, ack, ack_hold, master_reading, master_writing, stop);
     signal present_state : i2c_state_type := idle;
 begin
 
@@ -77,23 +77,23 @@ dut: entity work.I2C_INTERFACE
 stimuli_generator: process begin
     t_rst <= RESET;
     t_stream_complete <= '0';
-    t_data <= x"AB";
-    
     
     t_i2c_target_address <= "0101011"; -- 
     t_read_write_mode <= READ_WRITE_MODE_WRITE;
     wait for 10 * CLOCK_PERIOD;
+    t_data <= x"AB";
+    
     t_rst <= RUN; 
-    wait until t_que_for_send = '0';  
-    wait until t_que_for_send = '1';
+    wait until t_que_for_send = '0';
     t_data_inflight <= x"AB";
+    
+    wait until t_que_for_send = '1';
     t_data <= x"BC";
     wait until t_que_for_send = '0';
-    wait until t_que_for_send = '1';
     t_data_inflight <= x"BC";
-    t_data <= x"CD";
-    wait until t_que_for_send = '0';
+
     wait until t_que_for_send = '1';
+    t_data <= x"CD";
     t_data_inflight <= x"CD";
     t_data <= x"DE";
     wait until t_que_for_send = '0';  
@@ -139,15 +139,12 @@ begin
                 present_state <= addressing;
             when ack =>
                 frame_bit_idx := 8;
-                
+                received_data := "UUUUUUUU";
                 t_client_to_master_sda <= '0'; -- pull low for ack to master
                 t_client_to_master_write <= '1';
                 
-                if (read_write_mode = '0') then
-                    present_state <= master_writing;
-                else
-                    present_state <= master_reading;
-                end if;
+                present_state <= ack_hold;
+                
             when others =>
                 --present_state <= present_state;
         end case;
@@ -181,6 +178,16 @@ begin
                 end if;
             when stop =>
                 present_state <= idle;
+            when ack_hold =>
+                if (read_write_mode = '0') then
+                    if (t_que_for_send = '1') then
+                        present_state <= master_writing;
+                    else
+                        present_state <= ack_hold;
+                    end if;
+                else
+                    present_state <= master_reading;
+                end if;
             when others =>
                 --present_state <= present_state;
         end case;
