@@ -182,11 +182,13 @@ begin
                     sda <= '1';
                     scl <= '1';
                     timer <= 1;
+                    que_for_send_sig <= '0'; -- About to read the data line
                     next_state <= send_start;
                 when send_start =>
                     sda <= '0';
                     scl <= '1';
                     timer <= 1;
+                    data_out <= data;
                     next_state <= dev_addr_wr;
                 when dev_addr_wr => 
                     scl <= bus_clock;
@@ -202,6 +204,7 @@ begin
                     scl <= bus_clock;
                     sda <= 'Z';
                     timer <= 1;
+                    que_for_send_sig <= '1'; -- Data is read
                     next_state <= wr_data;
                 when wr_data =>
                     scl <= bus_clock;

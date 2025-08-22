@@ -75,6 +75,7 @@ dut: entity work.I2C_INTERFACE
              scl => t_scl);
 
 stimuli_generator: process begin
+    wait for 110ns; -- Per Vivado simulator guidelines
     t_rst <= RESET;
     t_stream_complete <= '0';
     
