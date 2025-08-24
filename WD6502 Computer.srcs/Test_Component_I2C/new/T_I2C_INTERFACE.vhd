@@ -95,14 +95,17 @@ stimuli_generator: process begin
 
     wait until t_que_for_send = '1';
     t_data <= x"CD";
+    wait until t_que_for_send = '0';
     t_data_inflight <= x"CD";
+    
+    wait until t_que_for_send = '1';
     t_data <= x"DE";
     wait until t_que_for_send = '0';  
-    wait until t_que_for_send = '1';
     t_data_inflight <= x"DE";
+    
+    wait until t_que_for_send = '1';
     t_data <= x"EF";
     wait until t_que_for_send = '0';  
-    wait until t_que_for_send = '1';
     t_data_inflight <= x"EF";
     t_stream_complete <= '1';   
     wait; -- For now just wait, we'll add continue conditions later
@@ -142,10 +145,9 @@ begin
                 frame_bit_idx := 8;
                 received_data := "UUUUUUUU";
                 t_client_to_master_sda <= '0'; -- pull low for ack to master
-                t_client_to_master_write <= '1';
+                t_client_to_master_write <= '1';     
                 
                 present_state <= ack_hold;
-                
             when others =>
                 --present_state <= present_state;
         end case;
@@ -172,9 +174,11 @@ begin
                         -- The master should send the stop signal and we'll check that in the stop state
                     end if;
                 else
-                    received_data(frame_bit_idx - 1) := t_master_to_client_sda;
-                    t_client_received_data(frame_bit_idx - 1) <= t_master_to_client_sda;
-                    frame_bit_idx := frame_bit_idx - 1;
+                    if (t_master_to_client_sda /= 'Z') then
+                        received_data(frame_bit_idx - 1) := t_master_to_client_sda;
+                        t_client_received_data(frame_bit_idx - 1) <= t_master_to_client_sda;
+                        frame_bit_idx := frame_bit_idx - 1;
+                    end if;
                     present_state <= master_writing;
                 end if;
             when stop =>
