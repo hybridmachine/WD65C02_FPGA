@@ -10,25 +10,19 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="5,101.098333 us"></ZoomStartTime>
-      <ZoomEndTime time="5,218.298334 us"></ZoomEndTime>
-      <Cursor1Time time="5,198.765000 us"></Cursor1Time>
+      <ZoomStartTime time="4,695.345703 us"></ZoomStartTime>
+      <ZoomEndTime time="4,979.576872 us"></ZoomEndTime>
+      <Cursor1Time time="5,112.940678 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="512"></NameColumnWidth>
-      <ValueColumnWidth column_width="274"></ValueColumnWidth>
+      <ValueColumnWidth column_width="264"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="21" />
+   <WVObjectSize size="20" />
    <wave_markers>
-      <marker time="5011275000" label="" />
-      <marker time="5091275000" label="" />
-      <marker time="5111275000" label="" />
-      <marker time="5198765000" label="" />
+      <marker time="5021275000" label="" />
+      <marker time="5101275000" label="" />
    </wave_markers>
-   <wvobject fp_name="/T_I2C_INTERFACE/t_clk" type="logic">
-      <obj_property name="ElementShortName">t_clk</obj_property>
-      <obj_property name="ObjectShortName">t_clk</obj_property>
-   </wvobject>
    <wvobject fp_name="/T_I2C_INTERFACE/t_rst" type="logic">
       <obj_property name="ElementShortName">t_rst</obj_property>
       <obj_property name="ObjectShortName">t_rst</obj_property>

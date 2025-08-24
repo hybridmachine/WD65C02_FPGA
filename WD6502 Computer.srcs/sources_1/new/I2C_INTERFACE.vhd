@@ -127,19 +127,13 @@ begin
                         next_state <= idle;
                         idx := 0;
                     else
-                        if (next_state /= present_state) then
-                            if (idx = timer-1) then
-                                present_state <= next_state;
-                                idx := 0;
-                            else
-                                if (idx < delay) then
-                                    idx := idx + 1;
-                                else
-                                    idx := 0;
-                                end if;
-                            end if;
+                        if (idx < timer) then
+                            idx := idx + 1;
                         else
-                            idx := 0;
+                            if (next_state /= present_state) then
+                                    present_state <= next_state;
+                                    idx := 0;
+                            end if;
                         end if;
                     end if;
                 end if;
@@ -193,7 +187,7 @@ begin
                 when dev_addr_wr => 
                     scl <= bus_clock;
                     sda <= i2c_target_address(6-idx);
-                    timer <= 7;
+                    timer <= 6;
                     next_state <= send_read_write_mode;
                 when send_read_write_mode =>
                     scl <= bus_clock;
@@ -210,8 +204,8 @@ begin
                     scl <= bus_clock;
                     que_for_send_sig <= '1'; 
                     sda <= data_out(7-idx);
-                    timer <= 8;
-                    if (idx = 7) then
+                    timer <= 7;
+                    if (idx < 7) then
                         next_state <= wr_data;
                     else
                         next_state <= ack3;
