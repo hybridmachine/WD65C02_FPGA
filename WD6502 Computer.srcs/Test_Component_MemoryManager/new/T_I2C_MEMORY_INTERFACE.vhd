@@ -47,6 +47,9 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_PIO_I2C_DATA_STREAMER_SDA : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_SCL : std_logic;   
     signal T_RESET : std_logic;
+    signal T_SWITCH_VECTOR : std_logic_vector(15 downto 0);
+    signal T_I2C_ADDRESS : std_logic_vector(7 downto 0);
+    signal T_I2C_ADDRESS_EXPECTED : std_logic_vector(7 downto 0) := "11000100";
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
     constant address_setup_ns : time := tADS * 1 ns;
@@ -54,6 +57,8 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     constant MODE_WRITE : std_logic := '1';
     constant MODE_READ : std_logic := not MODE_WRITE;
     
+    type i2c_state_type is (idle, starting, addressing, ack, ack_hold, master_reading, master_writing, stop);
+    signal present_state : i2c_state_type := idle;
     
     procedure WriteToMemory( signal  memory_clock : in std_logic;
                              constant i_address : in ADDRESS_65C02_T;
@@ -95,6 +100,7 @@ dut: entity work.MemoryManager
         PIO_7SEG_SEGMENTS => T_PIO_7SEG_SEGMENTS,
         PIO_I2C_DATA_STREAMER_SDA => T_PIO_I2C_DATA_STREAMER_SDA,
         PIO_I2C_DATA_STREAMER_SCL => T_PIO_I2C_DATA_STREAMER_SCL,
+        I_SWITCH_VECTOR => T_SWITCH_VECTOR,
         RESET => T_RESET );
 
 
@@ -171,7 +177,7 @@ begin
     WriteToMemory(  T_MEMORY_CLOCK,
                     PIO_I2C_DATA_STRM_I2C_ADDRESS,
                     T_BUS_ADDRESS,
-                    x"BE",
+                    T_I2C_ADDRESS_EXPECTED,
                     T_BUS_WRITE_DATA,
                     T_WRITE_FLAG);
     
@@ -182,13 +188,43 @@ begin
                     CONTROL_STREAM_BUFFER,
                     T_BUS_WRITE_DATA,
                     T_WRITE_FLAG);
-    
+  
+    wait;  
 end process stimuli_generator;
 
-i2c_signal_test: process
+i2c_signal_test: process(T_PIO_I2C_DATA_STREAMER_SDA,T_PIO_I2C_DATA_STREAMER_SCL)
+variable timer : positive := 0;
 begin
-    -- Wait for I2C Start condition
-    -- Verify I2C address
+    case present_state is
+        when idle =>
+            -- Wait for I2C Start condition
+            -- SCL high, SDA pulled low
+            if (falling_edge(T_PIO_I2C_DATA_STREAMER_SDA)) then
+                if (T_PIO_I2C_DATA_STREAMER_SCL = '1') then
+                    present_state <= starting;
+                end if;
+            end if;
+        when starting =>
+            if (falling_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
+                present_state <= addressing;
+                timer := 8;
+            end if;
+        when addressing =>
+            if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
+                if (timer > 0) then
+                    T_I2C_ADDRESS((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
+                    timer := timer - 1;
+                else
+                    -- Verify I2C address
+                    assert(T_I2C_ADDRESS = T_I2C_ADDRESS_EXPECTED) report "I2C address" severity failure;
+                end if;
+            end if;
+         when others=>
+            assert(false) report "Unexpected state" severity failure;
+    end case;
+    
+    
+    
     -- Verify byte stream
     -- Wait for I2C Stop
 end process i2c_signal_test;
