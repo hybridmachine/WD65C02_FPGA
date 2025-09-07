@@ -45,10 +45,13 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_PIO_7SEG_COMMON : std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
     signal T_PIO_7SEG_SEGMENTS : std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
     signal T_PIO_I2C_DATA_STREAMER_SDA : std_logic;
+    signal T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_SCL : std_logic;   
     signal T_RESET : std_logic;
     signal T_SWITCH_VECTOR : std_logic_vector(15 downto 0);
     signal T_I2C_ADDRESS : std_logic_vector(7 downto 0);
+    signal T_I2C_DATA : std_logic_vector(7 downto 0);
+    
     signal T_I2C_ADDRESS_EXPECTED : std_logic_vector(7 downto 0) := "11000100";
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
@@ -87,6 +90,7 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
 begin
 
 T_MEMORY_CLOCK <= not T_MEMORY_CLOCK after (CLOCK_PERIOD / 2);
+T_PIO_I2C_DATA_STREAMER_SDA <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when present_state = ack else 'Z';
 
 dut: entity work.MemoryManager 
     Port map (
@@ -217,6 +221,34 @@ begin
                 else
                     -- Verify I2C address
                     assert(T_I2C_ADDRESS = T_I2C_ADDRESS_EXPECTED) report "I2C address" severity failure;
+                end if;
+            end if;
+            if (falling_edge(T_PIO_I2C_DATA_STREAMER_SCL) and timer = 0) then
+                T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA <= '0'; -- Send ack
+                present_state <= ack;
+                timer := 1;
+            end if;
+         when ack =>
+            if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
+                if (timer > 0) then
+                    timer := timer - 1;
+                else   
+                    present_state <= ack_hold; 
+                end if;
+            end if;
+         when ack_hold =>
+            if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
+               present_state <= master_writing; 
+               timer := 8;
+            end if;
+         when master_writing =>
+            if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
+                if (timer > 0) then
+                    T_I2C_DATA((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
+                    timer := timer - 1;
+                else
+                    -- Verify I2C address
+                    assert(T_I2C_DATA = x"FE") report "I2C data" severity failure;
                 end if;
             end if;
          when others=>

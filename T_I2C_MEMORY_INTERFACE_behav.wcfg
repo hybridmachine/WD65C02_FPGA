@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="T_I2C_MEMORY_INTERFACE_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="T_I2C_MEMORY_INTERFACE" />
+            <top_module name="i2c_data_streamer" />
+            <top_module name="interrupt_controller" />
+            <top_module name="memory_manager" />
+            <top_module name="seven_segment_ca" />
+            <top_module name="timer_control" />
+            <top_module name="w65c02_definitions" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="5,067.390000 us"></ZoomStartTime>
+      <ZoomEndTime time="5,135.040001 us"></ZoomEndTime>
+      <Cursor1Time time="5,123.765000 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="630"></NameColumnWidth>
+      <ValueColumnWidth column_width="146"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="19" />
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_BUS_READ_DATA" type="array">
+      <obj_property name="ElementShortName">T_BUS_READ_DATA[7:0]</obj_property>
+      <obj_property name="ObjectShortName">T_BUS_READ_DATA[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_BUS_WRITE_DATA" type="array">
+      <obj_property name="ElementShortName">T_BUS_WRITE_DATA[7:0]</obj_property>
+      <obj_property name="ObjectShortName">T_BUS_WRITE_DATA[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_BUS_ADDRESS" type="array">
+      <obj_property name="ElementShortName">T_BUS_ADDRESS[15:0]</obj_property>
+      <obj_property name="ObjectShortName">T_BUS_ADDRESS[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_WRITE_FLAG" type="logic">
+      <obj_property name="ElementShortName">T_WRITE_FLAG</obj_property>
+      <obj_property name="ObjectShortName">T_WRITE_FLAG</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_PIO_LED_OUT" type="array">
+      <obj_property name="ElementShortName">T_PIO_LED_OUT[7:0]</obj_property>
+      <obj_property name="ObjectShortName">T_PIO_LED_OUT[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_PIO_7SEG_COMMON" type="array">
+      <obj_property name="ElementShortName">T_PIO_7SEG_COMMON[3:0]</obj_property>
+      <obj_property name="ObjectShortName">T_PIO_7SEG_COMMON[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_PIO_7SEG_SEGMENTS" type="array">
+      <obj_property name="ElementShortName">T_PIO_7SEG_SEGMENTS[7:0]</obj_property>
+      <obj_property name="ObjectShortName">T_PIO_7SEG_SEGMENTS[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_PIO_I2C_DATA_STREAMER_SDA" type="logic">
+      <obj_property name="ElementShortName">T_PIO_I2C_DATA_STREAMER_SDA</obj_property>
+      <obj_property name="ObjectShortName">T_PIO_I2C_DATA_STREAMER_SDA</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_PIO_I2C_DATA_STREAMER_SCL" type="logic">
+      <obj_property name="ElementShortName">T_PIO_I2C_DATA_STREAMER_SCL</obj_property>
+      <obj_property name="ObjectShortName">T_PIO_I2C_DATA_STREAMER_SCL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_RESET" type="logic">
+      <obj_property name="ElementShortName">T_RESET</obj_property>
+      <obj_property name="ObjectShortName">T_RESET</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_SWITCH_VECTOR" type="array">
+      <obj_property name="ElementShortName">T_SWITCH_VECTOR[15:0]</obj_property>
+      <obj_property name="ObjectShortName">T_SWITCH_VECTOR[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_I2C_ADDRESS" type="array">
+      <obj_property name="ElementShortName">T_I2C_ADDRESS[7:0]</obj_property>
+      <obj_property name="ObjectShortName">T_I2C_ADDRESS[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_I2C_ADDRESS_EXPECTED" type="array">
+      <obj_property name="ElementShortName">T_I2C_ADDRESS_EXPECTED[7:0]</obj_property>
+      <obj_property name="ObjectShortName">T_I2C_ADDRESS_EXPECTED[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/present_state" type="other">
+      <obj_property name="ElementShortName">present_state</obj_property>
+      <obj_property name="ObjectShortName">present_state</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/CLOCK_PERIOD" type="other">
+      <obj_property name="ElementShortName">CLOCK_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">CLOCK_PERIOD</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/address_setup_ns" type="other">
+      <obj_property name="ElementShortName">address_setup_ns</obj_property>
+      <obj_property name="ObjectShortName">address_setup_ns</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/address_hold_time" type="other">
+      <obj_property name="ElementShortName">address_hold_time</obj_property>
+      <obj_property name="ObjectShortName">address_hold_time</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/MODE_WRITE" type="logic">
+      <obj_property name="ElementShortName">MODE_WRITE</obj_property>
+      <obj_property name="ObjectShortName">MODE_WRITE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/MODE_READ" type="logic">
+      <obj_property name="ElementShortName">MODE_READ</obj_property>
+      <obj_property name="ObjectShortName">MODE_READ</obj_property>
+   </wvobject>
+</wave_config>
