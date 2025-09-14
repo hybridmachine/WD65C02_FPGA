@@ -195,7 +195,7 @@ begin
                     timer <= 1;
                     next_state <= ack1;
                 when ack1 =>
-                    scl <= bus_clock;
+                    scl <= '0';
                     sda <= 'Z';
                     timer <= 1;
                     que_for_send_sig <= '1'; -- Data is read
@@ -217,7 +217,7 @@ begin
                     -- start clock back up
                     scl <= bus_clock;
                     sda <= 'Z';
-                    timer <= 1;
+                    timer <= 0;
                     if (stream_complete = '0') then
                         next_state <= ack4;
                     else

@@ -16,15 +16,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="5,067.390000 us"></ZoomStartTime>
-      <ZoomEndTime time="5,135.040001 us"></ZoomEndTime>
-      <Cursor1Time time="5,123.765000 us"></Cursor1Time>
+      <ZoomStartTime time="5,154.848333 us"></ZoomStartTime>
+      <ZoomEndTime time="5,453.548334 us"></ZoomEndTime>
+      <Cursor1Time time="5,403.765000 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="630"></NameColumnWidth>
+      <NameColumnWidth column_width="620"></NameColumnWidth>
       <ValueColumnWidth column_width="146"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="19" />
+   <WVObjectSize size="20" />
    <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_BUS_READ_DATA" type="array">
       <obj_property name="ElementShortName">T_BUS_READ_DATA[7:0]</obj_property>
       <obj_property name="ObjectShortName">T_BUS_READ_DATA[7:0]</obj_property>
@@ -100,5 +100,9 @@
    <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/MODE_READ" type="logic">
       <obj_property name="ElementShortName">MODE_READ</obj_property>
       <obj_property name="ObjectShortName">MODE_READ</obj_property>
+   </wvobject>
+   <wvobject fp_name="/T_I2C_MEMORY_INTERFACE/T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA" type="logic">
+      <obj_property name="ElementShortName">T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA</obj_property>
+      <obj_property name="ObjectShortName">T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA</obj_property>
    </wvobject>
 </wave_config>

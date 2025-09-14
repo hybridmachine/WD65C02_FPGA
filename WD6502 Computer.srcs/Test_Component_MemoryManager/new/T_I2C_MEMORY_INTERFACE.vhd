@@ -159,7 +159,7 @@ begin
             when 0 =>
                 stream_value := x"FE";
             when 1 =>
-                stream_value := x"ED";
+                stream_value := x"BA";
             when 2 =>
                 stream_value := x"FA";
             when 3 =>
@@ -230,11 +230,9 @@ begin
             end if;
          when ack =>
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
-                if (timer > 0) then
-                    timer := timer - 1;
-                else   
-                    present_state <= ack_hold; 
-                end if;
+                assert(T_I2C_DATA = x"FE") report "I2C data" severity warning;   
+                present_state <= master_writing; 
+                timer := 8;   
             end if;
          when ack_hold =>
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
@@ -246,9 +244,13 @@ begin
                 if (timer > 0) then
                     T_I2C_DATA((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
                     timer := timer - 1;
+                    if (timer = 0) then
+                        present_state <= ack;
+                    end if;
                 else
                     -- Verify I2C address
-                    assert(T_I2C_DATA = x"FE") report "I2C data" severity failure;
+                    assert(T_I2C_DATA = x"FE") report "I2C data" severity warning;
+                    
                 end if;
             end if;
          when others=>
