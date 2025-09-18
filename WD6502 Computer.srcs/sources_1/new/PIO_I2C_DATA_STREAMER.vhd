@@ -31,15 +31,17 @@ use work.I2C_DATA_STREAMER.ALL;
 --use UNISIM.VComponents.all;
 
 entity PIO_I2C_DATA_STREAMER is
-    Port (  clk                 : in STD_LOGIC;
+    Port (  I_CLK                 : in STD_LOGIC;
             -- No reset, as per Ultra Fast Desig Guide don't use if it can be avoided, users can reset via the control bus
-            status              : out STD_LOGIC_VECTOR (7 downto 0);
-            control             : in STD_LOGIC_VECTOR (7 downto 0);
-            address             : in STD_LOGIC_VECTOR (15 downto 0);
-            data                : in STD_LOGIC_VECTOR (7 downto 0);
-            i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
-            sda                 : inout STD_LOGIC;
-            scl                 : out STD_LOGIC);
+            O_STATUS                : out STD_LOGIC_VECTOR (7 downto 0);
+            I_CONTROL               : in STD_LOGIC_VECTOR (7 downto 0);
+            I_ADDRESS               : in STD_LOGIC_VECTOR (15 downto 0);
+            I_DATA                  : in STD_LOGIC_VECTOR (7 downto 0);
+            I_I2C_TARGET_ADDRESS    : in STD_LOGIC_VECTOR(6 downto 0);
+            IO_SDA                  : inout STD_LOGIC;
+            O_SCL                   : out STD_LOGIC;
+            I_IRQ_ACK               : in STD_LOGIC;
+            O_PIO_IRQ               : out STD_LOGIC);
 end PIO_I2C_DATA_STREAMER;
 
 architecture Behavioral of PIO_I2C_DATA_STREAMER is
@@ -103,7 +105,7 @@ signal ram_web: std_logic := '0';
 signal ram_ena: std_logic := '1';
 signal ram_enb: std_logic := '1';
 
-signal control_reg : std_logic_vector(control'length-1 downto 0);
+signal control_reg : std_logic_vector(I_CONTROL'length-1 downto 0);
 
 type STREAMER_STATE_T is ( RESET_START,
                     RESET_INPROGRESS,
@@ -115,6 +117,8 @@ type STREAMER_STATE_T is ( RESET_START,
                     STREAM_DATA_OVER_I2C_WRITE_TO_I2C,
                     STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT,
                     STREAM_DATA_OVER_I2C_COMPLETE,
+                    WAIT_IRQ_ACK,
+                    WAIT_FOR_RESET,
                     WRITE_DATA_TO_BUFFER_START,
                     WRITE_DATA_TO_BUFFER_COMMIT,
                     WRITE_DATA_TO_BUFFER_COMPLETE);
@@ -159,31 +163,31 @@ RAM_DEVICE: RAM port map (
 ); 
 
 I2C_DEVICE: I2C_INTERFACE port map (
-    clk => clk,
+    clk => I_CLK,
     rst => i2c_reset,
     stream_complete => i2c_stream_complete,
     que_for_send => i2c_que_for_send,
     read_write_mode => i2c_readwrite_mode,
     data => i2c_data,
     ack_error => i2c_ack_error,
-    i2c_target_address => i2c_target_address,
-    sda => sda, 
-    scl => scl
+    i2c_target_address => I_I2C_TARGET_ADDRESS,
+    sda => IO_SDA, 
+    scl => O_SCL
 );
 
 ram_ena <= '1';
 ram_enb <= '1';
 
-ram_clka <= clk;
-ram_clkb <= clk;
+ram_clka <= I_CLK;
+ram_clkb <= I_CLK;
 
 ram_web <= '0'; -- B is our read only port
 
-process(clk) begin
-    if (rising_edge(clk)) then
-        status <= status_reg;
-        control_reg <= control;
-        if (control = CONTROL_RESET) then
+process(I_CLK) begin
+    if (rising_edge(I_CLK)) then
+        O_STATUS <= status_reg;
+        control_reg <= I_CONTROL;
+        if (I_CONTROL = CONTROL_RESET) then
             CURRENT_STREAMER_STATE <= RESET_START;
         else
             CURRENT_STREAMER_STATE <= NEXT_STREAMER_STATE;     
@@ -191,16 +195,17 @@ process(clk) begin
     end if;
 end process;
 
-process(clk) 
+process(I_CLK) 
 variable buffer_end_address : natural range 0 to 2047 := 0;
 variable byte_outbound_via_i2c : natural range 0 to 2047 := 0;
 variable byte_just_sent_via_i2c : natural range 0 to 2047 := 0;
 variable cycle_delay : natural range 0 to 255 := 0;
 begin
-    if (rising_edge(clk)) then
+    if (rising_edge(I_CLK)) then
         case CURRENT_STREAMER_STATE is
             when RESET_START =>
                 i2c_reset <= '1';
+                O_PIO_IRQ <= '0';
                 status_reg <= STATUS_RESETTING;
                 buffer_end_address := 0;
                 NEXT_STREAMER_STATE <= RESET_INPROGRESS;
@@ -224,8 +229,8 @@ begin
             when WRITE_DATA_TO_BUFFER_START =>
                 status_reg <= STATUS_WRITING_RAM;
                 ram_wea <= '0'; -- Make sure not in write mode then setup address and data lines
-                ram_addra <= address;
-                ram_dina <= data; 
+                ram_addra <= I_ADDRESS;
+                ram_dina <= I_DATA; 
                 NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMMIT;
             when WRITE_DATA_TO_BUFFER_COMMIT =>
                 status_reg <= STATUS_WRITING_RAM;
@@ -279,11 +284,20 @@ begin
                 
             when STREAM_DATA_OVER_I2C_COMPLETE =>
                 i2c_reset <= '1';
-                NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_COMPLETE;
+                O_PIO_IRQ <= '1'; 
+                NEXT_STREAMER_STATE <= WAIT_IRQ_ACK;
                 status_reg <= STATUS_STREAMING_I2C_COMPLETE;
-                -- Wait until a reset is requested to transition to ready
+            when WAIT_IRQ_ACK =>
+                if (I_IRQ_ACK = '1') then
+                    NEXT_STREAMER_STATE <= WAIT_FOR_RESET;
+                else
+                    NEXT_STREAMER_STATE <= WAIT_IRQ_ACK;
+                end if;
+            when WAIT_FOR_RESET =>
                 if (control_reg = CONTROL_RESET) then
                     NEXT_STREAMER_STATE <= RESET_START;
+                else
+                    NEXT_STREAMER_STATE <= WAIT_FOR_RESET;
                 end if;
             when OTHERS =>
                 NEXT_STREAMER_STATE <= RESET_START;

@@ -67,8 +67,8 @@ CODE
 	STACK_BASE:				equ		$0100
 	
 	; Memory addresses for I2C interface status
-    PIO_I2C_DATA_STRM_STATUS:               equ $0212
-	LED_IO_ADDR:			equ		$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+    PIO_I2C_DATA_STRM_STATUS:	equ $0212
+	LED_IO_ADDR:				equ		$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -85,9 +85,9 @@ START:
 ;                               Application Code
 ;***************************************************************************
 ;
-	jsr SUB_SEVENSEG_DISABLE
+	JSR SUB_SEVENSEG_DISABLE
 	; Run power on self test functions
-	jsr POST_MEMORY_TEST
+	JSR POST_MEMORY_TEST
 
 	; MAIN
 	LDA #00

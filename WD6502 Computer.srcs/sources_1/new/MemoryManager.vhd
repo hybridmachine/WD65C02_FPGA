@@ -173,15 +173,17 @@ COMPONENT PIO_ELAPSED_TIMER is
 end COMPONENT;
 
 COMPONENT PIO_I2C_DATA_STREAMER is
-    Port (  clk                 : in STD_LOGIC;
+    Port (  I_CLK                 : in STD_LOGIC;
             -- No reset, as per Ultra Fast Desig Guide don't use if it can be avoided, users can reset via the control bus
-            status              : out STD_LOGIC_VECTOR (7 downto 0);
-            control             : in STD_LOGIC_VECTOR (7 downto 0);
-            address             : in STD_LOGIC_VECTOR (15 downto 0);
-            data                : in STD_LOGIC_VECTOR (7 downto 0);
-            i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
-            sda                 : inout STD_LOGIC;
-            scl                 : out STD_LOGIC);
+            O_STATUS              : out STD_LOGIC_VECTOR (7 downto 0);
+            I_CONTROL             : in STD_LOGIC_VECTOR (7 downto 0);
+            I_ADDRESS             : in STD_LOGIC_VECTOR (15 downto 0);
+            I_DATA                : in STD_LOGIC_VECTOR (7 downto 0);
+            I_I2C_TARGET_ADDRESS  : in STD_LOGIC_VECTOR(6 downto 0);
+            IO_SDA                : inout STD_LOGIC;
+            O_SCL                 : out STD_LOGIC;
+            I_IRQ_ACK             : in STD_LOGIC;
+            O_PIO_IRQ             : out STD_LOGIC);
 end COMPONENT;
 
 COMPONENT PIO_IRQ_TIMER is
@@ -288,14 +290,16 @@ PIO_ELAPSED_TIMER_DEVICE: PIO_ELAPSED_TIMER port map (
 );
 
 PIO_I2C_DATA_STREAMER_DEVICE: PIO_I2C_DATA_STREAMER port map (  
-    clk => MEMORY_CLOCK,
-    status => PIO_I2C_DATA_STREAMER_STATUS,
-    control => PIO_I2C_DATA_STREAMER_CONTROL,
-    address => PIO_I2C_DATA_STREAMER_ADDRESS,
-    data => PIO_I2C_DATA_STREAMER_DATA,
-    i2c_target_address => PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS,
-    sda => PIO_I2C_DATA_STREAMER_SDA,
-    scl => PIO_I2C_DATA_STREAMER_SCL
+    I_CLK => MEMORY_CLOCK,
+    O_STATUS => PIO_I2C_DATA_STREAMER_STATUS,
+    I_CONTROL => PIO_I2C_DATA_STREAMER_CONTROL,
+    I_ADDRESS => PIO_I2C_DATA_STREAMER_ADDRESS,
+    I_DATA => PIO_I2C_DATA_STREAMER_DATA,
+    I_I2C_TARGET_ADDRESS => PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS,
+    IO_SDA => PIO_I2C_DATA_STREAMER_SDA,
+    O_SCL => PIO_I2C_DATA_STREAMER_SCL,
+    I_IRQ_ACK => PIO_INTERRUPT_CONTROLLER_ACK_VECTOR(2),
+    O_PIO_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(2) 
 );
 
 -- Concurrent processes to distribute clock signals to RAM and ROM
