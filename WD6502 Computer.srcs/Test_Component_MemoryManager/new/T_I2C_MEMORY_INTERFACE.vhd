@@ -40,6 +40,7 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_BUS_WRITE_DATA : DATA_65C02_T; --! Data to be written
     signal T_BUS_ADDRESS : ADDRESS_65C02_T; --! Read/Write address
     signal T_MEMORY_CLOCK : std_logic := '0'; --! Memory clock, typically full FPGA clock speed
+    signal T_CPU_CLOCK : std_logic := '0'; --! 65C02 Clock, used for writing to memory manager
     signal T_WRITE_FLAG : std_logic; --! When 1, write data to address, otherwise read address and output on data line
     signal T_PIO_LED_OUT : std_logic_vector (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
     signal T_PIO_7SEG_COMMON : std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
@@ -55,6 +56,7 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_I2C_ADDRESS_EXPECTED : std_logic_vector(7 downto 0) := "11000100";
     
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
+    constant CPU_CLOCK_PERIOD : time := 500ns; -- 2 mhz clock
     constant address_setup_ns : time := tADS * 1 ns;
     constant address_hold_time : time := tAH * 1 ns;
     constant MODE_WRITE : std_logic := '1';
@@ -90,6 +92,8 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
 begin
 
 T_MEMORY_CLOCK <= not T_MEMORY_CLOCK after (CLOCK_PERIOD / 2);
+T_CPU_CLOCK <= not T_CPU_CLOCK after (CPU_CLOCK_PERIOD / 2);
+
 T_PIO_I2C_DATA_STREAMER_SDA <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when present_state = ack else 'Z';
 
 dut: entity work.MemoryManager 
@@ -143,6 +147,7 @@ begin
     
     -- Write FeedFace to first four bytes of stream buffer (conceptually 0 is leftmost, 3 is rightmost byte
     for Addr_Low in 0 to 3 loop
+        wait until rising_edge(T_CPU_CLOCK);
         stream_address := std_logic_vector( to_unsigned( Addr_Low, stream_address'length));
         WriteToMemory(  T_MEMORY_CLOCK,
                         PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW,
@@ -175,6 +180,8 @@ begin
                     stream_value,
                     T_BUS_WRITE_DATA,
                     T_WRITE_FLAG);
+                    
+        wait until falling_edge(T_CPU_CLOCK);
     end loop;
 
     -- Set I2C address.
