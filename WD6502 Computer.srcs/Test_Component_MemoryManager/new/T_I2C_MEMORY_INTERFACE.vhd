@@ -61,8 +61,9 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     constant address_hold_time : time := tAH * 1 ns;
     constant MODE_WRITE : std_logic := '1';
     constant MODE_READ : std_logic := not MODE_WRITE;
+    constant TEST_DATA : std_logic_vector(31 downto 0) := x"CEFABAFE";
     
-    type i2c_state_type is (idle, starting, addressing, ack, ack_hold, master_reading, master_writing, stop);
+    type i2c_state_type is (idle, starting, addressing, address_ack, write_ack, ack_hold, master_reading, master_writing, stop);
     signal present_state : i2c_state_type := idle;
     
     procedure WriteToMemory( signal  memory_clock : in std_logic;
@@ -94,7 +95,7 @@ begin
 T_MEMORY_CLOCK <= not T_MEMORY_CLOCK after (CLOCK_PERIOD / 2);
 T_CPU_CLOCK <= not T_CPU_CLOCK after (CPU_CLOCK_PERIOD / 2);
 
-T_PIO_I2C_DATA_STREAMER_SDA <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when present_state = ack else 'Z';
+T_PIO_I2C_DATA_STREAMER_SDA <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when (present_state = address_ack or present_state = write_ack) else 'Z';
 
 dut: entity work.MemoryManager 
     Port map (
@@ -162,13 +163,13 @@ begin
                         T_WRITE_FLAG);
         case Addr_Low is
             when 0 =>
-                stream_value := x"FE";
+                stream_value := TEST_DATA(7 downto 0);
             when 1 =>
-                stream_value := x"BA";
+                stream_value := TEST_DATA(15 downto 8);
             when 2 =>
-                stream_value := x"FA";
+                stream_value := TEST_DATA(23 downto 16);
             when 3 =>
-                stream_value := x"CE";
+                stream_value := TEST_DATA(31 downto 24);
             when others =>
                 stream_value := x"FF";
         end case;
@@ -204,7 +205,9 @@ begin
 end process stimuli_generator;
 
 i2c_signal_test: process(T_PIO_I2C_DATA_STREAMER_SDA,T_PIO_I2C_DATA_STREAMER_SCL)
-variable timer : positive := 0;
+variable timer : natural := 0;
+variable test_data_byte_idx : natural := 0;
+variable test_data_byte_val : std_logic_vector(7 downto 0) := x"00";
 begin
     case present_state is
         when idle =>
@@ -224,20 +227,37 @@ begin
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
                 if (timer > 0) then
                     T_I2C_ADDRESS((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
-                    timer := timer - 1;
-                else
-                    -- Verify I2C address
-                    assert(T_I2C_ADDRESS = T_I2C_ADDRESS_EXPECTED) report "I2C address" severity failure;
+                    timer := timer - 1;                    
                 end if;
             end if;
             if (falling_edge(T_PIO_I2C_DATA_STREAMER_SCL) and timer = 0) then
+                assert(T_I2C_ADDRESS = T_I2C_ADDRESS_EXPECTED) report "I2C address" severity failure;
                 T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA <= '0'; -- Send ack
-                present_state <= ack;
+                present_state <= address_ack;
                 timer := 1;
             end if;
-         when ack =>
-            if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
-                assert(T_I2C_DATA = x"FE") report "I2C data" severity warning;   
+         when address_ack =>
+            if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then   
+                present_state <= master_writing; 
+                timer := 8;   
+            end if;
+         when write_ack =>
+            if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then  
+                -- Verify I2C address
+                case test_data_byte_idx is
+                    when 0 =>
+                        test_data_byte_val := TEST_DATA(7 downto 0);
+                    when 1 =>
+                        test_data_byte_val := TEST_DATA(15 downto 8);
+                    when 2 =>
+                        test_data_byte_val := TEST_DATA(23 downto 16);
+                    when 3 =>
+                        test_data_byte_val := TEST_DATA(31 downto 24);
+                    when others =>
+                        test_data_byte_val := x"FF";
+                end case;
+                test_data_byte_idx := test_data_byte_idx + 1;
+                assert(T_I2C_DATA = test_data_byte_val) report "I2C data" severity warning;  
                 present_state <= master_writing; 
                 timer := 8;   
             end if;
@@ -252,12 +272,8 @@ begin
                     T_I2C_DATA((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
                     timer := timer - 1;
                     if (timer = 0) then
-                        present_state <= ack;
+                        present_state <= write_ack;
                     end if;
-                else
-                    -- Verify I2C address
-                    assert(T_I2C_DATA = x"FE") report "I2C data" severity warning;
-                    
                 end if;
             end if;
          when others=>
