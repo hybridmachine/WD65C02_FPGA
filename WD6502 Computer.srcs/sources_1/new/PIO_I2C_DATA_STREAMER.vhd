@@ -197,6 +197,7 @@ end process;
 
 process(I_CLK) 
 variable buffer_end_address : natural range 0 to 2047 := 0;
+variable buffer_write_address : natural range 0 to 2047 := 0;
 variable byte_outbound_via_i2c : natural range 0 to 2047 := 0;
 variable byte_just_sent_via_i2c : natural range 0 to 2047 := 0;
 variable cycle_delay : natural range 0 to 255 := 0;
@@ -208,6 +209,7 @@ begin
                 O_PIO_IRQ <= '0';
                 status_reg <= STATUS_RESETTING;
                 buffer_end_address := 0;
+                buffer_write_address := 0;
                 NEXT_STREAMER_STATE <= RESET_INPROGRESS;
             when RESET_INPROGRESS =>
                 status_reg <= STATUS_RESETTING;
@@ -231,6 +233,10 @@ begin
                 ram_wea <= '0'; -- Make sure not in write mode then setup address and data lines
                 ram_addra <= I_ADDRESS;
                 ram_dina <= I_DATA; 
+                buffer_write_address := to_integer(unsigned(I_ADDRESS));
+                if (buffer_write_address > buffer_end_address) then
+                    buffer_end_address := buffer_write_address;
+                end if;
                 NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMMIT;
             when WRITE_DATA_TO_BUFFER_COMMIT =>
                 status_reg <= STATUS_WRITING_RAM;
@@ -238,7 +244,6 @@ begin
                 NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMPLETE;
             when WRITE_DATA_TO_BUFFER_COMPLETE =>
                 status_reg <= STATUS_WRITING_RAM;
-                buffer_end_address := buffer_end_address + 1;
                 ram_wea <= '0'; -- Write should be complete, turn off write mode
                 NEXT_STREAMER_STATE <= READY;
             when STREAM_DATA_OVER_I2C_READ_FROM_RAM =>
@@ -250,7 +255,7 @@ begin
                 i2c_stream_complete <= '0';   
                 NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE;
             when STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE =>
-                if (byte_outbound_via_i2c <= buffer_end_address) then
+                if (byte_outbound_via_i2c <= (buffer_end_address+1)) then
                     if (cycle_delay <= 0) then                   
                         NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;                        
                     else
