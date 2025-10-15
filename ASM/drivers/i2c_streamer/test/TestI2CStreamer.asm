@@ -35,7 +35,8 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+
+	INCLUDE "../../../common/InterruptVectors.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -92,6 +93,9 @@ START:
 	; MAIN
 	LDA #00
 	STA LED_IO_ADDR ; Clear any LEDs
+	STA CYCLE_COUNT_LOW_ADDR
+	STA CYCLE_COUNT_HIGH_ADDR
+	
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
 	CMP #$76
@@ -217,8 +221,32 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	rti
 
 IRQHandler:
-		pla
-		rti
+		PHA
+		; 4) In interrupt service routine, increment timer value on every fired interrupt
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		; Not used since timer is IRQ 0, so A would be 0
+		CMP #IRQ_CHANNEL_I2CSTRM
+		BNE SEND_IRQ_ACK
+		CLC
+		LDA CYCLE_COUNT_LOW_ADDR
+		ADC #01
+		STA CYCLE_COUNT_LOW_ADDR
+		LDA CYCLE_COUNT_HIGH_ADDR
+		ADC #00 ; Add in any carry flag
+		STA CYCLE_COUNT_HIGH_ADDR
+		; Unhandled IRQ, just send back ACK
+		JMP SEND_IRQ_ACK
+SEND_IRQ_ACK:
+        ; 5) Write ACK to IRQ controller, in interrupt handler
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		STA PIO_IRQ_CONTROLLER_IRQACK
+		
+		; Reset ack lines
+		LDA #$FF
+		STA PIO_IRQ_CONTROLLER_IRQACK
+		
+		PLA
+		RTI
 
 	bits:	db	1
 	cnt:	db	0

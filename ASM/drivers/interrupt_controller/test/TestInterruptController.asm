@@ -38,7 +38,7 @@ CODE
 ;***************************************************************************
 
 	INCLUDE "../../seven_segment_display/SevenSegmentDisplay.inc"
-
+	INCLUDE "../../../common/InterruptVectors.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -69,8 +69,7 @@ CODE
 	LED_IO_ADDR:	equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 	TIMER_CTL_ADDRESS:			equ $0218
 	TIMER_PERIOD_MS_ADDRESS: 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
-	PIO_IRQ_CONTROLLER_IRQNUM:  equ $0223
-    PIO_IRQ_CONTROLLER_IRQACK:  equ $0224
+	
 
 	PIO_SWITCHES_PREV_STATEVEC_L: equ $0225
     PIO_SWITCHES_PREV_STATEVEC_H: equ $0226
@@ -78,9 +77,6 @@ CODE
     PIO_SWITCHES_UPDATED_VEC_H: equ $0228
 
 	TIMER_CNT: 					equ $0400 ; -- Two bytes, zero'd on startup, incremented and displayed in IRQB handler
-
-	IRQ_CHANNEL_TIMER:			equ $00 ; Timer fires on IRQ 0
-	IRQ_CHANNEL_BUTTON:			equ $01 ; Buttons come in on IRQ 1
 
 	; Interrupt handler will copy current values from device to these locations, 
 	; main work thread will then write status LEDs based on state
