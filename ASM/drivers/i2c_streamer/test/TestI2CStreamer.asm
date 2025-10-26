@@ -63,13 +63,15 @@ CODE
 ;***************************************************************************
 ;                               Local Constants
 ;***************************************************************************
+	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
 	CYCLE_COUNT_LOW_ADDR:	equ		$01
 	STACK_BASE:				equ		$0100
 	
 	; Memory addresses for I2C interface status
     PIO_I2C_DATA_STRM_STATUS:	equ $0212
-	LED_IO_ADDR:				equ		$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+	LED_IO_ADDR:				equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+	STATUS_READY:				equ $00
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -93,116 +95,64 @@ START:
 	; MAIN
 	LDA #00
 	STA LED_IO_ADDR ; Clear any LEDs
-	STA CYCLE_COUNT_LOW_ADDR
-	STA CYCLE_COUNT_HIGH_ADDR
-	
+	STA CYCLE_COUNT_CURRENT ; Clear the current counter
+	STA CYCLE_COUNT_LOW_ADDR ; Clear cycle 16 bits
+	STA CYCLE_COUNT_HIGH_ADDR 
+	CLI ; Enable interrupts, the streamer will send interrupts.
+
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
 	CMP #$76
-	BEQ TEST_INIT_PASS
+	BEQ WAIT_FOR_STREAMER_READY
 	JSR TEST_FAIL
-TEST_INIT_PASS:
-	; For debug, spin watching status
-	JSR WATCH_STATUS
+
+WAIT_FOR_STREAMER_READY:
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
-	BEQ TEST_STATUS_PASS ; Expect Zero to be set
+	BEQ SEND_I2C_DATA ; When Zero send data
 	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
-	JSR TEST_FAIL
-TEST_STATUS_PASS
+	JMP WAIT_FOR_STREAMER_READY
+
+SEND_I2C_DATA
 	LDX #$00
 	LDY #$00
 	LDA #$00
 	
-	; Write 254 bytes of data to buffer
 LOOP_WRITE:
-	; Save registers
-	PHA
-	PHX
-	PHY
+	LDA I2CMESSAGE,X
+	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
-	BEQ TEST_WRITE_PASS ; accumulator should be set to 0
+	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
 	JSR TEST_FAIL
-TEST_WRITE_PASS:
-	; Restore registers
-	PLY
-	PLX
-	PLA
 
-	; Increment X and A (Leave Y at 0)
+BYTE_BUFFERED:
+	; Increment array index into I2CMESSAGE
 	INX
-	INA
-
+	
 	PHX
-	PHA
 	JSR SUB_SEVENSEG_DISPLAY_VALUE
 	; Cleanup stack
-	PLA
-	PLA
+	PLX
 
-	BNE LOOP_WRITE ; If hasn't rolled to 0, keep going
+	JMP LOOP_WRITE ; 
 
+I2CSTREAMBUFFER:
 	; Send the stream
 	JSR SUB_I2CSTREAM_STREAM
 
-WATCH_STATUS:
-	PHX
-	; Spin for some clock cycles
-	LDA #$80
-	PHA
-	LDA #$00
-	PHA
-	JSR SPIN_FOR_DELAY
-	; Cleanup stack
-	PLA
-	PLA
-	PLX
-	STX LED_IO_ADDR ; Show index
-	PHX
-	LDA #$00
-	PHA 
-	LDA PIO_I2C_DATA_STRM_STATUS
-	PHA
-	JSR SUB_SEVENSEG_DISPLAY_VALUE
-	; Cleanup stack
-	PLA
-	PLA
-	PLX
-	INX
-	JMP WATCH_STATUS ; For now just loop forever watching status
-	BRK ; End of test 
+WAIT_FOR_CYCLE_COUNT_CHANGE:
+	; The interrupt handler will increment the CYCLE_COUNT_LOW_ADDR 
+	LDA CYCLE_COUNT_CURRENT
+	CMP CYCLE_COUNT_LOW_ADDR
+	BNE WAIT_FOR_CYCLE_COUNT_CHANGE
+	
+	; Update the current count value
+	LDA CYCLE_COUNT_LOW_ADDR
+	STA CYCLE_COUNT_CURRENT
 
-; CYCLE_COUNT_HIGH in STACK+4 and CYCLE_COUNT_LOW in STACK+3
-SPIN_FOR_DELAY: 
-	TSX ; Put the stack location in X
-	INX ; Points to return address of function high
-	INX ; Points to return address of function low
-	INX ; Points to low address
-    LDA STACK_BASE,X ; load low address
-	SEC 
-	SBC #$01
-	BCC DECREMENT_HIGH
-	STA STACK_BASE,X
-	JMP SPIN_FOR_DELAY
-DECREMENT_HIGH:
-	TSX ; Put the stack location in X
-	INX ; Points to return address of function high
-	INX ; Points to return address of function low
-	INX ; Points to low address
-	INX ; Points to high address
-	SEC
-	LDA STACK_BASE,X
-	BEQ END_SPIN ; High is 0, we are done counting down
-	SBC #$01
-	STA STACK_BASE,X
-	DEX ; Point to low address
-	LDA #$FF
-	STA STACK_BASE,X
-	JMP SPIN_FOR_DELAY
-END_SPIN: 
-    RTS
+	JMP SEND_I2C_DATA
 
 TEST_FAIL:
 	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
@@ -248,10 +198,7 @@ SEND_IRQ_ACK:
 		PLA
 		RTI
 
-	bits:	db	1
-	cnt:	db	0
-	wraps:	dw	0
-	delay:	db	10
+I2CMESSAGE:	db	'HELLO WORLD!',0 ; Null terminated string
 
 
 ;***************************************************************************
