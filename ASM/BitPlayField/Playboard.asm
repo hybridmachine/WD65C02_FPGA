@@ -64,6 +64,7 @@ CODE
         PLAYFIELDSTART: 	equ RAM_BASE
         PLAYFIELDEND:   	equ PLAYFIELDSTART+(ROWSIZE*ROWCOUNT)
 		CELLBYTEADDRESS:	equ $10 ; $10 and $11 hold the pointer to the current cell address. 
+
 START:
 		SEI             ; Ignore maskable interrupts
         CLC             ; Clear carry
@@ -108,8 +109,36 @@ LOOPZEROMEM:
 	JMP ZEROMEM; We'll break out when CELLBYTEADDRESS == PLAYFIELDSTART
 
 TESTPLAYFIELD:
+	LDX #$00
+	LDY #$01
+	JSR GETCELLVALUE
+	LDY #$02
+	JSR GETCELLVALUE
+	LDY #$1F
+	JSR GETCELLVALUE
 	BRK; Just halt for testing for now
 
+; Calling convention is Column is in X, Row is in Y register. Return bit status in in A
+GETCELLVALUE:
+	LDA #PLAYFIELDSTART
+	STA CELLBYTEADDRESS
+
+	CLC
+	TYA ; Put the Y row index in A
+	; Multiply by 4 (we assume 4 byte wide rows), this is the address offset for the row header
+	ASL A 
+	ASL A
+	ADC CELLBYTEADDRESS ; Move the cellbyteaddress to the first byte in the row.
+	STA CELLBYTEADDRESS
+	LDA #$00
+	ADC CELLBYTEADDRESS+1
+	STA CELLBYTEADDRESS+1
+	
+	; For easy tracing in the debugger
+	LDA CELLBYTEADDRESS+1
+	LDA CELLBYTEADDRESS
+
+	RTS
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	PHP
