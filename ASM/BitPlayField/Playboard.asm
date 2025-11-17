@@ -84,7 +84,8 @@ INITPLAYBOARD:
 	LDA #>PLAYFIELDEND
 	STA CELLBYTEADDRESS+1
 ZEROMEM:
-	LDA 0
+	LDA CELLBYTEADDRESS ; Load the low byte value , just store it in the byte pointed to
+						; This is for testing, we'll put 0 in production
 	STA (CELLBYTEADDRESS)
 
 	; See if we have hit the start address, if so , move on to test
@@ -109,7 +110,7 @@ LOOPZEROMEM:
 	JMP ZEROMEM; We'll break out when CELLBYTEADDRESS == PLAYFIELDSTART
 
 TESTPLAYFIELD:
-	LDX #$00
+	LDX #28
 	LDY #$01
 	JSR GETCELLVALUE
 	LDY #$02
@@ -138,6 +139,27 @@ GETCELLVALUE:
 	LDA CELLBYTEADDRESS+1
 	LDA CELLBYTEADDRESS
 
+	; Now that we have the row header, lets get the column address then we'll find the bit in question
+	TXA
+	LDX #0
+	; Calculate the byte address offset based on the column value
+CMP24:
+	CMP #24
+	BLT CMP16
+	LDX #3
+	JMP GETBIT
+CMP16:
+	CMP #16
+	BLT CMP8
+	LDX #2
+	JMP GETBIT
+CMP8:
+	CMP #8
+	BLT GETBIT
+	LDX #1
+	JMP GETBIT
+GETBIT:
+	LDA (CELLBYTEADDRESS,X)
 	RTS
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
