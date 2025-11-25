@@ -85,8 +85,7 @@ INITPLAYBOARD:
 	LDA #>PLAYFIELDEND
 	STA CELLBYTEADDRESS+1
 ZEROMEM:
-	LDA CELLBYTEADDRESS ; Load the low byte value , just store it in the byte pointed to
-						; This is for testing, we'll put 0 in production
+	LDA #00
 	STA (CELLBYTEADDRESS)
 
 	; See if we have hit the start address, if so , move on to test
@@ -111,11 +110,22 @@ LOOPZEROMEM:
 	JMP ZEROMEM; We'll break out when CELLBYTEADDRESS == PLAYFIELDSTART
 
 TESTPLAYFIELD:
-	LDX #28
-	LDY #$01
-	JSR GETCELLVALUE
+	LDX #00
+	LDY #00
+	LDA #CELL_LIVE
+	JSR SETCELLVALUE
+	LDX #02
+	LDY #00
+	LDA #CELL_LIVE
+	JSR SETCELLVALUE
+	LDX #08
+	LDY #00
+	LDA #CELL_LIVE
+	JSR SETCELLVALUE
+	LDX #09
 	LDY #$02
 	JSR GETCELLVALUE
+	LDX #20
 	LDY #$1F
 	JSR GETCELLVALUE
 	BRK; Just halt for testing for now
@@ -193,7 +203,90 @@ SHIFTLEFT:
 RETURN0:
 	LDA #CELL_DEAD
 	RTS
+
+
+; Calling convention is Column is in X, Row is in Y register. Return bit status in in A
+SETCELLVALUE:
+	STA $01 # Save off the cell dead/live bit setting
+	LDA #PLAYFIELDSTART
+	STA CELLBYTEADDRESS
+
+	CLC
+	TYA ; Put the Y row index in A
+	; Multiply by 4 (we assume 4 byte wide rows), this is the address offset for the row header
+	ASL A 
+	ASL A
+	ADC CELLBYTEADDRESS ; Move the cellbyteaddress to the first byte in the row.
+	STA CELLBYTEADDRESS
+	LDA #$00
+	ADC CELLBYTEADDRESS+1
+	STA CELLBYTEADDRESS+1
 	
+	; For easy tracing in the debugger
+	LDA CELLBYTEADDRESS+1
+	LDA CELLBYTEADDRESS
+
+	; Now that we have the row header, lets get the column address then we'll find the bit in question
+	TXA
+	LDX #0
+	; Calculate the byte address offset based on the column value
+SETCMP24:
+	CMP #24
+	BLT SETCMP16
+	LDX #3
+	; Calculate value in A - start of byte 4
+	SEC
+	SBC #24
+	JMP SETBIT
+SETCMP16:
+	CMP #16
+	BLT SETCMP8
+	LDX #2
+	; Calculate value in A - start of byte 3
+	SEC
+	SBC #16
+	JMP SETBIT
+SETCMP8:
+	CMP #8
+	BLT SETBIT
+	LDX #1
+	; Calculate value in A - start of byte 2
+	SEC
+	SBC #8
+	JMP SETBIT
+SETBIT:
+	STA $02 ; Place the bit offset in $02, we'll use this for masking next
+	; Load the byte to mask
+	LDA #07
+	SEC
+	SBC $02
+	TAY
+	LDA #01
+SETSHIFTLEFT:	
+	ASL
+	DEY
+	BNE SETSHIFTLEFT
+	STA $02
+	LDA $01
+	CMP #01
+	BNE SETBITOFF
+SETBITON:
+	LDA (CELLBYTEADDRESS,X)
+
+	; And the Byte value with the specific bit we want
+	ORA $02
+	JMP SAVEBIT
+SETBITOFF:
+	LDA #$FF
+	EOR $02
+	; This should leave a hole (0) where the bit we want off is
+	AND (CELLBYTEADDRESS,X)
+
+SAVEBIT:
+	STA (CELLBYTEADDRESS,X)
+	LDA (CELLBYTEADDRESS,X)
+	RTS
+
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	PHP
