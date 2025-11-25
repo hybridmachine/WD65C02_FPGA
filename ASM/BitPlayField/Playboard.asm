@@ -64,7 +64,8 @@ CODE
         PLAYFIELDSTART: 	equ RAM_BASE
         PLAYFIELDEND:   	equ PLAYFIELDSTART+(ROWSIZE*ROWCOUNT)
 		CELLBYTEADDRESS:	equ $10 ; $10 and $11 hold the pointer to the current cell address. 
-
+		CELL_LIVE:			equ $01
+		CELL_DEAD:			equ $00			
 START:
 		SEI             ; Ignore maskable interrupts
         CLC             ; Clear carry
@@ -147,20 +148,52 @@ CMP24:
 	CMP #24
 	BLT CMP16
 	LDX #3
+	; Calculate value in A - start of byte 4
+	SEC
+	SBC #24
 	JMP GETBIT
 CMP16:
 	CMP #16
 	BLT CMP8
 	LDX #2
+	; Calculate value in A - start of byte 3
+	SEC
+	SBC #16
 	JMP GETBIT
 CMP8:
 	CMP #8
 	BLT GETBIT
 	LDX #1
+	; Calculate value in A - start of byte 2
+	SEC
+	SBC #8
 	JMP GETBIT
 GETBIT:
+	STA $02 ; Place the bit offset in $02, we'll use this for masking next
+	; Load the byte to mask
+	LDA #07
+	SEC
+	SBC $02
+	TAY
+	LDA #01
+SHIFTLEFT:	
+	ASL
+	DEY
+	BNE SHIFTLEFT
+	STA $02
 	LDA (CELLBYTEADDRESS,X)
+
+	; And the Byte value with the specific bit we want
+	AND $02
+	BEQ RETURN0
+	; If we get here, we have a set bit, return one
+	LDA #CELL_LIVE
 	RTS
+
+RETURN0:
+	LDA #CELL_DEAD
+	RTS
+	
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	PHP
