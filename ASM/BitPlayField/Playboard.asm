@@ -112,55 +112,41 @@ LOOPZEROMEM:
 TESTPLAYFIELD:
 	LDX #00
 	LDY #00
-	LDA #CELL_LIVE
+SCANCOL:
+	CPX #32
+	BEQ SCANROW
+	; First test that location is 0 to start
+	JSR GETCELLVALUE
+	CMP #00
+	BNE FAILTEST
+	
+	; Set the location to on then test that it is on
+	LDA #01
 	JSR SETCELLVALUE
-	LDX #02
-	LDY #00
-	LDA #CELL_LIVE
-	JSR SETCELLVALUE
-	LDX #08
-	LDY #00
-	LDA #CELL_LIVE
-	JSR SETCELLVALUE
+	
+	LDA #00 ; Clear just in case
+	JSR GETCELLVALUE
+	CMP #01
+	BNE FAILSETTEST
+	INX
+	JMP SCANCOL
+SCANROW:
+	CPY #32
+	BEQ PASSTEST
+	INY
 	LDX #00
-	LDY #00
-	JSR GETCELLVALUE
-	LDX #01
-	LDY #00
-	JSR GETCELLVALUE
-	LDX #02
-	LDY #00
-	JSR GETCELLVALUE
-	LDX #01
-	LDY #01
-	LDA #CELL_LIVE
-	JSR SETCELLVALUE
-	LDX #03
-	LDY #03
-	LDA #CELL_LIVE
-	JSR SETCELLVALUE
-	LDX #00
-	LDY #01
-	JSR GETCELLVALUE
-	LDX #01
-	LDY #01
-	JSR GETCELLVALUE
-	LDX #03
-	LDY #03
-	JSR GETCELLVALUE
-	LDX #00
-	LDY #03
-	JSR GETCELLVALUE
-	LDX #01
-	LDY #03
-	JSR GETCELLVALUE
-	LDX #02
-	LDY #03
-	JSR GETCELLVALUE
-	BRK; Just halt for testing for now
+	JMP SCANCOL
+PASSTEST:
+	BRK
+FAILTEST:
+	BRK
+FAILSETTEST:
+	BRK
 
 ; Calling convention is Column is in X, Row is in Y register. Return bit status in in A
 GETCELLVALUE:
+	PHX
+	PHY
 	LDA #PLAYFIELDSTART
 	STA CELLBYTEADDRESS
 
@@ -216,9 +202,12 @@ GETBIT:
 	TAY
 	LDA #01
 SHIFTLEFT:	
+	CPY #00
+	BEQ GETSHIFTCOMPLETE
 	ASL
 	DEY
-	BNE SHIFTLEFT
+	JMP SHIFTLEFT
+GETSHIFTCOMPLETE:
 	STA $02
 	LDA (CELLBYTEADDRESS,X)
 
@@ -227,15 +216,25 @@ SHIFTLEFT:
 	BEQ RETURN0
 	; If we get here, we have a set bit, return one
 	LDA #CELL_LIVE
+
+	; Restore X and Y
+	PLY
+	PLX
 	RTS
 
 RETURN0:
 	LDA #CELL_DEAD
+
+	; Restore X and Y
+	PLY
+	PLX
 	RTS
 
 
 ; Calling convention is Column is in X, Row is in Y register. Return bit status in in A
 SETCELLVALUE:
+	PHX
+	PHY
 	STA $01 # Save off the cell dead/live bit setting
 	LDA #PLAYFIELDSTART
 	STA CELLBYTEADDRESS
@@ -292,9 +291,13 @@ SETBIT:
 	TAY
 	LDA #01
 SETSHIFTLEFT:	
+	CPY #00
+	BEQ SHIFTCOMPLETE
 	ASL
 	DEY
-	BNE SETSHIFTLEFT
+	JMP SETSHIFTLEFT
+
+SHIFTCOMPLETE:
 	STA $02
 	LDA $01
 	CMP #01
@@ -314,6 +317,10 @@ SETBITOFF:
 SAVEBIT:
 	STA (CELLBYTEADDRESS,X)
 	LDA (CELLBYTEADDRESS,X)
+	
+	; Restore X and Y
+	PLY
+	PLX
 	RTS
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
