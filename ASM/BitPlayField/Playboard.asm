@@ -64,6 +64,8 @@ CODE
         PLAYFIELDSTART: 	equ RAM_BASE
         PLAYFIELDEND:   	equ PLAYFIELDSTART+(ROWSIZE*ROWCOUNT)
 		CELLBYTEADDRESS:	equ $10 ; $10 and $11 hold the pointer to the current cell address. 
+		SWAPX:				equ $12 
+		SWAPY:				equ $13
 		CELL_LIVE:			equ $01
 		CELL_DEAD:			equ $00			
 START:
@@ -209,7 +211,15 @@ SHIFTLEFT:
 	JMP SHIFTLEFT
 GETSHIFTCOMPLETE:
 	STA $02
-	LDA (CELLBYTEADDRESS,X)
+	PHA
+	TXA
+	STA SWAPX
+	TYA
+	STA SWAPY
+	LDY SWAPX
+	PLA
+	LDA (CELLBYTEADDRESS),Y
+	LDY SWAPY ; Restore Y
 
 	; And the Byte value with the specific bit we want
 	AND $02
@@ -303,8 +313,16 @@ SHIFTCOMPLETE:
 	CMP #01
 	BNE SETBITOFF
 SETBITON:
-	LDA (CELLBYTEADDRESS,X)
-
+	PHA
+	TXA
+	STA SWAPX
+	TYA
+	STA SWAPY
+	LDY SWAPX
+	PLA
+	LDA (CELLBYTEADDRESS),Y
+	LDY SWAPY ; Restore Y
+	
 	; And the Byte value with the specific bit we want
 	ORA $02
 	JMP SAVEBIT
@@ -312,11 +330,28 @@ SETBITOFF:
 	LDA #$FF
 	EOR $02
 	; This should leave a hole (0) where the bit we want off is
-	AND (CELLBYTEADDRESS,X)
+	PHA
+	TXA
+	STA SWAPX
+	TYA
+	STA SWAPY
+	LDY SWAPX
+	PLA
+	AND (CELLBYTEADDRESS),Y
+	LDY SWAPY ; Restore Y
 
 SAVEBIT:
-	STA (CELLBYTEADDRESS,X)
-	LDA (CELLBYTEADDRESS,X)
+	PHA
+	TXA
+	STA SWAPX
+	TYA
+	STA SWAPY
+	LDY SWAPX
+	PLA
+	STA (CELLBYTEADDRESS),Y
+	LDA (CELLBYTEADDRESS),Y
+	LDY SWAPY ; Restore Y
+
 	
 	; Restore X and Y
 	PLY
