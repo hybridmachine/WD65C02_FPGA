@@ -86,31 +86,9 @@ INITPLAYBOARD:
 	STA CELLBYTEADDRESS
 	LDA #>PLAYFIELDEND
 	STA CELLBYTEADDRESS+1
-ZEROMEM:
-	LDA #00
-	STA (CELLBYTEADDRESS)
 
-	; See if we have hit the start address, if so , move on to test
-	LDA #PLAYFIELDSTART
-	CMP CELLBYTEADDRESS
-	BNE LOOPZEROMEM
-	LDA #>PLAYFIELDSTART
-	CMP CELLBYTEADDRESS+1
-	BNE LOOPZEROMEM
-	; If we get here, low and high match PLAYFIELDSTART low and high, we reached the end, test
-	JMP TESTPLAYFIELD
-
-LOOPZEROMEM:
-	; Decrement the address, we are zeroing mem backwards
-	SEC
-	LDA CELLBYTEADDRESS
-	SBC #1
-	STA CELLBYTEADDRESS
-	LDA CELLBYTEADDRESS+1
-	SBC #0
-	STA CELLBYTEADDRESS+1
-	JMP ZEROMEM; We'll break out when CELLBYTEADDRESS == PLAYFIELDSTART
-
+	JSR FNC_ZEROMEM
+	
 TESTPLAYFIELD:
 	LDX #00
 	LDY #00
@@ -118,16 +96,16 @@ SCANCOL:
 	CPX #32
 	BEQ SCANROW
 	; First test that location is 0 to start
-	JSR GETCELLVALUE
+	JSR FNC_GETCELLVALUE
 	CMP #00
 	BNE FAILTEST
 	
 	; Set the location to on then test that it is on
 	LDA #01
-	JSR SETCELLVALUE
+	JSR FNC_SETCELLVALUE
 	
 	LDA #00 ; Clear just in case
-	JSR GETCELLVALUE
+	JSR FNC_GETCELLVALUE
 	CMP #01
 	BNE FAILSETTEST
 	INX
@@ -139,14 +117,14 @@ SCANROW:
 	LDX #00
 	JMP SCANCOL
 PASSTEST:
-	BRK
+	JSR FNC_ZEROMEM
 FAILTEST:
 	BRK
 FAILSETTEST:
 	BRK
 
 ; Calling convention is Column is in X, Row is in Y register. Return bit status in in A
-GETCELLVALUE:
+FNC_GETCELLVALUE:
 	PHX
 	PHY
 	LDA #PLAYFIELDSTART
@@ -240,9 +218,33 @@ RETURN0:
 	PLX
 	RTS
 
+; Zero out the Playboard. Note this goes from high down to low
+FNC_ZEROMEM:
+	LDA #00
+	STA (CELLBYTEADDRESS)
 
+	; See if we have hit the start address, if so , move on to test
+	LDA #PLAYFIELDSTART
+	CMP CELLBYTEADDRESS
+	BNE LOOPZEROMEM
+	LDA #>PLAYFIELDSTART
+	CMP CELLBYTEADDRESS+1
+	BNE LOOPZEROMEM
+	RTS ; We have rolled to the start address, return
+
+LOOPZEROMEM:
+	; Decrement the address, we are zeroing mem backwards
+	SEC
+	LDA CELLBYTEADDRESS
+	SBC #1
+	STA CELLBYTEADDRESS
+	LDA CELLBYTEADDRESS+1
+	SBC #0
+	STA CELLBYTEADDRESS+1
+	JMP FNC_ZEROMEM; We'll break out when CELLBYTEADDRESS == PLAYFIELDSTART
+	
 ; Calling convention is Column is in X, Row is in Y register. Return bit status in in A
-SETCELLVALUE:
+FNC_SETCELLVALUE:
 	PHX
 	PHY
 	STA $01 # Save off the cell dead/live bit setting
