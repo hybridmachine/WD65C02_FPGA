@@ -53,7 +53,32 @@ CODE
 ;***************************************************************************
 ;None
 
+;***************************************************************************
+;                              Macros
+;***************************************************************************
 
+; Overwrites A
+GETCOLUMNBYTE MACRO
+	PHY
+	; Put the X val in the Y reg
+	TXA
+	TAY
+	LDA (CELLBYTEADDRESS),Y
+	PLY ; Restore Y
+	ENDM
+
+SETCOLUMNBYTE MACRO
+	PHY
+	
+	PHA
+	; Put the X val in the Y reg
+	TXA
+	TAY
+	PLA
+	STA (CELLBYTEADDRESS),Y
+	
+	PLY ; Restore Y
+	ENDM
 ;***************************************************************************
 ;                               Local Constants
 ;***************************************************************************
@@ -64,8 +89,8 @@ CODE
         PLAYFIELDSTART: 	equ RAM_BASE
         PLAYFIELDEND:   	equ PLAYFIELDSTART+(ROWSIZE*ROWCOUNT)
 		CELLBYTEADDRESS:	equ $10 ; $10 and $11 hold the pointer to the current cell address. 
-		SWAPX:				equ $12 
-		SWAPY:				equ $13
+		SCRATCH:			equ $12 ; $12 and $13 for scratch calculations. 
+		NBRCNT:				equ $14
 		CELL_LIVE:			equ $01
 		CELL_DEAD:			equ $00			
 START:
@@ -75,7 +100,8 @@ START:
 
 		LDX	#$ff		; Initialize the stack pointer
 		TXS
-
+		STZ SCRATCH
+		STZ SCRATCH+1
 
 ;***************************************************************************
 ;                               Application Code
@@ -118,12 +144,19 @@ SCANROW:
 	JMP SCANCOL
 PASSTEST:
 	JSR FNC_ZEROMEM
+	BRK
+	; Test the get neighborcount
 FAILTEST:
 	BRK
 FAILSETTEST:
 	BRK
 
-; Calling convention is Column is in X, Row is in Y register. Return bit status in in A
+; Calling convention is Column is in X, Row is in Y register. Return count in A
+FNC_GETNEIGHBORCOUNT:
+	LDA #00
+
+
+; Calling convention is Column is in X, Row is in Y register. Return bit status in A
 FNC_GETCELLVALUE:
 	PHX
 	PHY
@@ -189,15 +222,9 @@ SHIFTLEFT:
 	JMP SHIFTLEFT
 GETSHIFTCOMPLETE:
 	STA $02
-	PHA
-	TXA
-	STA SWAPX
-	TYA
-	STA SWAPY
-	LDY SWAPX
-	PLA
-	LDA (CELLBYTEADDRESS),Y
-	LDY SWAPY ; Restore Y
+
+	; Macro to load column byte into A
+	GETCOLUMNBYTE
 
 	; And the Byte value with the specific bit we want
 	AND $02
@@ -315,15 +342,8 @@ SHIFTCOMPLETE:
 	CMP #01
 	BNE SETBITOFF
 SETBITON:
-	PHA
-	TXA
-	STA SWAPX
-	TYA
-	STA SWAPY
-	LDY SWAPX
-	PLA
-	LDA (CELLBYTEADDRESS),Y
-	LDY SWAPY ; Restore Y
+	; Macro to load column byte into A
+	GETCOLUMNBYTE
 	
 	; And the Byte value with the specific bit we want
 	ORA $02
@@ -332,30 +352,30 @@ SETBITOFF:
 	LDA #$FF
 	EOR $02
 	; This should leave a hole (0) where the bit we want off is
+	;PHA
+	;TXA
+	;STA SWAPX
+	;TYA
+	;STA SWAPY
+	;LDY SWAPX
+	;PLA
+	;AND (CELLBYTEADDRESS),Y
+	;LDY SWAPY ; Restore Y
+
 	PHA
-	TXA
-	STA SWAPX
-	TYA
-	STA SWAPY
-	LDY SWAPX
+	; Macro to load column byte into A
+	GETCOLUMNBYTE
+	STA SCRATCH
 	PLA
-	AND (CELLBYTEADDRESS),Y
-	LDY SWAPY ; Restore Y
+	AND SCRATCH
 
 SAVEBIT:
-	PHA
-	TXA
-	STA SWAPX
-	TYA
-	STA SWAPY
-	LDY SWAPX
-	PLA
-	STA (CELLBYTEADDRESS),Y
-	LDA (CELLBYTEADDRESS),Y
-	LDY SWAPY ; Restore Y
 
-	
-	; Restore X and Y
+	; Byte in A saved to column byte
+	SETCOLUMNBYTE
+	; Put column byte back in A
+	GETCOLUMNBYTE
+
 	PLY
 	PLX
 	RTS
