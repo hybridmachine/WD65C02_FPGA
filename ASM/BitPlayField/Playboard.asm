@@ -351,17 +351,8 @@ SETBITON:
 SETBITOFF:
 	LDA #$FF
 	EOR $02
+	
 	; This should leave a hole (0) where the bit we want off is
-	;PHA
-	;TXA
-	;STA SWAPX
-	;TYA
-	;STA SWAPY
-	;LDY SWAPX
-	;PLA
-	;AND (CELLBYTEADDRESS),Y
-	;LDY SWAPY ; Restore Y
-
 	PHA
 	; Macro to load column byte into A
 	GETCOLUMNBYTE
