@@ -151,10 +151,49 @@ FAILTEST:
 FAILSETTEST:
 	BRK
 
+; Setup the R-pentomino and check for expected neighborcount
+TST_R_PENTOMINO:
+
 ; Calling convention is Column is in X, Row is in Y register. Return count in A
 FNC_GETNEIGHBORCOUNT:
 	LDA #00
+	STA NBRCNT
+	STX SCRATCH
+	STY SCRATCH+1
+X_MINUS_1:
+	CPX #01
+	BCC X_PLUS_0
+	
+	DEX
+	JSR FNC_Y_MINUS_1
+	JSR FNC_Y_PLUS_0
+	JSR FNC_Y_PLUS_1
+	INX
 
+X_PLUS_0:
+	JSR FNC_Y_MINUS_1
+	; Skip Y + 0 if X + 0 (if centered on own bit)
+	JSR FNC_Y_PLUS_1
+X_PLUS_1:
+	CPX #30 ; Test to see if X = 31
+	BCS FNC_GETNEIGHBORCOUNT_RTRN ; If at the outer edge, skip X+1
+	
+	INX
+	JSR FNC_Y_MINUS_1
+	JSR FNC_Y_PLUS_0
+	JSR FNC_Y_PLUS_1
+	DEX
+
+FNC_GETNEIGHBORCOUNT_RTRN:
+	RTS
+
+; Sub functions, called for each column of X, gets the count
+FNC_Y_MINUS_1:
+	RTS
+FNC_Y_PLUS_0:
+	RTS
+FNC_Y_PLUS_1:
+	RTS
 
 ; Calling convention is Column is in X, Row is in Y register. Return bit status in A
 FNC_GETCELLVALUE:
