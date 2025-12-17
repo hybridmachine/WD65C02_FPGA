@@ -206,7 +206,7 @@ FNC_Y_PLUS_0:
 	STA NBRCNT
 	RTS
 FNC_Y_PLUS_1:
-	CPY #30 ; Test to see if X = 31
+	CPY #30 ; Test to see if Y = 31
 	BCS FNC_Y_PLUS_1_RTRN ; If at the outer edge, skip Y+1
 	INY
 	JSR FNC_GETCELLVALUE
