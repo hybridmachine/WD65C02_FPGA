@@ -189,10 +189,32 @@ FNC_GETNEIGHBORCOUNT_RTRN:
 
 ; Sub functions, called for each column of X, gets the count
 FNC_Y_MINUS_1:
+	CPY #01
+	BCC FNC_Y_MINUS_1_RTRN
+	DEY
+	JSR FNC_GETCELLVALUE
+	CLC
+	ADC NBRCNT ; No need to test carry, we should never get above 8
+	STA NBRCNT
+	INY
+FNC_Y_MINUS_1_RTRN
 	RTS
 FNC_Y_PLUS_0:
+	JSR FNC_GETCELLVALUE
+	CLC
+	ADC NBRCNT ; No need to test carry, we should never get above 8
+	STA NBRCNT
 	RTS
 FNC_Y_PLUS_1:
+	CPY #30 ; Test to see if X = 31
+	BCS FNC_Y_PLUS_1_RTRN ; If at the outer edge, skip Y+1
+	INY
+	JSR FNC_GETCELLVALUE
+	CLC
+	ADC NBRCNT ; No need to test carry, we should never get above 8
+	STA NBRCNT
+	DEY
+FNC_Y_PLUS_1_RTRN
 	RTS
 
 ; Calling convention is Column is in X, Row is in Y register. Return bit status in A
