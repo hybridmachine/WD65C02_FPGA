@@ -26,8 +26,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+library UNISIM;
+use UNISIM.VComponents.all;
 
 entity I2C_INTERFACE is
     GENERIC (
@@ -63,9 +63,24 @@ shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
 TYPE state_type IS (idle, send_start, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, send_read_write_mode, ack1, ack2, ack3, ack4);
 signal present_state, next_state: state_type;
+signal sda_in : std_logic;
+signal sda_out : std_logic;
 
+         
 begin
 
+    IOBx : IOBUF
+         generic map(
+             DRIVE => 12,
+             IOSTANDARD => "DEFAULT",
+             SLEW => "SLOW")
+         port map (
+             O => sda_out,      -- Buffer output from I2C device to outside world
+             IO => sda,     	-- Data inout port (connect directly to top-level port)
+             I => sda_in,     	-- Buffer input to I2C device from outside world
+             T => READ_WRITE_MODE          	-- 3-state enable input, high=input, low=output
+         ); 
+ 
     ack_error <= ack(0) OR ack(1) OR ack(2); 
     que_for_send <= que_for_send_sig;
     
@@ -144,16 +159,16 @@ begin
                     end if;
                     -- Store ACK signals during writing:
                     if (present_state = ack1) then
-                        ack(0) <= sda;
+                        ack(0) <= sda_in;
                     elsif(present_state = ack2) then
-                        ack(1) <= sda;
+                        ack(1) <= sda_in;
                     elsif(present_state = ack3) then
-                        ack(2) <= sda;
+                        ack(2) <= sda_in;
                     end if;
         
                     -- Store data read from memory:
                     if (present_state = rd_data) then
-                        data_in(7-idx) <= sda;
+                        data_in(7-idx) <= sda_in;
                     end if;
                 end if; 
             end if;  
@@ -162,7 +177,7 @@ begin
                 when idle =>
                     -- Assumption is scl and sda have pullup resisters, don't drive the bus in idle
                     scl <= 'Z';
-                    sda <= 'Z';
+                    sda_out <= 'Z';
                     timer <= delay;
                     que_for_send_sig <= '1'; -- Tell the caller to queue the next byte
                     if (wr_flag = '1') then
@@ -173,37 +188,37 @@ begin
                         next_state <= idle;
                     end if;
                 when start_wr =>
-                    sda <= '1';
+                    sda_out <= '1';
                     scl <= '1';
                     timer <= 1;
                     que_for_send_sig <= '0'; -- About to read the data line
                     next_state <= send_start;
                 when send_start =>
-                    sda <= '0';
+                    sda_out <= '0';
                     scl <= '1';
                     timer <= 1;
                     data_out <= data;
                     next_state <= dev_addr_wr;
                 when dev_addr_wr => 
                     scl <= bus_clock;
-                    sda <= i2c_target_address(6-idx);
+                    sda_out <= i2c_target_address(6-idx);
                     timer <= 6;
                     next_state <= send_read_write_mode;
                 when send_read_write_mode =>
                     scl <= bus_clock;
-                    sda <= not wr_flag; -- 0 means we write back to client
+                    sda_out <= not wr_flag; -- 0 means we write back to client
                     timer <= 1;
                     next_state <= ack1;
                 when ack1 =>
                     scl <= '0';
-                    sda <= 'Z';
+                    sda_out <= 'Z';
                     timer <= 1;
                     que_for_send_sig <= '1'; -- Data is read
                     next_state <= wr_data;
                 when wr_data =>
                     scl <= bus_clock;
                     que_for_send_sig <= '1'; 
-                    sda <= data_out(7-idx);
+                    sda_out <= data_out(7-idx);
                     timer <= 7;
                     if (idx < 7) then
                         next_state <= wr_data;
@@ -216,7 +231,7 @@ begin
                     -- Then hold clock low for one cycle then 
                     -- start clock back up
                     scl <= bus_clock;
-                    sda <= 'Z';
+                    sda_out <= 'Z';
                     timer <= 0;
                     if (stream_complete = '0') then
                         next_state <= ack4;
@@ -231,12 +246,12 @@ begin
                     next_state <= wr_data;
                 when stop =>
                     scl <= '1';
-                    sda <= NOT data_clock;
+                    sda_out <= NOT data_clock;
                     timer <= 1;
                     next_state <= idle;
                 when others =>
                     scl <= '1';
-                    sda <= '1';
+                    sda_out <= '1';
                     timer <= delay;
                     next_state <= idle;  
             end case;
