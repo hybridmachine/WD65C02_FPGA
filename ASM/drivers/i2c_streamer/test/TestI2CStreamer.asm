@@ -93,34 +93,44 @@ START:
 	JSR POST_MEMORY_TEST
 
 	; MAIN
-	LDA #00
+	LDA #03
 	STA LED_IO_ADDR ; Clear any LEDs
 	STA CYCLE_COUNT_CURRENT ; Clear the current counter
 	STA CYCLE_COUNT_LOW_ADDR ; Clear cycle 16 bits
 	STA CYCLE_COUNT_HIGH_ADDR 
 	CLI ; Enable interrupts, the streamer will send interrupts.
 
+	JSR LOG_ADDRESS ; DEBUG
+	LDA #00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
+	STA LED_IO_ADDR ; For debug	
 	CMP #$76
 	BEQ WAIT_FOR_STREAMER_READY
 	JSR TEST_FAIL
 
 WAIT_FOR_STREAMER_READY:
+	JSR LOG_ADDRESS ; DEBUG
+	LDA #$80
+	STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
+	
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
 	BEQ SEND_I2C_DATA ; When Zero send data
 	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
+	JSR LOG_ADDRESS ; DEBUG
 	JMP WAIT_FOR_STREAMER_READY
 
 SEND_I2C_DATA
+	JSR LOG_ADDRESS ; DEBUG
 	LDX #$00
 	LDY #$00
 	LDA #$00
 	
 LOOP_WRITE:
 	LDA I2CMESSAGE,X
+	STA LED_IO_ADDR ; For debug, write byte val to LEDs
 	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
@@ -137,14 +147,16 @@ BYTE_BUFFERED:
 	; Cleanup stack
 	PLY
 	PLX
-
+	
 	JMP LOOP_WRITE ; 
 
 I2CSTREAMBUFFER:
-	; Send the stream
+	JSR LOG_ADDRESS ; DEBUG
 	JSR SUB_I2CSTREAM_STREAM
 
 WAIT_FOR_CYCLE_COUNT_CHANGE:
+	LDA #$FA
+	STA LED_IO_ADDR; For Debug, write 02 to LEDs so we know we are waiting for IRQ
 	; The interrupt handler will increment the CYCLE_COUNT_LOW_ADDR 
 	LDA CYCLE_COUNT_CURRENT
 	CMP CYCLE_COUNT_LOW_ADDR
@@ -153,13 +165,30 @@ WAIT_FOR_CYCLE_COUNT_CHANGE:
 	; Update the current count value
 	LDA CYCLE_COUNT_LOW_ADDR
 	STA CYCLE_COUNT_CURRENT
+	STA LED_IO_ADDR; For Debug, write 02 to LEDs so we know we are waiting for IRQ
+
+	JSR TEST_FAIL ; DEBUG
+	; Send the stream
 
 	JMP SEND_I2C_DATA
 
 TEST_FAIL:
 	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
+	LDA #$AA
+	STA LED_IO_ADDR
 	JMP TEST_FAIL
 	BRK
+
+LOG_ADDRESS:
+	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
+	PHX
+	LDX #$00
+LOOP_LOG_ADDRESS:
+	INX
+	CPX #$FF
+	BNE LOOP_LOG_ADDRESS
+	PLX
+	RTS
 	
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
