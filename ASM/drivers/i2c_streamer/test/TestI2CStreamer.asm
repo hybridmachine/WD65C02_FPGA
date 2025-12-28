@@ -93,11 +93,11 @@ START:
 	JSR POST_MEMORY_TEST
 
 	; MAIN
-	LDA #03
 	STA LED_IO_ADDR ; Clear any LEDs
 	STA CYCLE_COUNT_CURRENT ; Clear the current counter
 	STA CYCLE_COUNT_LOW_ADDR ; Clear cycle 16 bits
-	STA CYCLE_COUNT_HIGH_ADDR 
+	STA CYCLE_COUNT_HIGH_ADDR
+	JSR LOG_ADDRESS ; DEBUG 
 	CLI ; Enable interrupts, the streamer will send interrupts.
 
 	JSR LOG_ADDRESS ; DEBUG
@@ -119,7 +119,6 @@ WAIT_FOR_STREAMER_READY:
 	TXA ; If X is 0, then this sets the Zero flag
 	BEQ SEND_I2C_DATA ; When Zero send data
 	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
-	JSR LOG_ADDRESS ; DEBUG
 	JMP WAIT_FOR_STREAMER_READY
 
 SEND_I2C_DATA
@@ -135,7 +134,7 @@ LOOP_WRITE:
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
-	JSR TEST_FAIL
+	JSR LOG_ADDRESS
 
 BYTE_BUFFERED:
 	; Increment array index into I2CMESSAGE
@@ -167,7 +166,7 @@ WAIT_FOR_CYCLE_COUNT_CHANGE:
 	STA CYCLE_COUNT_CURRENT
 	STA LED_IO_ADDR; For Debug, write 02 to LEDs so we know we are waiting for IRQ
 
-	JSR TEST_FAIL ; DEBUG
+	JSR LOG_ADDRESS ; DEBUG
 	; Send the stream
 
 	JMP SEND_I2C_DATA
@@ -203,6 +202,7 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 
 IRQHandler:
 		PHA
+		JSR LOG_ADDRESS ; DEBUG
 		; 4) In interrupt service routine, increment timer value on every fired interrupt
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		; Not used since timer is IRQ 0, so A would be 0

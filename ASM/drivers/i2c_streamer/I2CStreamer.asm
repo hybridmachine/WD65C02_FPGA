@@ -84,6 +84,7 @@ SEND_CONTROL_BYTE MACRO CONTROL_BYTE
 ;                               Local Constants
 ;***************************************************************************
 ;
+    LED_IO_ADDR:				            equ	$0200
     ; Memory addresses for I2C interface
     PIO_I2C_DATA_STRM_STATUS:               equ $0212
     PIO_I2C_DATA_STRM_CTRL:                 equ $0213
@@ -99,7 +100,8 @@ SEND_CONTROL_BYTE MACRO CONTROL_BYTE
     CONTROL_STANDBY:                        equ $03
 
     STATUS_SUCCESS:                         equ $00 
-    DEFAULT_I2C_ADDRESS:                    equ $76 ; 0111 011X
+    STATUS_RESETTING:                       equ $04
+    DEFAULT_I2C_ADDRESS:                    equ $76 ; 0111 0110
 
 ;***************************************************************************
 ;                               Library Code
@@ -111,8 +113,26 @@ SEND_CONTROL_BYTE MACRO CONTROL_BYTE
 SUB_I2CSTREAM_INITIALIZE:
     ; Save off accumulator then reset the I2C interface then set it to stanby
     PHA
-    SEND_CONTROL_BYTE CONTROL_RESET
-    ; SEND_CONTROL_BYTE CONTROL_STANDBY
+    ; Loop until the I2C streamer says its resetting
+SEND_RESET:
+    SEND_CONTROL_BYTE #CONTROL_RESET 
+    LDA PIO_I2C_DATA_STRM_STATUS
+    STA LED_IO_ADDR ; For DEBUG
+    CMP #STATUS_SUCCESS
+    BEQ RESET_COMPLETE
+    CMP #STATUS_RESETTING
+    BEQ RESET_INPROGRESS
+    JMP SEND_RESET
+RESET_INPROGRESS:
+    SEND_CONTROL_BYTE #CONTROL_STANDBY
+    LDA PIO_I2C_DATA_STRM_STATUS
+    AND #$80    ; Turn on high bit so we can see when we are in progress, waiting for complete
+    STA LED_IO_ADDR ; For DEBUG
+    CMP #STATUS_SUCCESS
+    BEQ RESET_COMPLETE
+    JMP RESET_INPROGRESS
+RESET_COMPLETE:
+    SEND_CONTROL_BYTE #CONTROL_STANDBY
     ; Reload the accumulator and set the I2C target address
     PLA
     BNE I2C_SET_ADDRESS ; If 0 , we'll first load default address in accumulator

@@ -45,7 +45,7 @@ CODE
 ; Enables the display and takes the 2 bytes on the call stack and displays them on the display
 ; Calling convention is stack push high byte, low byte then call this function
 SUB_SEVENSEG_DISPLAY_VALUE:
-    ; Turn on display (functional noop if already one)
+    ; Turn on display (functional noop if already on)
     LDA #SEVEN_SEG_ON
     STA SEVEN_SEG_CTL_ADDR
     ; Get value from stack

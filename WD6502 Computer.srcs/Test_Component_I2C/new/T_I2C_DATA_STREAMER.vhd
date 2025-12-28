@@ -84,14 +84,14 @@ t_sda <= t_client_to_master_sda when (I2CDataDirection(i2c_present_state) = clie
 t_ack <= t_client_to_master_sda;
 
 dut: entity work.PIO_I2C_DATA_STREAMER 
-Port map (  clk => t_clk,
-            status => t_status,              
-            control => t_control,             
-            address => t_address,             
-            data => t_data,                
-            i2c_target_address => t_i2c_target_address,  
-            sda => t_sda,                 
-            scl => t_scl);                 
+Port map (  I_CLK => t_clk,
+            O_STATUS => t_status,              
+            I_CONTROL => t_control,             
+            I_ADDRESS => t_address,             
+            I_DATA => t_data,                
+            I_I2C_TARGET_ADDRESS => t_i2c_target_address,  
+            IO_SDA => t_sda,                 
+            O_SCL => t_scl);                 
 
 stimuli_generator: process 
 variable write_address : natural := 0;

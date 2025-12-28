@@ -295,6 +295,7 @@ begin
             when WAIT_IRQ_ACK =>
                 if (I_IRQ_ACK = '1') then
                     NEXT_STREAMER_STATE <= WAIT_FOR_RESET;
+                    O_PIO_IRQ <= '0'; 
                 else
                     NEXT_STREAMER_STATE <= WAIT_IRQ_ACK;
                 end if;
