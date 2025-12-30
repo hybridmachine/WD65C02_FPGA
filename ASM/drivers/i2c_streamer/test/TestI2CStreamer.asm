@@ -69,9 +69,10 @@ CODE
 	STACK_BASE:				equ		$0100
 	
 	; Memory addresses for I2C interface status
-    PIO_I2C_DATA_STRM_STATUS:	equ $0212
-	LED_IO_ADDR:				equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
-	STATUS_READY:				equ $00
+    PIO_I2C_DATA_STRM_STATUS:		equ $0212
+	LED_IO_ADDR:					equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+	STATUS_READY:					equ $00
+	STATUS_STREAMING_I2C_COMPLETE: 	equ $05
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -93,6 +94,8 @@ START:
 	JSR POST_MEMORY_TEST
 
 	; MAIN
+	
+	LDA #$00
 	STA LED_IO_ADDR ; Clear any LEDs
 	STA CYCLE_COUNT_CURRENT ; Clear the current counter
 	STA CYCLE_COUNT_LOW_ADDR ; Clear cycle 16 bits
@@ -100,8 +103,7 @@ START:
 	JSR LOG_ADDRESS ; DEBUG 
 	CLI ; Enable interrupts, the streamer will send interrupts.
 
-	JSR LOG_ADDRESS ; DEBUG
-	LDA #00 ; Use builtin default I2C address
+	LDA #$00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
 	STA LED_IO_ADDR ; For debug	
@@ -111,7 +113,8 @@ START:
 
 WAIT_FOR_STREAMER_READY:
 	JSR LOG_ADDRESS ; DEBUG
-	LDA #$80
+	LDA PIO_I2C_DATA_STRM_STATUS
+	AND #$80
 	STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
 	
 	; Test for status STATUS_READY (#$00)
@@ -140,32 +143,60 @@ BYTE_BUFFERED:
 	; Increment array index into I2CMESSAGE
 	INX
 	
-	PHX
 	PHY
-	JSR SUB_SEVENSEG_DISPLAY_VALUE
+	PHX
+	; JSR SUB_SEVENSEG_DISPLAY_VALUE
 	; Cleanup stack
-	PLY
 	PLX
+	PLY
 	
 	JMP LOOP_WRITE ; 
 
 I2CSTREAMBUFFER:
-	JSR LOG_ADDRESS ; DEBUG
+	
+	;LDA #$C0
+	;STA LED_IO_ADDR
+
+	JSR LOG_ADDRESS
+	CLI ; Ensure interrupts enabled
+	PHP ; Push processor status to stack
+	PLA ; Pull that into the A register
+	STA LED_IO_ADDR ; Show proc status on LEDs
+	
+	; JSR LOG_ADDRESS ; DEBUG
 	JSR SUB_I2CSTREAM_STREAM
 
+	PHP ; Push processor status to stack
+	PLA ; Pull that into the A register
+	STA LED_IO_ADDR ; Show proc status on LEDs
+
 WAIT_FOR_CYCLE_COUNT_CHANGE:
-	LDA #$FA
-	STA LED_IO_ADDR; For Debug, write 02 to LEDs so we know we are waiting for IRQ
+	
+	; For now brute force cycling the streamer, we are still bugging the IRQ handler
+	JSR SUB_I2CSTREAM_GETSTATUS
+	TXA
+	CMP #STATUS_READY
+	BEQ SEND_I2C_DATA
+	STA LED_IO_ADDR ; Show proc status on LEDs
+	
+	CMP #STATUS_STREAMING_I2C_COMPLETE
+	BNE WAIT_FOR_CYCLE_COUNT_CHANGE
+
+	LDA #$00 ; Use builtin default I2C address
+	JSR SUB_I2CSTREAM_INITIALIZE
+	
+	;LDA #$FA
+	;STA LED_IO_ADDR; For Debug, write 02 to LEDs so we know we are waiting for IRQ
 	; The interrupt handler will increment the CYCLE_COUNT_LOW_ADDR 
 	LDA CYCLE_COUNT_CURRENT
+	;STA LED_IO_ADDR;
 	CMP CYCLE_COUNT_LOW_ADDR
 	BEQ WAIT_FOR_CYCLE_COUNT_CHANGE
 	
 	; Update the current count value
 	LDA CYCLE_COUNT_LOW_ADDR
 	STA CYCLE_COUNT_CURRENT
-	STA LED_IO_ADDR; For Debug, write 02 to LEDs so we know we are waiting for IRQ
-
+	
 	JSR LOG_ADDRESS ; DEBUG
 	; Send the stream
 
@@ -194,7 +225,7 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php
 	pha
 	lda #$FF
-	
+	JSR LOG_ADDRESS ; DEBUG
 	;clear Irq
 	pla
 	plp
@@ -206,14 +237,14 @@ IRQHandler:
 		; 4) In interrupt service routine, increment timer value on every fired interrupt
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		; Not used since timer is IRQ 0, so A would be 0
-		CMP #IRQ_CHANNEL_I2CSTRM
-		BNE SEND_IRQ_ACK
+		; CMP #IRQ_CHANNEL_I2CSTRM
+		; BNE SEND_IRQ_ACK
 		CLC
 		LDA CYCLE_COUNT_LOW_ADDR
-		ADC #01
+		ADC #$01
 		STA CYCLE_COUNT_LOW_ADDR
 		LDA CYCLE_COUNT_HIGH_ADDR
-		ADC #00 ; Add in any carry flag
+		ADC #$00 ; Add in any carry flag
 		STA CYCLE_COUNT_HIGH_ADDR
 		; Unhandled IRQ, just send back ACK
 		JMP SEND_IRQ_ACK
@@ -222,6 +253,9 @@ SEND_IRQ_ACK:
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		STA PIO_IRQ_CONTROLLER_IRQACK
 		
+		AND #$80 ; Set high bit so we know we are coming from IRQHandler
+		STA LED_IO_ADDR;
+
 		; Reset ack lines
 		LDA #$FF
 		STA PIO_IRQ_CONTROLLER_IRQACK
