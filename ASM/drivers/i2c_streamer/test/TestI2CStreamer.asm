@@ -65,7 +65,7 @@ CODE
 ;***************************************************************************
 	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
-	CYCLE_COUNT_LOW_ADDR:	equ		$01
+	CYCLE_COUNT_LOW_ADDR:	equ		$05
 	STACK_BASE:				equ		$0100
 	
 	; Memory addresses for I2C interface status
@@ -106,7 +106,7 @@ START:
 	LDA #$00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
-	STA LED_IO_ADDR ; For debug	
+	; STA LED_IO_ADDR ; For debug	
 	CMP #$76
 	BEQ WAIT_FOR_STREAMER_READY
 	JSR TEST_FAIL
@@ -115,13 +115,13 @@ WAIT_FOR_STREAMER_READY:
 	JSR LOG_ADDRESS ; DEBUG
 	LDA PIO_I2C_DATA_STRM_STATUS
 	AND #$80
-	STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
+	; STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
 	
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
 	BEQ SEND_I2C_DATA ; When Zero send data
-	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
+	; STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
 	JMP WAIT_FOR_STREAMER_READY
 
 SEND_I2C_DATA
@@ -132,7 +132,7 @@ SEND_I2C_DATA
 	
 LOOP_WRITE:
 	LDA I2CMESSAGE,X
-	STA LED_IO_ADDR ; For debug, write byte val to LEDs
+	; STA LED_IO_ADDR ; For debug, write byte val to LEDs
 	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
@@ -161,14 +161,14 @@ I2CSTREAMBUFFER:
 	CLI ; Ensure interrupts enabled
 	PHP ; Push processor status to stack
 	PLA ; Pull that into the A register
-	STA LED_IO_ADDR ; Show proc status on LEDs
+	; STA LED_IO_ADDR ; Show proc status on LEDs
 	
 	; JSR LOG_ADDRESS ; DEBUG
 	JSR SUB_I2CSTREAM_STREAM
 
 	PHP ; Push processor status to stack
 	PLA ; Pull that into the A register
-	STA LED_IO_ADDR ; Show proc status on LEDs
+	; STA LED_IO_ADDR ; Show proc status on LEDs
 
 WAIT_FOR_CYCLE_COUNT_CHANGE:
 	
@@ -177,8 +177,33 @@ WAIT_FOR_CYCLE_COUNT_CHANGE:
 	TXA
 	CMP #STATUS_READY
 	BEQ SEND_I2C_DATA
-	STA LED_IO_ADDR ; Show proc status on LEDs
+	; STA LED_IO_ADDR ; Show proc status on LEDs
 	
+	PHA
+	LDA CYCLE_COUNT_LOW_ADDR
+	CMP CYCLE_COUNT_CURRENT
+	BEQ WAIT_FOR_CYCLE_COUNT_CONTINUE
+	STA CYCLE_COUNT_CURRENT
+	LDA #$00
+	PHA
+	LDA CYCLE_COUNT_CURRENT
+	PHA
+	JSR SUB_SEVENSEG_DISPLAY_VALUE
+	PLA
+	PLA
+
+	;PHA ; Save off current A value
+	;LDA CYCLE_COUNT_HIGH_ADDR
+	;PHA
+	;LDA CYCLE_COUNT_LOW_ADDR	
+	;PHA
+	;JSR SUB_SEVENSEG_DISPLAY_VALUE
+	;PLA
+	;PLA
+	;PLA ; Restore current A value
+
+WAIT_FOR_CYCLE_COUNT_CONTINUE:
+	PLA
 	CMP #STATUS_STREAMING_I2C_COMPLETE
 	BNE WAIT_FOR_CYCLE_COUNT_CHANGE
 
@@ -210,6 +235,9 @@ TEST_FAIL:
 	BRK
 
 LOG_ADDRESS:
+	; Disable for now
+	RTS
+
 	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
 	PHX
 	LDX #$00
@@ -233,9 +261,9 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 
 IRQHandler:
 		PHA
-		JSR LOG_ADDRESS ; DEBUG
+		; JSR LOG_ADDRESS ; DEBUG
 		; 4) In interrupt service routine, increment timer value on every fired interrupt
-		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		; LDA PIO_IRQ_CONTROLLER_IRQNUM
 		; Not used since timer is IRQ 0, so A would be 0
 		; CMP #IRQ_CHANNEL_I2CSTRM
 		; BNE SEND_IRQ_ACK
@@ -247,15 +275,14 @@ IRQHandler:
 		ADC #$00 ; Add in any carry flag
 		STA CYCLE_COUNT_HIGH_ADDR
 		; Unhandled IRQ, just send back ACK
-		JMP SEND_IRQ_ACK
+		; JMP SEND_IRQ_ACK
 SEND_IRQ_ACK:
         ; 5) Write ACK to IRQ controller, in interrupt handler
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		STA PIO_IRQ_CONTROLLER_IRQACK
-		
-		AND #$80 ; Set high bit so we know we are coming from IRQHandler
+		ORA #$80 ; Set high bit so we know we are coming from IRQHandler
 		STA LED_IO_ADDR;
-
+		
 		; Reset ack lines
 		LDA #$FF
 		STA PIO_IRQ_CONTROLLER_IRQACK
