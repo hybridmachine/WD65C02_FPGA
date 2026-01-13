@@ -38,7 +38,8 @@ entity MemoryManager is
            PIO_LED_OUT : out std_logic_vector (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
            PIO_7SEG_COMMON : out std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
            PIO_7SEG_SEGMENTS : out std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
-           PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_IN : in std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_OUT : out std_logic;
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
            I_SWITCH_VECTOR : in std_logic_vector(15 downto 0);
            IRQ : out std_logic;   
@@ -180,7 +181,8 @@ COMPONENT PIO_I2C_DATA_STREAMER is
             I_ADDRESS             : in STD_LOGIC_VECTOR (15 downto 0);
             I_DATA                : in STD_LOGIC_VECTOR (7 downto 0);
             I_I2C_TARGET_ADDRESS  : in STD_LOGIC_VECTOR(6 downto 0);
-            IO_SDA                : inout STD_LOGIC;
+            I_SDA                 : in STD_LOGIC;
+            O_SDA                 : out STD_LOGIC;
             O_SCL                 : out STD_LOGIC;
             I_IRQ_ACK             : in STD_LOGIC;
             O_PIO_IRQ             : out STD_LOGIC);
@@ -296,7 +298,8 @@ PIO_I2C_DATA_STREAMER_DEVICE: PIO_I2C_DATA_STREAMER port map (
     I_ADDRESS => PIO_I2C_DATA_STREAMER_ADDRESS,
     I_DATA => PIO_I2C_DATA_STREAMER_DATA,
     I_I2C_TARGET_ADDRESS => PIO_I2C_DATA_STREAMER_I2C_TARGET_ADDRESS,
-    IO_SDA => PIO_I2C_DATA_STREAMER_SDA,
+    I_SDA => PIO_I2C_DATA_STREAMER_SDA_IN,
+    O_SDA => PIO_I2C_DATA_STREAMER_SDA_OUT,
     O_SCL => PIO_I2C_DATA_STREAMER_SCL,
     I_IRQ_ACK => PIO_INTERRUPT_CONTROLLER_ACK_VECTOR(2),
     O_PIO_IRQ => PIO_INTERRUPT_CONTROLLER_REQUEST_VECTOR(2) 

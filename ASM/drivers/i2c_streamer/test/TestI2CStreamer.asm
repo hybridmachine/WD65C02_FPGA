@@ -172,6 +172,11 @@ I2CSTREAMBUFFER:
 
 WAIT_FOR_CYCLE_COUNT_CHANGE:
 	
+	; Log streamer status to LEDs
+	JSR SUB_I2CSTREAM_GETSTATUS
+	TXA
+	STA LED_IO_ADDR ; Show proc status on LEDs
+
 	; For now brute force cycling the streamer, we are still bugging the IRQ handler
 	
 	LDA CYCLE_COUNT_LOW_ADDR
@@ -192,7 +197,7 @@ WAIT_FOR_CYCLE_COUNT_CONTINUE:
 	TXA
 	CMP #STATUS_READY
 	BEQ REINIT_I2CSTREAM
-	STA LED_IO_ADDR ; Show proc status on LEDs
+	; STA LED_IO_ADDR ; Show proc status on LEDs
 	CMP #STATUS_STREAMING_I2C_COMPLETE
 	BEQ REINIT_I2CSTREAM
 	JMP WAIT_FOR_CYCLE_COUNT_CONTINUE
@@ -211,7 +216,7 @@ TEST_FAIL:
 
 LOG_ADDRESS:
 	; Disable for now
-	RTS
+	; RTS
 
 	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
 	PHX
@@ -255,8 +260,8 @@ SEND_IRQ_ACK:
         ; 5) Write ACK to IRQ controller, in interrupt handler
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		STA PIO_IRQ_CONTROLLER_IRQACK
-		ORA #$80 ; Set high bit so we know we are coming from IRQHandler
-		STA LED_IO_ADDR;
+		; ORA #$80 ; Set high bit so we know we are coming from IRQHandler
+		; STA LED_IO_ADDR;
 		
 		; Reset ack lines
 		LDA #$FF

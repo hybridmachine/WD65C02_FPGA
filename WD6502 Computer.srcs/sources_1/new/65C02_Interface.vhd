@@ -83,7 +83,8 @@ COMPONENT MemoryManager is
            PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
            PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
-           PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_IN : in std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_OUT : out std_logic;
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
            I_SWITCH_VECTOR : in std_logic_vector(15 downto 0);
            IRQ : out STD_LOGIC;
@@ -124,13 +125,17 @@ signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
 signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
 signal READ_WRITE_MODE :  STD_LOGIC := READ_MODE;
 
-
+signal I2C_READ_WRITE_MODE : STD_LOGIC := READ_MODE;
+signal PIO_I2C_DATA_STREAMER_SDA_IN : STD_LOGIC;
+signal PIO_I2C_DATA_STREAMER_SDA_OUT : STD_LOGIC;
 
 begin -- Begin architecture definition
 
 --SOB <= '1'; -- Not really used, spec says to keep it high
 --BE <= '1'; -- For now bus is always on
 NMIB <= '1'; -- Not currently using, keep high for now.
+
+I2C_READ_WRITE_MODE <= READ_MODE WHEN PIO_I2C_DATA_STREAMER_SDA_OUT = 'Z' else WRITE_MODE;
 
 MemoryManagement : MemoryManager port map (
     BUS_READ_DATA => DATA_FROM_6502,
@@ -142,7 +147,8 @@ MemoryManagement : MemoryManager port map (
     PIO_7SEG_COMMON => PIO_7SEG_COMMON,
     PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
     PIO_I2C_DATA_STREAMER_SCL => PIO_I2C_DATA_STREAMER_SCL,
-    PIO_I2C_DATA_STREAMER_SDA => PIO_I2C_DATA_STREAMER_SDA,
+    PIO_I2C_DATA_STREAMER_SDA_IN => PIO_I2C_DATA_STREAMER_SDA_IN,
+    PIO_I2C_DATA_STREAMER_SDA_OUT => PIO_I2C_DATA_STREAMER_SDA_OUT,
     I_SWITCH_VECTOR => I_SWITCH_VECTOR,
     IRQ => IRQB,
     RESET => RESET
@@ -156,15 +162,24 @@ GEN1: for i in 0 to 7 generate
              SLEW => "SLOW")
              port map (
              O => DATA_TO_6502(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
-             IO => DATA(i),     	-- Data inout port (connect directly to top-level port)
+             IO => DATA(i),     	        -- Data inout port (connect directly to top-level port)
              I => DATA_FROM_6502(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
              T => READ_WRITE_MODE          	-- 3-state enable input, high=input, low=output
          );  
-
-
 end generate GEN1;
 
--- End of IOBUF_inst instantiation
+I2C_IOBx : IOBUF
+    generic map(
+        DRIVE => 12,
+        IOSTANDARD => "DEFAULT",
+        SLEW => "SLOW")
+    port map (
+        O => PIO_I2C_DATA_STREAMER_SDA_OUT,     -- Buffer output from I2C device to outside world
+        IO => PIO_I2C_DATA_STREAMER_SDA,     	-- Data inout port (connect directly to top-level port)
+        I => PIO_I2C_DATA_STREAMER_SDA_IN,     	-- Buffer input to I2C device from outside world
+        T => I2C_READ_WRITE_MODE          	    -- 3-state enable input, high=input, low=output
+    ); 
+-- End of IOBUFS_inst instantiation
                        
 ---- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
 ---- Otherwise RDY is always high.

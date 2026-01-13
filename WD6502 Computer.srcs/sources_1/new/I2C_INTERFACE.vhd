@@ -43,7 +43,8 @@ entity I2C_INTERFACE is
             data                : in STD_LOGIC_VECTOR (7 downto 0);
             ack_error           : out STD_LOGIC;
             i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
-            sda                 : inout STD_LOGIC;
+            i_sda               : in STD_LOGIC;
+            o_sda               : out STD_LOGIC;
             scl                 : out STD_LOGIC);
 end I2C_INTERFACE;
 
@@ -65,24 +66,14 @@ TYPE state_type IS (idle, send_start, start_wr, start_rd, dev_addr_wr, dev_addr_
 signal present_state, next_state: state_type;
 signal sda_in : std_logic;
 signal sda_out : std_logic;
-
+signal IOBUF_MODE : std_logic;
          
-begin
-
-    IOBx : IOBUF
-         generic map(
-             DRIVE => 12,
-             IOSTANDARD => "DEFAULT",
-             SLEW => "SLOW")
-         port map (
-             O => sda_out,      -- Buffer output from I2C device to outside world
-             IO => sda,     	-- Data inout port (connect directly to top-level port)
-             I => sda_in,     	-- Buffer input to I2C device from outside world
-             T => READ_WRITE_MODE          	-- 3-state enable input, high=input, low=output
-         ); 
- 
+begin 
     ack_error <= ack(0) OR ack(1) OR ack(2); 
     que_for_send <= que_for_send_sig;
+    
+    sda_in <= i_sda;
+    o_sda <= sda_out;
     
     ------ Auxiliary clock -----------------------------
     -- Frequency = 4 * data_rate

@@ -99,9 +99,13 @@ SEND_CONTROL_BYTE MACRO CONTROL_BYTE
     CONTROL_STREAM_BUFFER:                  equ $02
     CONTROL_STANDBY:                        equ $03
 
+    STATUS_READY:                           equ $00
     STATUS_SUCCESS:                         equ $00 
     STATUS_RESETTING:                       equ $04
     DEFAULT_I2C_ADDRESS:                    equ $76 ; 0111 0110
+
+    CALL_COUNTER:                           equ $20
+    CALL_COUNTER_SHIFTED:                   equ $21
 
 ;***************************************************************************
 ;                               Library Code
@@ -111,6 +115,7 @@ SEND_CONTROL_BYTE MACRO CONTROL_BYTE
 ; Initialize the I2C Interface. Address for I2C is in accumulator (Only high 7 bits are read, low bit is unused).
 ; If value is 0, default address is used. Default address is left in accumulator, callers can check it to find the value
 SUB_I2CSTREAM_INITIALIZE:
+    STZ CALL_COUNTER; Rset the counter for now, we do it here since we aren't having an issue here
     ; Save off accumulator then reset the I2C interface then set it to stanby
     PHA
     ; Loop until the I2C streamer says its resetting
@@ -126,7 +131,7 @@ SEND_RESET:
 RESET_INPROGRESS:
     SEND_CONTROL_BYTE #CONTROL_STANDBY
     LDA PIO_I2C_DATA_STRM_STATUS
-    AND #$80    ; Turn on high bit so we can see when we are in progress, waiting for complete
+    ; AND #$80    ; Turn on high bit so we can see when we are in progress, waiting for complete
     STA LED_IO_ADDR ; For DEBUG
     CMP #STATUS_SUCCESS
     BEQ RESET_COMPLETE
@@ -151,6 +156,33 @@ SUB_I2CSTREAM_GETSTATUS:
 ; Y: address high, X: address low, Accumulator: Byte to write to buffer
 ; Returns success/error in accumulator after write attempt
 SUB_I2CSTREAM_WRITEBYTE:
+    PHY
+    PHX
+    PHA
+    ; Increment call counter (let it roll on overflow, 8 bit counter only)
+    CLC
+    LDA CALL_COUNTER
+    ADC #$01
+    STA CALL_COUNTER
+
+    ; Shift count left 4 bits, we'll ORA that with our status bits so we can see how many times we have been called (rolling at 15)
+    ASL
+    ASL
+    ASL
+    ASL
+    STA CALL_COUNTER_SHIFTED
+
+    LDA #$00
+WAIT_FOR_READY:
+    ORA CALL_COUNTER_SHIFTED ; Set top 4 bits based on counter (we left shit counter value)
+    STA LED_IO_ADDR
+    LDA PIO_I2C_DATA_STRM_STATUS
+    CMP #STATUS_READY
+    BNE WAIT_FOR_READY
+
+    PLA
+    PLX
+    PLY
     STY PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH
     STX PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW
     STA PIO_I2C_DATA_STRM_DATA
@@ -160,6 +192,13 @@ SUB_I2CSTREAM_WRITEBYTE:
 
     ; Place I2C in standby for next command
     SEND_CONTROL_BYTE #CONTROL_STANDBY
+
+WAIT_FOR_READY2:
+    STA LED_IO_ADDR
+    JSR SUB_I2CSTREAM_GETSTATUS
+    TXA
+    CMP #STATUS_READY
+    BNE WAIT_FOR_READY2
     
     LDA #STATUS_SUCCESS
     RTS
