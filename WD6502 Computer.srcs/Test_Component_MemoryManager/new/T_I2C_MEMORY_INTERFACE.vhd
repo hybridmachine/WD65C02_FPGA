@@ -45,7 +45,8 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_PIO_LED_OUT : std_logic_vector (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
     signal T_PIO_7SEG_COMMON : std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
     signal T_PIO_7SEG_SEGMENTS : std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
-    signal T_PIO_I2C_DATA_STREAMER_SDA : std_logic;
+    signal T_PIO_I2C_DATA_STREAMER_SDA_IN : std_logic;
+    signal T_PIO_I2C_DATA_STREAMER_SDA_OUT : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_SCL : std_logic;   
     signal T_RESET : std_logic;
@@ -100,7 +101,7 @@ begin
 T_MEMORY_CLOCK <= not T_MEMORY_CLOCK after (CLOCK_PERIOD / 2);
 T_CPU_CLOCK <= not T_CPU_CLOCK after (CPU_CLOCK_PERIOD / 2);
 
-T_PIO_I2C_DATA_STREAMER_SDA <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when (present_state = address_ack or present_state = write_ack) else 'Z';
+T_PIO_I2C_DATA_STREAMER_SDA_IN <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when (present_state = address_ack or present_state = write_ack) else 'Z';
 
 dut: entity work.MemoryManager 
     Port map (
@@ -112,7 +113,8 @@ dut: entity work.MemoryManager
         PIO_LED_OUT => T_PIO_LED_OUT,
         PIO_7SEG_COMMON => T_PIO_7SEG_COMMON,
         PIO_7SEG_SEGMENTS => T_PIO_7SEG_SEGMENTS,
-        PIO_I2C_DATA_STREAMER_SDA => T_PIO_I2C_DATA_STREAMER_SDA,
+        PIO_I2C_DATA_STREAMER_SDA_IN => T_PIO_I2C_DATA_STREAMER_SDA_IN,
+        PIO_I2C_DATA_STREAMER_SDA_OUT => T_PIO_I2C_DATA_STREAMER_SDA_OUT,
         PIO_I2C_DATA_STREAMER_SCL => T_PIO_I2C_DATA_STREAMER_SCL,
         I_SWITCH_VECTOR => T_SWITCH_VECTOR,
         IRQ => T_IRQ,
@@ -221,7 +223,7 @@ begin
     end if;
 end process;
 
-i2c_signal_test: process(T_PIO_I2C_DATA_STREAMER_SDA,T_PIO_I2C_DATA_STREAMER_SCL,IRQ_STATE)
+i2c_signal_test: process(T_PIO_I2C_DATA_STREAMER_SDA_OUT,T_PIO_I2C_DATA_STREAMER_SCL,IRQ_STATE)
 variable timer : natural := 0;
 variable test_data_byte_idx : natural := 0;
 variable test_data_byte_val : std_logic_vector(7 downto 0) := x"00";
@@ -230,7 +232,7 @@ begin
         when idle =>
             -- Wait for I2C Start condition
             -- SCL high, SDA pulled low
-            if (falling_edge(T_PIO_I2C_DATA_STREAMER_SDA)) then
+            if (falling_edge(T_PIO_I2C_DATA_STREAMER_SDA_OUT)) then
                 if (T_PIO_I2C_DATA_STREAMER_SCL = '1') then
                     present_state <= starting;
                 end if;
@@ -243,7 +245,7 @@ begin
         when addressing =>
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
                 if (timer > 0) then
-                    T_I2C_ADDRESS((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
+                    T_I2C_ADDRESS((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA_OUT;
                     timer := timer - 1;                    
                 end if;
             end if;
@@ -287,7 +289,7 @@ begin
          when master_writing =>
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
                 if (timer > 0) then
-                    T_I2C_DATA((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
+                    T_I2C_DATA((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA_OUT;
                     timer := timer - 1;
                     if (timer = 0) then
                         present_state <= write_ack;
