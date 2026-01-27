@@ -11,18 +11,18 @@
         "Component_Name": [ { "value": "design_with_logic_probe_WDC65C02_Interface_0_0", "resolve_type": "user", "usage": "all" } ]
       },
       "project_parameters": {
-        "ARCHITECTURE": [ { "value": "artix7" } ],
-        "BASE_BOARD_PART": [ { "value": "" } ],
-        "BOARD_CONNECTIONS": [ { "value": "" } ],
-        "DEVICE": [ { "value": "xc7a35t" } ],
-        "NEXTGEN_VERSAL": [ { "value": "0" } ],
-        "PACKAGE": [ { "value": "cpg236" } ],
-        "PREFHDL": [ { "value": "VHDL" } ],
-        "SILICON_REVISION": [ { "value": "" } ],
-        "SIMULATOR_LANGUAGE": [ { "value": "MIXED" } ],
-        "SPEEDGRADE": [ { "value": "-1" } ],
-        "STATIC_POWER": [ { "value": "" } ],
-        "TEMPERATURE_GRADE": [ { "value": "" } ]
+        "ARCHITECTURE": [ { "value": "artix7", "usage": "all" } ],
+        "BASE_BOARD_PART": [ { "value": "", "usage": "all" } ],
+        "BOARD_CONNECTIONS": [ { "value": "", "usage": "all" } ],
+        "DEVICE": [ { "value": "xc7a35t", "usage": "all" } ],
+        "NEXTGEN_VERSAL": [ { "value": "0", "usage": "all" } ],
+        "PACKAGE": [ { "value": "cpg236", "usage": "all" } ],
+        "PREFHDL": [ { "value": "VHDL", "usage": "all" } ],
+        "SILICON_REVISION": [ { "value": "", "usage": "all" } ],
+        "SIMULATOR_LANGUAGE": [ { "value": "MIXED", "usage": "all" } ],
+        "SPEEDGRADE": [ { "value": "-1", "usage": "all" } ],
+        "STATIC_POWER": [ { "value": "", "usage": "all" } ],
+        "TEMPERATURE_GRADE": [ { "value": "", "usage": "all" } ]
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
@@ -31,7 +31,7 @@
         "OUTPUTDIR": [ { "value": "../../../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe/ip/design_with_logic_probe_WDC65C02_Interface_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2024.1" } ],
+        "SWVERSION": [ { "value": "2025.2" } ],
         "SYNTHESISFLOW": [ { "value": "GLOBAL" } ]
       }
     },
@@ -64,7 +64,7 @@
           "abstraction_type": "xilinx.com:signal:reset_rtl:1.0",
           "mode": "slave",
           "parameters": {
-            "POLARITY": [ { "value": "ACTIVE_LOW", "value_permission": "bd_and_user", "resolve_type": "generated", "is_ips_inferred": true, "is_static_object": false } ],
+            "POLARITY": [ { "value": "ACTIVE_HIGH", "value_src": "user", "value_permission": "bd_and_user", "resolve_type": "generated", "is_ips_inferred": true, "is_static_object": false } ],
             "INSERT_VIP": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "simulation.rtl", "is_ips_inferred": true, "is_static_object": false } ]
           },
           "port_maps": {
@@ -91,5 +91,6 @@
         }
       }
     }
-  }
+  },
+  "checksum": "30ff4f16"
 }
