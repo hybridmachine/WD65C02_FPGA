@@ -170,7 +170,7 @@
             "direction": "I",
             "parameters": {
               "POLARITY": {
-                "value": "ACTIVE_HIGH"
+                "value": "ACTIVE_LOW"
               }
             }
           },
