@@ -39,6 +39,7 @@ CODE
 
 	INCLUDE "../../seven_segment_display/SevenSegmentDisplay.inc"
 	INCLUDE "../../../common/InterruptVectors.inc"
+	INCLUDE "../../../common/InterruptTimerCtl.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -62,14 +63,7 @@ CODE
 ;
 
 	STACK_BASE:                 equ $0100      ; Stack base address
-    ; These values align with definitions in PKG_TIMER_CONTROL.vhd
-    CTL_TIMER_RESET:            equ $00  ; Request timer reset
-    CTL_TIMER_RUN:              equ $FF  ; Set timer to run
-
 	LED_IO_ADDR:	equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
-	TIMER_CTL_ADDRESS:			equ $0218
-	TIMER_PERIOD_MS_ADDRESS: 	equ $0219 ; -- Four bytes , little endian. Unsigned int millisecond period for timer
-	
 
 	PIO_SWITCHES_PREV_STATEVEC_L: equ $0225
     PIO_SWITCHES_PREV_STATEVEC_H: equ $0226

@@ -1,7 +1,7 @@
 {
    "ActiveEmotionalView":"Default View",
    "Default View_ScaleFactor":"1.5",
-   "Default View_TopLeft":"-501,-249",
+   "Default View_TopLeft":"-512,-250",
    "ExpandedHierarchyInLayout":"",
    "PinnedBlocks":"",
    "PinnedPorts":"",
@@ -30,6 +30,7 @@ preplace netloc Net 1 0 2 NJ 180 NJ
 preplace netloc Net1 1 2 1 NJ 60
 preplace netloc Net2 1 2 1 750J 280n
 preplace netloc RWB_PIN_1 1 0 2 NJ 210 180J
+preplace netloc Reset_1 1 0 2 NJ 110 180
 preplace netloc SYNC_1 1 0 2 NJ 240 180J
 preplace netloc SingleStep_1 1 0 2 NJ 150 190J
 preplace netloc WD6502_Interface_0_PHI2 1 2 1 750J 130n
@@ -41,7 +42,6 @@ preplace netloc WDC65C02_Interface_0_RDY 1 2 1 760J 160n
 preplace netloc WDC65C02_Interface_0_RESB 1 2 1 750J 190n
 preplace netloc WDC65C02_Interface_PIO_I2C_DATA_STREAMER_SCL 1 2 1 740J 300n
 preplace netloc clk_wiz_0_clk_out1 1 0 2 NJ 50 190J
-preplace netloc Reset_1 1 0 2 NJ 110 180
 levelinfo -pg 1 -10 160 530 780
 pagesize -pg 1 -db -bbox -sgen -180 -20 1030 530
 "

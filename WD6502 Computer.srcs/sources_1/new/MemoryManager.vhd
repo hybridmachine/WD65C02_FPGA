@@ -43,7 +43,7 @@ entity MemoryManager is
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
            I_SWITCH_VECTOR : in std_logic_vector(15 downto 0);
            IRQ : out std_logic;   
-           RESET : in std_logic --! Reset 
+           RESET : in std_logic --! Reset active high (pulled low, we NOT this internally)
            );
 end MemoryManager;
 

@@ -128,12 +128,14 @@ signal READ_WRITE_MODE :  STD_LOGIC := READ_MODE;
 signal I2C_READ_WRITE_MODE : STD_LOGIC := READ_MODE;
 signal PIO_I2C_DATA_STREAMER_SDA_IN : STD_LOGIC;
 signal PIO_I2C_DATA_STREAMER_SDA_OUT : STD_LOGIC;
+signal RESET_INVERTED : STD_LOGIC;
 
 begin -- Begin architecture definition
 
 --SOB <= '1'; -- Not really used, spec says to keep it high
 --BE <= '1'; -- For now bus is always on
 NMIB <= '1'; -- Not currently using, keep high for now.
+RESET_INVERTED <= NOT RESET;
 
 I2C_READ_WRITE_MODE <= READ_MODE WHEN PIO_I2C_DATA_STREAMER_SDA_OUT = 'Z' else WRITE_MODE;
 
@@ -151,7 +153,7 @@ MemoryManagement : MemoryManager port map (
     PIO_I2C_DATA_STREAMER_SDA_OUT => PIO_I2C_DATA_STREAMER_SDA_OUT,
     I_SWITCH_VECTOR => I_SWITCH_VECTOR,
     IRQ => IRQB,
-    RESET => RESET
+    RESET => RESET_INVERTED
 );
 
 GEN1: for i in 0 to 7 generate     
@@ -197,7 +199,7 @@ variable WRITE_RAM_SETUP : natural range 0 to 1000 := WRITE_RAM_SETUP_PERIOD; --
 variable WRITE_RAM_HOLD : natural range 0 to 1000 := WRITE_RAM_HOLD_PERIOD; -- How long to leave the write flag high after its triggered
 begin
     if (rising_edge(CLOCK)) then
-        if (RESET = CPU_RESET) then
+        if (RESET_INVERTED = CPU_RESET) then
             READ_WRITE_MODE <= READ_MODE; 
         else
             READ_WRITE_MODE <= READ_MODE;
@@ -237,12 +239,12 @@ variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
 begin 
     if (rising_edge(CLOCK)) then
-        if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
+        if (RESET_INVERTED = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
             FPGA_CLOCK_COUNTER_FOR_CPU := 1;
             wdc65c02_CLOCK <= '0';
             RESET_IN_PROGRESS := '1';  
         else                   
-            if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
+            if (RESET_INVERTED = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
                 RESET_IN_PROGRESS := '0';
             end if;
             
@@ -272,7 +274,7 @@ begin
 --        end if;
         -- Push the internal signal out to the CPU clock PIN
 
-        if (RESET = CPU_RESET and reset_in_progress = '0') then
+        if (RESET_INVERTED = CPU_RESET and reset_in_progress = '0') then
             PROCESSOR_STATE <= RESET_START;
             reset_clock_count := RESET_MIN_CLOCKS;
             RESB <= CPU_RESET;

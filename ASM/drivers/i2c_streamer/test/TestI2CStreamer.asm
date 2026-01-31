@@ -37,6 +37,7 @@ CODE
 ;***************************************************************************
 
 	INCLUDE "../../../common/InterruptVectors.inc"
+	INCLUDE "../../../common/InterruptTimerCtl.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -66,6 +67,10 @@ CODE
 	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
 	CYCLE_COUNT_LOW_ADDR:	equ		$05
+
+	; Byte to hold number of cyles to wait. Set this then start wait, timer loop in interrupt handler will decrement this to 0
+	TIMER_WAIT_CYCLES:		equ		$0A
+
 	STACK_BASE:				equ		$0100
 	
 	; Memory addresses for I2C interface status
@@ -95,13 +100,27 @@ START:
 
 	; MAIN
 	
+	JSR INITIALIZE_TIMER
+	
 	LDA #$00
 	STA LED_IO_ADDR ; Clear any LEDs
 	STA CYCLE_COUNT_CURRENT ; Clear the current counter
 	STA CYCLE_COUNT_LOW_ADDR ; Clear cycle 16 bits
 	STA CYCLE_COUNT_HIGH_ADDR
-	JSR LOG_ADDRESS ; DEBUG 
+	
 	CLI ; Enable interrupts, the streamer will send interrupts.
+	
+	; Start the timer
+	LDA #$FF
+	STA PIO_IRQ_CONTROLLER_IRQACK ; Set this to no ack
+	LDA #CTL_TIMER_RUN
+	STA TIMER_CTL_ADDRESS
+
+	; Test timer
+	JSR LOG_ADDRESS ; DEBUG
+	LDA #$14 ; Wait (100 * 20) ms, 2 seconds
+	STA TIMER_WAIT_CYCLES
+	JSR WAIT_FOR_TIMER
 
 	LDA #$00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
@@ -227,7 +246,29 @@ LOOP_LOG_ADDRESS:
 	BNE LOOP_LOG_ADDRESS
 	PLX
 	RTS
+WAIT_FOR_TIMER:
+	LDA TIMER_WAIT_CYCLES
+	BNE WAIT_FOR_TIMER
+	; When wait cycles drops to 0, return
+	RTS
+
+INITIALIZE_TIMER:
+	; Disable the timer
+	LDA #CTL_TIMER_RESET
+	STA TIMER_CTL_ADDRESS
+
+	; Program the timer period in MS (100 == 0x0064)
+	LDA #$64
+	STA TIMER_PERIOD_MS_ADDRESS
 	
+	LDA #$00
+	STA TIMER_PERIOD_MS_ADDRESS+1
+	STA TIMER_PERIOD_MS_ADDRESS+2
+	STA TIMER_PERIOD_MS_ADDRESS+3
+
+	; We don't start the timer here, caller must start timer
+	RTS	
+
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php
@@ -242,8 +283,13 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 IRQHandler:
 		PHA
 		; JSR LOG_ADDRESS ; DEBUG
-		; 4) In interrupt service routine, increment timer value on every fired interrupt
-		; LDA PIO_IRQ_CONTROLLER_IRQNUM
+		; 4) In interrupt service routine, decrement TIMER_WAIT_CYCLES if not 0
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		BNE SKIP_TIMER ; If not IRQ 0, skip timer code
+		LDA TIMER_WAIT_CYCLES
+		BEQ SKIP_TIMER ; If already 0, skip decrement
+		DEC TIMER_WAIT_CYCLES
+SKIP_TIMER:
 		; Not used since timer is IRQ 0, so A would be 0
 		; CMP #IRQ_CHANNEL_I2CSTRM
 		; BNE SEND_IRQ_ACK
