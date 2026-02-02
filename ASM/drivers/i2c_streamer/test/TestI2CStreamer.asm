@@ -78,6 +78,8 @@ CODE
 	LED_IO_ADDR:					equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 	STATUS_READY:					equ $00
 	STATUS_STREAMING_I2C_COMPLETE: 	equ $05
+
+	SCRATCH:						equ $0A
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -118,9 +120,7 @@ START:
 
 	; Test timer
 	JSR LOG_ADDRESS ; DEBUG
-	LDA #$14 ; Wait (100 * 20) ms, 2 seconds
-	STA TIMER_WAIT_CYCLES
-	JSR WAIT_FOR_TIMER
+	
 
 	LDA #$00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
@@ -151,23 +151,26 @@ SEND_I2C_DATA
 	
 LOOP_WRITE:
 	LDA I2CMESSAGE,X
-	; STA LED_IO_ADDR ; For debug, write byte val to LEDs
+	STA LED_IO_ADDR ; For debug, write byte val to LEDs
+	JSR LOG_ADDRESS
 	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
+	JSR LOG_ADDRESS
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
-	JSR LOG_ADDRESS
+	
 
 BYTE_BUFFERED:
+	
+	JSR LOG_ADDRESS	
+	STX LED_IO_ADDR
+	
+	JSR LOG_ADDRESS
+
 	; Increment array index into I2CMESSAGE
 	INX
-	
-	PHY
-	PHX
-	; JSR SUB_SEVENSEG_DISPLAY_VALUE
-	; Cleanup stack
-	PLX
-	PLY
+	STX LED_IO_ADDR
+	JSR LOG_ADDRESS	
 	
 	JMP LOOP_WRITE ; 
 
@@ -237,15 +240,16 @@ LOG_ADDRESS:
 	; Disable for now
 	; RTS
 
+	STX SCRATCH
 	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
-	PHX
-	LDX #$00
-LOOP_LOG_ADDRESS:
-	INX
-	CPX #$FF
-	BNE LOOP_LOG_ADDRESS
-	PLX
+	LDX SCRATCH
+	PHA
+	LDA #$0A ; Wait (100 * 10) ms, 1 seconds
+	STA TIMER_WAIT_CYCLES
+	JSR WAIT_FOR_TIMER
+	PLA
 	RTS
+	
 WAIT_FOR_TIMER:
 	LDA TIMER_WAIT_CYCLES
 	BNE WAIT_FOR_TIMER
