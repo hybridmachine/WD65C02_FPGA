@@ -78,6 +78,7 @@ CODE
 	LED_IO_ADDR:					equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
 	STATUS_READY:					equ $00
 	STATUS_STREAMING_I2C_COMPLETE: 	equ $05
+	DATA_BYTE_INDEX:				equ $06
 
 	SCRATCH:						equ $0A
 ;***************************************************************************
@@ -146,14 +147,21 @@ WAIT_FOR_STREAMER_READY:
 SEND_I2C_DATA
 	JSR LOG_ADDRESS ; DEBUG
 	LDX #$00
+	STX DATA_BYTE_INDEX
 	LDY #$00
 	LDA #$00
 	
 LOOP_WRITE:
+	LDX DATA_BYTE_INDEX
 	LDA I2CMESSAGE,X
+
+	PHA
 	STA LED_IO_ADDR ; For debug, write byte val to LEDs
 	JSR LOG_ADDRESS
+	
+	PLA
 	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
+	
 	JSR LOG_ADDRESS
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
@@ -168,7 +176,9 @@ BYTE_BUFFERED:
 	JSR LOG_ADDRESS
 
 	; Increment array index into I2CMESSAGE
+	LDX DATA_BYTE_INDEX
 	INX
+	STX DATA_BYTE_INDEX
 	STX LED_IO_ADDR
 	JSR LOG_ADDRESS	
 	
