@@ -117,11 +117,7 @@ START:
 	LDA #$FF
 	STA PIO_IRQ_CONTROLLER_IRQACK ; Set this to no ack
 	LDA #CTL_TIMER_RUN
-	STA TIMER_CTL_ADDRESS
-
-	; Test timer
-	JSR LOG_ADDRESS ; DEBUG
-	
+	STA TIMER_CTL_ADDRESS	
 
 	LDA #$00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
@@ -132,10 +128,10 @@ START:
 	JSR TEST_FAIL
 
 WAIT_FOR_STREAMER_READY:
-	JSR LOG_ADDRESS ; DEBUG
 	LDA PIO_I2C_DATA_STRM_STATUS
-	AND #$80
-	; STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
+	ORA #$80
+	STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
+	JSR LOG_ADDRESS ; DEBUG
 	
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
@@ -145,24 +141,18 @@ WAIT_FOR_STREAMER_READY:
 	JMP WAIT_FOR_STREAMER_READY
 
 SEND_I2C_DATA
-	JSR LOG_ADDRESS ; DEBUG
 	LDX #$00
 	STX DATA_BYTE_INDEX
 	LDY #$00
 	LDA #$00
 	
 LOOP_WRITE:
+	LDY #$00
 	LDX DATA_BYTE_INDEX
 	LDA I2CMESSAGE,X
 
-	PHA
-	STA LED_IO_ADDR ; For debug, write byte val to LEDs
-	JSR LOG_ADDRESS
-	
-	PLA
 	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	
-	JSR LOG_ADDRESS
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
@@ -170,17 +160,10 @@ LOOP_WRITE:
 
 BYTE_BUFFERED:
 	
-	JSR LOG_ADDRESS	
-	STX LED_IO_ADDR
-	
-	JSR LOG_ADDRESS
-
 	; Increment array index into I2CMESSAGE
 	LDX DATA_BYTE_INDEX
 	INX
 	STX DATA_BYTE_INDEX
-	STX LED_IO_ADDR
-	JSR LOG_ADDRESS	
 	
 	JMP LOOP_WRITE ; 
 
@@ -191,16 +174,7 @@ I2CSTREAMBUFFER:
 
 	JSR LOG_ADDRESS
 	CLI ; Ensure interrupts enabled
-	PHP ; Push processor status to stack
-	PLA ; Pull that into the A register
-	; STA LED_IO_ADDR ; Show proc status on LEDs
-	
-	; JSR LOG_ADDRESS ; DEBUG
 	JSR SUB_I2CSTREAM_STREAM
-
-	PHP ; Push processor status to stack
-	PLA ; Pull that into the A register
-	; STA LED_IO_ADDR ; Show proc status on LEDs
 
 WAIT_FOR_CYCLE_COUNT_CHANGE:
 	
@@ -217,14 +191,7 @@ WAIT_FOR_CYCLE_COUNT_CHANGE:
 	STA CYCLE_COUNT_CURRENT ; Value changed, save in current
 
 WAIT_FOR_CYCLE_COUNT_CONTINUE:
-	LDA CYCLE_COUNT_HIGH_ADDR
-	PHA
-	LDA CYCLE_COUNT_CURRENT
-	PHA
-	JSR SUB_SEVENSEG_DISPLAY_VALUE
-	PLA
-	PLA
-
+	JSR LOG_ADDRESS
 	JSR SUB_I2CSTREAM_GETSTATUS
 	TXA
 	CMP #STATUS_READY
@@ -296,7 +263,6 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 
 IRQHandler:
 		PHA
-		; JSR LOG_ADDRESS ; DEBUG
 		; 4) In interrupt service routine, decrement TIMER_WAIT_CYCLES if not 0
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		BNE SKIP_TIMER ; If not IRQ 0, skip timer code
