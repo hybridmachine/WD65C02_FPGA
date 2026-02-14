@@ -85,6 +85,7 @@ COMPONENT MemoryManager is
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
            PIO_I2C_DATA_STREAMER_SDA_IN : in std_logic;
            PIO_I2C_DATA_STREAMER_SDA_OUT : out std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_ENABLE : out std_logic;
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
            I_SWITCH_VECTOR : in std_logic_vector(15 downto 0);
            IRQ : out STD_LOGIC;
@@ -128,6 +129,7 @@ signal READ_WRITE_MODE :  STD_LOGIC := READ_MODE;
 signal I2C_READ_WRITE_MODE : STD_LOGIC := READ_MODE;
 signal PIO_I2C_DATA_STREAMER_SDA_IN : STD_LOGIC;
 signal PIO_I2C_DATA_STREAMER_SDA_OUT : STD_LOGIC;
+signal PIO_I2C_DATA_STREAMER_SDA_ENABLE : STD_LOGIC;
 signal RESET_INVERTED : STD_LOGIC;
 
 begin -- Begin architecture definition
@@ -137,7 +139,8 @@ begin -- Begin architecture definition
 NMIB <= '1'; -- Not currently using, keep high for now.
 RESET_INVERTED <= NOT RESET;
 
-I2C_READ_WRITE_MODE <= READ_MODE WHEN PIO_I2C_DATA_STREAMER_SDA_OUT = 'Z' else WRITE_MODE;
+-- T='0' drives pin, T='1' releases pin. Enable='1' means I2C is driving.
+I2C_READ_WRITE_MODE <= NOT PIO_I2C_DATA_STREAMER_SDA_ENABLE;
 
 MemoryManagement : MemoryManager port map (
     BUS_READ_DATA => DATA_FROM_6502,
@@ -151,6 +154,7 @@ MemoryManagement : MemoryManager port map (
     PIO_I2C_DATA_STREAMER_SCL => PIO_I2C_DATA_STREAMER_SCL,
     PIO_I2C_DATA_STREAMER_SDA_IN => PIO_I2C_DATA_STREAMER_SDA_IN,
     PIO_I2C_DATA_STREAMER_SDA_OUT => PIO_I2C_DATA_STREAMER_SDA_OUT,
+    PIO_I2C_DATA_STREAMER_SDA_ENABLE => PIO_I2C_DATA_STREAMER_SDA_ENABLE,
     I_SWITCH_VECTOR => I_SWITCH_VECTOR,
     IRQ => IRQB,
     RESET => RESET_INVERTED
@@ -176,10 +180,10 @@ I2C_IOBx : IOBUF
         IOSTANDARD => "DEFAULT",
         SLEW => "SLOW")
     port map (
-        O => PIO_I2C_DATA_STREAMER_SDA_OUT,     -- Buffer output from I2C device to outside world
-        IO => PIO_I2C_DATA_STREAMER_SDA,     	-- Data inout port (connect directly to top-level port)
-        I => PIO_I2C_DATA_STREAMER_SDA_IN,     	-- Buffer input to I2C device from outside world
-        T => I2C_READ_WRITE_MODE          	    -- 3-state enable input, high=input, low=output
+        O => PIO_I2C_DATA_STREAMER_SDA_IN,      -- Read FROM pin -> I2C module input
+        IO => PIO_I2C_DATA_STREAMER_SDA,     	 -- Data inout port (connect directly to top-level port)
+        I => PIO_I2C_DATA_STREAMER_SDA_OUT,      -- I2C module output -> drive TO pin
+        T => I2C_READ_WRITE_MODE          	     -- 3-state enable input, high=input, low=output
     ); 
 -- End of IOBUFS_inst instantiation
                        

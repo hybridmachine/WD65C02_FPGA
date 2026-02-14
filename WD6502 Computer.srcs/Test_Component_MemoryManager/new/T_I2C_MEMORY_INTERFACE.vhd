@@ -47,6 +47,7 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_PIO_7SEG_SEGMENTS : std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
     signal T_PIO_I2C_DATA_STREAMER_SDA_IN : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_SDA_OUT : std_logic;
+    signal T_PIO_I2C_DATA_STREAMER_SDA_ENABLE : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_SCL : std_logic;   
     signal T_RESET : std_logic;
@@ -101,7 +102,7 @@ begin
 T_MEMORY_CLOCK <= not T_MEMORY_CLOCK after (CLOCK_PERIOD / 2);
 T_CPU_CLOCK <= not T_CPU_CLOCK after (CPU_CLOCK_PERIOD / 2);
 
-T_PIO_I2C_DATA_STREAMER_SDA_IN <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when (present_state = address_ack or present_state = write_ack) else 'Z';
+T_PIO_I2C_DATA_STREAMER_SDA_IN <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when (present_state = address_ack or present_state = write_ack) else '1';
 
 dut: entity work.MemoryManager 
     Port map (
@@ -115,6 +116,7 @@ dut: entity work.MemoryManager
         PIO_7SEG_SEGMENTS => T_PIO_7SEG_SEGMENTS,
         PIO_I2C_DATA_STREAMER_SDA_IN => T_PIO_I2C_DATA_STREAMER_SDA_IN,
         PIO_I2C_DATA_STREAMER_SDA_OUT => T_PIO_I2C_DATA_STREAMER_SDA_OUT,
+        PIO_I2C_DATA_STREAMER_SDA_ENABLE => T_PIO_I2C_DATA_STREAMER_SDA_ENABLE,
         PIO_I2C_DATA_STREAMER_SCL => T_PIO_I2C_DATA_STREAMER_SCL,
         I_SWITCH_VECTOR => T_SWITCH_VECTOR,
         IRQ => T_IRQ,

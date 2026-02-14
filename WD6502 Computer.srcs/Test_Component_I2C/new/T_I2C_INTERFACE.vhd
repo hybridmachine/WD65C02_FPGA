@@ -38,7 +38,10 @@ end T_I2C_INTERFACE;
 architecture Behavioral of T_I2C_INTERFACE is
 
     signal t_clk, t_rst, t_read_write_mode : std_logic := '0';
-    signal t_ack_error, t_scl, t_sda : std_logic;
+    signal t_ack_error, t_scl : std_logic;
+    signal t_sda : std_logic;
+    signal t_sda_out : std_logic;
+    signal t_sda_enable : std_logic;
     signal t_master_to_client_sda : std_logic;
     signal t_client_to_master_sda : std_logic;
     signal t_client_to_master_write : std_logic := '0';
@@ -59,19 +62,25 @@ architecture Behavioral of T_I2C_INTERFACE is
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
+
+-- Model bidirectional SDA bus: master drives when enabled, client drives during ACK, otherwise pullup
+t_sda <= t_sda_out when t_sda_enable = '1' else
+         t_client_to_master_sda when t_client_to_master_write = '1' else
+         'H';
 t_master_to_client_sda <= t_sda;
-t_sda <= t_client_to_master_sda when t_client_to_master_write = '1' else 'Z';
 
 dut: entity work.I2C_INTERFACE
-    port map(clk => t_clk, 
-             rst => t_rst, 
+    port map(clk => t_clk,
+             rst => t_rst,
              stream_complete => t_stream_complete,
              que_for_send => t_que_for_send,
-             read_write_mode => t_read_write_mode, 
+             read_write_mode => t_read_write_mode,
              ack_error => t_ack_error,
              data => t_data,
              i2c_target_address => t_i2c_target_address,
-             sda => t_sda,
+             i_sda => t_sda,
+             o_sda => t_sda_out,
+             o_sda_enable => t_sda_enable,
              scl => t_scl);
 
 stimuli_generator: process begin

@@ -40,6 +40,7 @@ entity PIO_I2C_DATA_STREAMER is
             I_I2C_TARGET_ADDRESS    : in STD_LOGIC_VECTOR(6 downto 0);
             I_SDA                   : in STD_LOGIC;
             O_SDA                   : out STD_LOGIC;
+            O_SDA_ENABLE            : out STD_LOGIC;
             O_SCL                   : out STD_LOGIC;
             I_IRQ_ACK               : in STD_LOGIC;
             O_PIO_IRQ               : out STD_LOGIC);
@@ -85,6 +86,7 @@ COMPONENT I2C_INTERFACE is
             i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
             i_sda               : in STD_LOGIC;
             o_sda               : out STD_LOGIC;
+            o_sda_enable        : out STD_LOGIC;
             scl                 : out STD_LOGIC);
 end COMPONENT;
 
@@ -173,8 +175,9 @@ I2C_DEVICE: I2C_INTERFACE port map (
     data => i2c_data,
     ack_error => i2c_ack_error,
     i2c_target_address => I_I2C_TARGET_ADDRESS,
-    i_sda => I_SDA, 
+    i_sda => I_SDA,
     o_sda => O_SDA,
+    o_sda_enable => O_SDA_ENABLE,
     scl => O_SCL
 );
 
