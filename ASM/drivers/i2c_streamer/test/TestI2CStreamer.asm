@@ -130,7 +130,7 @@ START:
 WAIT_FOR_STREAMER_READY:
 	LDA PIO_I2C_DATA_STRM_STATUS
 	ORA #$80
-	STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
+	; STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
 	JSR LOG_ADDRESS ; DEBUG
 	
 	; Test for status STATUS_READY (#$00)
@@ -180,8 +180,8 @@ WAIT_FOR_CYCLE_COUNT_CHANGE:
 	
 	; Log streamer status to LEDs
 	JSR SUB_I2CSTREAM_GETSTATUS
-	TXA
-	STA LED_IO_ADDR ; Show proc status on LEDs
+	; TXA
+	; STA LED_IO_ADDR ; Show proc status on LEDs
 
 	; For now brute force cycling the streamer, we are still bugging the IRQ handler
 	
@@ -189,6 +189,7 @@ WAIT_FOR_CYCLE_COUNT_CHANGE:
 	CMP CYCLE_COUNT_CURRENT
 	BEQ WAIT_FOR_CYCLE_COUNT_CHANGE
 	STA CYCLE_COUNT_CURRENT ; Value changed, save in current
+	; STA LED_IO_ADDR ; Show count
 
 WAIT_FOR_CYCLE_COUNT_CONTINUE:
 	JSR LOG_ADDRESS
@@ -277,6 +278,7 @@ SKIP_TIMER:
 		LDA CYCLE_COUNT_LOW_ADDR
 		ADC #$01
 		STA CYCLE_COUNT_LOW_ADDR
+		STA LED_IO_ADDR
 		LDA CYCLE_COUNT_HIGH_ADDR
 		ADC #$00 ; Add in any carry flag
 		STA CYCLE_COUNT_HIGH_ADDR
