@@ -1,17 +1,16 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x46538F8B1EEB462B",
+      "boundary_crc": "0x46538F8B03498FB9",
       "device": "xc7a35tcpg236-1",
       "gen_directory": "../../../../WD6502 Computer.gen/sources_1/bd/design_with_logic_probe",
       "name": "design_with_logic_probe",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "None",
-      "tool_version": "2024.1",
+      "tool_version": "2025.2",
       "validated": "true"
     },
     "design_tree": {
-      "invert_reset_signal": "",
       "WDC65C02_Interface": ""
     },
     "ports": {
@@ -45,6 +44,10 @@
         "type": "clk",
         "direction": "I",
         "parameters": {
+          "ASSOCIATED_RESET": {
+            "value": "Reset",
+            "value_src": "default"
+          },
           "CLK_DOMAIN": {
             "value": "design_with_logic_probe_CLOCK",
             "value_src": "default"
@@ -131,27 +134,13 @@
       }
     },
     "components": {
-      "invert_reset_signal": {
-        "vlnv": "xilinx.com:ip:util_vector_logic:2.0",
-        "ip_revision": "4",
-        "xci_name": "design_with_logic_probe_util_vector_logic_1_0",
-        "xci_path": "ip\\design_with_logic_probe_util_vector_logic_1_0\\design_with_logic_probe_util_vector_logic_1_0.xci",
-        "inst_hier_path": "invert_reset_signal",
-        "parameters": {
-          "C_OPERATION": {
-            "value": "not"
-          },
-          "C_SIZE": {
-            "value": "1"
-          }
-        }
-      },
       "WDC65C02_Interface": {
         "vlnv": "xilinx.com:module_ref:WDC65C02_Interface:1.0",
         "ip_revision": "1",
         "xci_name": "design_with_logic_probe_WDC65C02_Interface_0_0",
         "xci_path": "ip\\design_with_logic_probe_WDC65C02_Interface_0_0\\design_with_logic_probe_WDC65C02_Interface_0_0.xci",
         "inst_hier_path": "WDC65C02_Interface",
+        "has_run_ip_tcl": "true",
         "reference_info": {
           "ref_type": "hdl",
           "ref_name": "WDC65C02_Interface",
@@ -178,7 +167,12 @@
           },
           "RESET": {
             "type": "rst",
-            "direction": "I"
+            "direction": "I",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_LOW"
+              }
+            }
           },
           "SINGLESTEP": {
             "direction": "I"
@@ -287,7 +281,7 @@
       "Reset_1": {
         "ports": [
           "Reset",
-          "invert_reset_signal/Op1"
+          "WDC65C02_Interface/RESET"
         ]
       },
       "SYNC_1": {
@@ -354,12 +348,6 @@
         "ports": [
           "CLOCK",
           "WDC65C02_Interface/CLOCK"
-        ]
-      },
-      "invert_reset_signal_Res": {
-        "ports": [
-          "invert_reset_signal/Res",
-          "WDC65C02_Interface/RESET"
         ]
       }
     }

@@ -83,7 +83,9 @@ COMPONENT MemoryManager is
            PIO_LED_OUT : out STD_LOGIC_VECTOR (7 downto 0);
            PIO_7SEG_COMMON : out STD_LOGIC_VECTOR(3 downto 0);
            PIO_7SEG_SEGMENTS : out STD_LOGIC_VECTOR(7 downto 0);
-           PIO_I2C_DATA_STREAMER_SDA : inout std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_IN : in std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_OUT : out std_logic;
+           PIO_I2C_DATA_STREAMER_SDA_ENABLE : out std_logic;
            PIO_I2C_DATA_STREAMER_SCL : out std_logic;
            I_SWITCH_VECTOR : in std_logic_vector(15 downto 0);
            IRQ : out STD_LOGIC;
@@ -124,13 +126,21 @@ signal BUS_ADDRESS :  STD_LOGIC_VECTOR (15 downto 0);
 signal MEMORY_CLOCK :  STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
 signal READ_WRITE_MODE :  STD_LOGIC := READ_MODE;
 
-
+signal I2C_READ_WRITE_MODE : STD_LOGIC := READ_MODE;
+signal PIO_I2C_DATA_STREAMER_SDA_IN : STD_LOGIC;
+signal PIO_I2C_DATA_STREAMER_SDA_OUT : STD_LOGIC;
+signal PIO_I2C_DATA_STREAMER_SDA_ENABLE : STD_LOGIC;
+signal RESET_INVERTED : STD_LOGIC;
 
 begin -- Begin architecture definition
 
 --SOB <= '1'; -- Not really used, spec says to keep it high
 --BE <= '1'; -- For now bus is always on
 NMIB <= '1'; -- Not currently using, keep high for now.
+RESET_INVERTED <= NOT RESET;
+
+-- T='0' drives pin, T='1' releases pin. Enable='1' means I2C is driving.
+I2C_READ_WRITE_MODE <= NOT PIO_I2C_DATA_STREAMER_SDA_ENABLE;
 
 MemoryManagement : MemoryManager port map (
     BUS_READ_DATA => DATA_FROM_6502,
@@ -142,10 +152,12 @@ MemoryManagement : MemoryManager port map (
     PIO_7SEG_COMMON => PIO_7SEG_COMMON,
     PIO_7SEG_SEGMENTS => PIO_7SEG_SEGMENTS,
     PIO_I2C_DATA_STREAMER_SCL => PIO_I2C_DATA_STREAMER_SCL,
-    PIO_I2C_DATA_STREAMER_SDA => PIO_I2C_DATA_STREAMER_SDA,
+    PIO_I2C_DATA_STREAMER_SDA_IN => PIO_I2C_DATA_STREAMER_SDA_IN,
+    PIO_I2C_DATA_STREAMER_SDA_OUT => PIO_I2C_DATA_STREAMER_SDA_OUT,
+    PIO_I2C_DATA_STREAMER_SDA_ENABLE => PIO_I2C_DATA_STREAMER_SDA_ENABLE,
     I_SWITCH_VECTOR => I_SWITCH_VECTOR,
     IRQ => IRQB,
-    RESET => RESET
+    RESET => RESET_INVERTED
 );
 
 GEN1: for i in 0 to 7 generate     
@@ -156,15 +168,24 @@ GEN1: for i in 0 to 7 generate
              SLEW => "SLOW")
              port map (
              O => DATA_TO_6502(i),       	-- Buffer output going out to 65C02 (RAM/ROM reads)
-             IO => DATA(i),     	-- Data inout port (connect directly to top-level port)
+             IO => DATA(i),     	        -- Data inout port (connect directly to top-level port)
              I => DATA_FROM_6502(i),     	-- Buffer input from 65C02 (writes to our FPGA hosted RAM)
              T => READ_WRITE_MODE          	-- 3-state enable input, high=input, low=output
          );  
-
-
 end generate GEN1;
 
--- End of IOBUF_inst instantiation
+I2C_IOBx : IOBUF
+    generic map(
+        DRIVE => 12,
+        IOSTANDARD => "DEFAULT",
+        SLEW => "SLOW")
+    port map (
+        O => PIO_I2C_DATA_STREAMER_SDA_IN,      -- Read FROM pin -> I2C module input
+        IO => PIO_I2C_DATA_STREAMER_SDA,     	 -- Data inout port (connect directly to top-level port)
+        I => PIO_I2C_DATA_STREAMER_SDA_OUT,      -- I2C module output -> drive TO pin
+        T => I2C_READ_WRITE_MODE          	     -- 3-state enable input, high=input, low=output
+    ); 
+-- End of IOBUFS_inst instantiation
                        
 ---- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
 ---- Otherwise RDY is always high.
@@ -182,7 +203,7 @@ variable WRITE_RAM_SETUP : natural range 0 to 1000 := WRITE_RAM_SETUP_PERIOD; --
 variable WRITE_RAM_HOLD : natural range 0 to 1000 := WRITE_RAM_HOLD_PERIOD; -- How long to leave the write flag high after its triggered
 begin
     if (rising_edge(CLOCK)) then
-        if (RESET = CPU_RESET) then
+        if (RESET_INVERTED = CPU_RESET) then
             READ_WRITE_MODE <= READ_MODE; 
         else
             READ_WRITE_MODE <= READ_MODE;
@@ -222,12 +243,12 @@ variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 variable RESET_IN_PROGRESS : std_logic := '0';
 begin 
     if (rising_edge(CLOCK)) then
-        if (RESET = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
+        if (RESET_INVERTED = CPU_RESET and RESET_IN_PROGRESS = '0') then -- Reset active low
             FPGA_CLOCK_COUNTER_FOR_CPU := 1;
             wdc65c02_CLOCK <= '0';
             RESET_IN_PROGRESS := '1';  
         else                   
-            if (RESET = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
+            if (RESET_INVERTED = CPU_RUNNING and RESET_IN_PROGRESS = '1') then
                 RESET_IN_PROGRESS := '0';
             end if;
             
@@ -257,7 +278,7 @@ begin
 --        end if;
         -- Push the internal signal out to the CPU clock PIN
 
-        if (RESET = CPU_RESET and reset_in_progress = '0') then
+        if (RESET_INVERTED = CPU_RESET and reset_in_progress = '0') then
             PROCESSOR_STATE <= RESET_START;
             reset_clock_count := RESET_MIN_CLOCKS;
             RESB <= CPU_RESET;

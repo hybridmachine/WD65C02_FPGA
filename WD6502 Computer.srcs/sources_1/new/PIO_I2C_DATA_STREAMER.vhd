@@ -38,7 +38,9 @@ entity PIO_I2C_DATA_STREAMER is
             I_ADDRESS               : in STD_LOGIC_VECTOR (15 downto 0);
             I_DATA                  : in STD_LOGIC_VECTOR (7 downto 0);
             I_I2C_TARGET_ADDRESS    : in STD_LOGIC_VECTOR(6 downto 0);
-            IO_SDA                  : inout STD_LOGIC;
+            I_SDA                   : in STD_LOGIC;
+            O_SDA                   : out STD_LOGIC;
+            O_SDA_ENABLE            : out STD_LOGIC;
             O_SCL                   : out STD_LOGIC;
             I_IRQ_ACK               : in STD_LOGIC;
             O_PIO_IRQ               : out STD_LOGIC);
@@ -82,7 +84,9 @@ COMPONENT I2C_INTERFACE is
             data                : in STD_LOGIC_VECTOR (7 downto 0);
             ack_error           : out STD_LOGIC;
             i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
-            sda                 : inout STD_LOGIC;
+            i_sda               : in STD_LOGIC;
+            o_sda               : out STD_LOGIC;
+            o_sda_enable        : out STD_LOGIC;
             scl                 : out STD_LOGIC);
 end COMPONENT;
 
@@ -144,8 +148,14 @@ signal i2c_ack_error : std_logic := '0';
 signal i2c_stream_complete : STD_LOGIC; -- 0 for in progress, 1 for complete
 signal i2c_que_for_send : STD_LOGIC; -- 1 for driver to write, 0 for sending
 signal status_reg : std_logic_vector(7 downto 0);
-
+signal R_SCL : std_logic;
+signal R_O_SDA : std_logic;
+signal R_TRACE_1 : std_logic := '0';
+signal R_TRACE_2 : std_logic := '0';
 begin
+
+O_SCL <= R_SCL;
+O_SDA <= R_O_SDA; 
 
 RAM_DEVICE: RAM port map (
     addra => ram_addra,
@@ -171,8 +181,10 @@ I2C_DEVICE: I2C_INTERFACE port map (
     data => i2c_data,
     ack_error => i2c_ack_error,
     i2c_target_address => I_I2C_TARGET_ADDRESS,
-    sda => IO_SDA, 
-    scl => O_SCL
+    i_sda => I_SDA,
+    o_sda => R_O_SDA,
+    o_sda_enable => O_SDA_ENABLE,
+    scl => R_SCL
 );
 
 ram_ena <= '1';
@@ -206,7 +218,10 @@ begin
         case CURRENT_STREAMER_STATE is
             when RESET_START =>
                 i2c_reset <= '1';
+                R_TRACE_1 <= '0';
+                R_TRACE_2 <= '0';
                 O_PIO_IRQ <= '0';
+                byte_outbound_via_i2c := 0;
                 status_reg <= STATUS_RESETTING;
                 buffer_end_address := 0;
                 buffer_write_address := 0;
@@ -224,6 +239,7 @@ begin
                     NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_START;
                 elsif (control_reg = CONTROL_STREAM_BUFFER) then
                     cycle_delay := 2;
+                    
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
                 else
                     NEXT_STREAMER_STATE <= READY;
@@ -255,6 +271,7 @@ begin
                 i2c_stream_complete <= '0';   
                 NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE;
             when STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE =>
+                R_TRACE_1 <= '1';
                 if (byte_outbound_via_i2c <= (buffer_end_address+1)) then
                     if (cycle_delay <= 0) then                   
                         NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;                        
@@ -270,7 +287,9 @@ begin
                 end if;
             when STREAM_DATA_OVER_I2C_WRITE_TO_I2C =>
                 status_reg <= STATUS_READING_STREAM_BUFFER;  
+                
                 if (i2c_que_for_send = '1') then
+                    R_TRACE_2 <= '1';
                     i2c_data <= ram_doutb;
                     i2c_reset <= '0';
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;
@@ -295,6 +314,7 @@ begin
             when WAIT_IRQ_ACK =>
                 if (I_IRQ_ACK = '1') then
                     NEXT_STREAMER_STATE <= WAIT_FOR_RESET;
+                    O_PIO_IRQ <= '0'; 
                 else
                     NEXT_STREAMER_STATE <= WAIT_IRQ_ACK;
                 end if;

@@ -35,7 +35,9 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+
+	INCLUDE "../../../common/InterruptVectors.inc"
+	INCLUDE "../../../common/InterruptTimerCtl.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -62,13 +64,23 @@ CODE
 ;***************************************************************************
 ;                               Local Constants
 ;***************************************************************************
+	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
-	CYCLE_COUNT_LOW_ADDR:	equ		$01
+	CYCLE_COUNT_LOW_ADDR:	equ		$05
+
+	; Byte to hold number of cyles to wait. Set this then start wait, timer loop in interrupt handler will decrement this to 0
+	TIMER_WAIT_CYCLES:		equ		$0A
+
 	STACK_BASE:				equ		$0100
 	
 	; Memory addresses for I2C interface status
-    PIO_I2C_DATA_STRM_STATUS:	equ $0212
-	LED_IO_ADDR:				equ		$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+    PIO_I2C_DATA_STRM_STATUS:		equ $0212
+	LED_IO_ADDR:					equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+	STATUS_READY:					equ $00
+	STATUS_STREAMING_I2C_COMPLETE: 	equ $05
+	DATA_BYTE_INDEX:				equ $06
+
+	SCRATCH:						equ $0A
 ;***************************************************************************
 ;                              Macros
 ;***************************************************************************
@@ -90,140 +102,203 @@ START:
 	JSR POST_MEMORY_TEST
 
 	; MAIN
-	LDA #00
+	
+	JSR INITIALIZE_TIMER
+	
+	LDA #$00
 	STA LED_IO_ADDR ; Clear any LEDs
+	STA CYCLE_COUNT_CURRENT ; Clear the current counter
+	STA CYCLE_COUNT_LOW_ADDR ; Clear cycle 16 bits
+	STA CYCLE_COUNT_HIGH_ADDR
+	
+	CLI ; Enable interrupts, the streamer will send interrupts.
+	
+	; Start the timer
+	LDA #$FF
+	STA PIO_IRQ_CONTROLLER_IRQACK ; Set this to no ack
+	LDA #CTL_TIMER_RUN
+	STA TIMER_CTL_ADDRESS	
+
+	LDA #$00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
 	; Test that accumulator has default address set
+	; STA LED_IO_ADDR ; For debug	
 	CMP #$76
-	BEQ TEST_INIT_PASS
+	BEQ WAIT_FOR_STREAMER_READY
 	JSR TEST_FAIL
-TEST_INIT_PASS:
-	; For debug, spin watching status
-	JSR WATCH_STATUS
+
+WAIT_FOR_STREAMER_READY:
+	LDA PIO_I2C_DATA_STRM_STATUS
+	ORA #$80
+	; STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
+	JSR LOG_ADDRESS ; DEBUG
+	
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
-	BEQ TEST_STATUS_PASS ; Expect Zero to be set
-	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
-	JSR TEST_FAIL
-TEST_STATUS_PASS
+	BEQ SEND_I2C_DATA ; When Zero send data
+	; STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
+	JMP WAIT_FOR_STREAMER_READY
+
+SEND_I2C_DATA
 	LDX #$00
+	STX DATA_BYTE_INDEX
 	LDY #$00
 	LDA #$00
 	
-	; Write 254 bytes of data to buffer
 LOOP_WRITE:
-	; Save registers
-	PHA
-	PHX
-	PHY
+	LDY #$00
+	LDX DATA_BYTE_INDEX
+	LDA I2CMESSAGE,X
+
+	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
+	
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
-	BEQ TEST_WRITE_PASS ; accumulator should be set to 0
-	JSR TEST_FAIL
-TEST_WRITE_PASS:
-	; Restore registers
-	PLY
-	PLX
-	PLA
+	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
+	
 
-	; Increment X and A (Leave Y at 0)
+BYTE_BUFFERED:
+	
+	; Increment array index into I2CMESSAGE
+	LDX DATA_BYTE_INDEX
 	INX
-	INA
+	STX DATA_BYTE_INDEX
+	
+	JMP LOOP_WRITE ; 
 
-	PHX
-	PHA
-	JSR SUB_SEVENSEG_DISPLAY_VALUE
-	; Cleanup stack
-	PLA
-	PLA
+I2CSTREAMBUFFER:
+	
+	;LDA #$C0
+	;STA LED_IO_ADDR
 
-	BNE LOOP_WRITE ; If hasn't rolled to 0, keep going
-
-	; Send the stream
+	JSR LOG_ADDRESS
+	CLI ; Ensure interrupts enabled
 	JSR SUB_I2CSTREAM_STREAM
 
-WATCH_STATUS:
-	PHX
-	; Spin for some clock cycles
-	LDA #$80
-	PHA
-	LDA #$00
-	PHA
-	JSR SPIN_FOR_DELAY
-	; Cleanup stack
-	PLA
-	PLA
-	PLX
-	STX LED_IO_ADDR ; Show index
-	PHX
-	LDA #$00
-	PHA 
-	LDA PIO_I2C_DATA_STRM_STATUS
-	PHA
-	JSR SUB_SEVENSEG_DISPLAY_VALUE
-	; Cleanup stack
-	PLA
-	PLA
-	PLX
-	INX
-	JMP WATCH_STATUS ; For now just loop forever watching status
-	BRK ; End of test 
+WAIT_FOR_CYCLE_COUNT_CHANGE:
+	
+	; Log streamer status to LEDs
+	JSR SUB_I2CSTREAM_GETSTATUS
+	; TXA
+	; STA LED_IO_ADDR ; Show proc status on LEDs
 
-; CYCLE_COUNT_HIGH in STACK+4 and CYCLE_COUNT_LOW in STACK+3
-SPIN_FOR_DELAY: 
-	TSX ; Put the stack location in X
-	INX ; Points to return address of function high
-	INX ; Points to return address of function low
-	INX ; Points to low address
-    LDA STACK_BASE,X ; load low address
-	SEC 
-	SBC #$01
-	BCC DECREMENT_HIGH
-	STA STACK_BASE,X
-	JMP SPIN_FOR_DELAY
-DECREMENT_HIGH:
-	TSX ; Put the stack location in X
-	INX ; Points to return address of function high
-	INX ; Points to return address of function low
-	INX ; Points to low address
-	INX ; Points to high address
-	SEC
-	LDA STACK_BASE,X
-	BEQ END_SPIN ; High is 0, we are done counting down
-	SBC #$01
-	STA STACK_BASE,X
-	DEX ; Point to low address
-	LDA #$FF
-	STA STACK_BASE,X
-	JMP SPIN_FOR_DELAY
-END_SPIN: 
-    RTS
+	; For now brute force cycling the streamer, we are still bugging the IRQ handler
+	
+	LDA CYCLE_COUNT_LOW_ADDR
+	CMP CYCLE_COUNT_CURRENT
+	BEQ WAIT_FOR_CYCLE_COUNT_CHANGE
+	STA CYCLE_COUNT_CURRENT ; Value changed, save in current
+	; STA LED_IO_ADDR ; Show count
+
+WAIT_FOR_CYCLE_COUNT_CONTINUE:
+	JSR LOG_ADDRESS
+	JSR SUB_I2CSTREAM_GETSTATUS
+	TXA
+	CMP #STATUS_READY
+	BEQ REINIT_I2CSTREAM
+	; STA LED_IO_ADDR ; Show proc status on LEDs
+	CMP #STATUS_STREAMING_I2C_COMPLETE
+	BEQ REINIT_I2CSTREAM
+	JMP WAIT_FOR_CYCLE_COUNT_CONTINUE
+
+REINIT_I2CSTREAM:
+	LDA #$00 ; Use builtin default I2C address
+	JSR SUB_I2CSTREAM_INITIALIZE
+	JMP WAIT_FOR_STREAMER_READY
 
 TEST_FAIL:
 	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
+	LDA #$AA
+	STA LED_IO_ADDR
 	JMP TEST_FAIL
 	BRK
+
+LOG_ADDRESS:
+	; Disable for now
+	; RTS
+
+	STX SCRATCH
+	JSR SUB_SEVENSEG_DISPLAY_VALUE ; This will show the calling address
+	LDX SCRATCH
+	PHA
+	LDA #$0A ; Wait (100 * 10) ms, 1 seconds
+	STA TIMER_WAIT_CYCLES
+	JSR WAIT_FOR_TIMER
+	PLA
+	RTS
 	
+WAIT_FOR_TIMER:
+	LDA TIMER_WAIT_CYCLES
+	BNE WAIT_FOR_TIMER
+	; When wait cycles drops to 0, return
+	RTS
+
+INITIALIZE_TIMER:
+	; Disable the timer
+	LDA #CTL_TIMER_RESET
+	STA TIMER_CTL_ADDRESS
+
+	; Program the timer period in MS (100 == 0x0064)
+	LDA #$64
+	STA TIMER_PERIOD_MS_ADDRESS
+	
+	LDA #$00
+	STA TIMER_PERIOD_MS_ADDRESS+1
+	STA TIMER_PERIOD_MS_ADDRESS+2
+	STA TIMER_PERIOD_MS_ADDRESS+3
+
+	; We don't start the timer here, caller must start timer
+	RTS	
+
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php
 	pha
 	lda #$FF
-	
+	JSR LOG_ADDRESS ; DEBUG
 	;clear Irq
 	pla
 	plp
 	rti
 
 IRQHandler:
-		pla
-		rti
+		PHA
+		; 4) In interrupt service routine, decrement TIMER_WAIT_CYCLES if not 0
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		BNE SKIP_TIMER ; If not IRQ 0, skip timer code
+		LDA TIMER_WAIT_CYCLES
+		BEQ SKIP_TIMER ; If already 0, skip decrement
+		DEC TIMER_WAIT_CYCLES
+SKIP_TIMER:
+		; Not used since timer is IRQ 0, so A would be 0
+		; CMP #IRQ_CHANNEL_I2CSTRM
+		; BNE SEND_IRQ_ACK
+		CLC
+		LDA CYCLE_COUNT_LOW_ADDR
+		ADC #$01
+		STA CYCLE_COUNT_LOW_ADDR
+		STA LED_IO_ADDR
+		LDA CYCLE_COUNT_HIGH_ADDR
+		ADC #$00 ; Add in any carry flag
+		STA CYCLE_COUNT_HIGH_ADDR
+		; Unhandled IRQ, just send back ACK
+		; JMP SEND_IRQ_ACK
+SEND_IRQ_ACK:
+        ; 5) Write ACK to IRQ controller, in interrupt handler
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		STA PIO_IRQ_CONTROLLER_IRQACK
+		; ORA #$80 ; Set high bit so we know we are coming from IRQHandler
+		; STA LED_IO_ADDR;
+		
+		; Reset ack lines
+		LDA #$FF
+		STA PIO_IRQ_CONTROLLER_IRQACK
+		
+		PLA
+		RTI
 
-	bits:	db	1
-	cnt:	db	0
-	wraps:	dw	0
-	delay:	db	10
+I2CMESSAGE:	db	'HELLO WORLD!',0 ; Null terminated string
 
 
 ;***************************************************************************

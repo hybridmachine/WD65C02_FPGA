@@ -26,8 +26,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+library UNISIM;
+use UNISIM.VComponents.all;
 
 entity I2C_INTERFACE is
     GENERIC (
@@ -43,7 +43,9 @@ entity I2C_INTERFACE is
             data                : in STD_LOGIC_VECTOR (7 downto 0);
             ack_error           : out STD_LOGIC;
             i2c_target_address  : in STD_LOGIC_VECTOR(6 downto 0);
-            sda                 : inout STD_LOGIC;
+            i_sda               : in STD_LOGIC;
+            o_sda               : out STD_LOGIC;
+            o_sda_enable        : out STD_LOGIC;
             scl                 : out STD_LOGIC);
 end I2C_INTERFACE;
 
@@ -63,11 +65,24 @@ shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
 TYPE state_type IS (idle, send_start, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, send_read_write_mode, ack1, ack2, ack3, ack4);
 signal present_state, next_state: state_type;
-
-begin
-
+signal sda_in : std_logic;
+signal sda_out : std_logic;
+signal sda_enable : std_logic := '0';
+signal scl_out : std_logic; -- Intermediate signal, allows us to drive scl independantly for path testing.
+         
+begin 
     ack_error <= ack(0) OR ack(1) OR ack(2); 
     que_for_send <= que_for_send_sig;
+    
+    sda_in <= i_sda;
+    o_sda_enable <= sda_enable;
+    -- o_sda_enable <= '1';
+    -- For path testing
+    -- scl <= que_for_send_sig;
+    -- o_sda <= wr_flag;
+    
+    o_sda <= sda_out;
+    scl <= scl_out;
     
     ------ Auxiliary clock -----------------------------
     -- Frequency = 4 * data_rate
@@ -144,25 +159,26 @@ begin
                     end if;
                     -- Store ACK signals during writing:
                     if (present_state = ack1) then
-                        ack(0) <= sda;
+                        ack(0) <= sda_in;
                     elsif(present_state = ack2) then
-                        ack(1) <= sda;
+                        ack(1) <= sda_in;
                     elsif(present_state = ack3) then
-                        ack(2) <= sda;
+                        ack(2) <= sda_in;
                     end if;
         
                     -- Store data read from memory:
                     if (present_state = rd_data) then
-                        data_in(7-idx) <= sda;
+                        data_in(7-idx) <= sda_in;
                     end if;
                 end if; 
             end if;  
         
             case present_state is
                 when idle =>
-                    -- Assumption is scl and sda have pullup resisters, don't drive the bus in idle
-                    scl <= 'Z';
-                    sda <= 'Z';
+                    -- Release bus, external pullups hold lines high
+                    scl_out <= '1';
+                    sda_out <= '1';
+                    sda_enable <= '0';
                     timer <= delay;
                     que_for_send_sig <= '1'; -- Tell the caller to queue the next byte
                     if (wr_flag = '1') then
@@ -173,37 +189,43 @@ begin
                         next_state <= idle;
                     end if;
                 when start_wr =>
-                    sda <= '1';
-                    scl <= '1';
+                    sda_out <= '1';
+                    sda_enable <= '1';
+                    scl_out <= '1';
                     timer <= 1;
                     que_for_send_sig <= '0'; -- About to read the data line
                     next_state <= send_start;
                 when send_start =>
-                    sda <= '0';
-                    scl <= '1';
+                    sda_out <= '0';
+                    sda_enable <= '1';
+                    scl_out <= '1';
                     timer <= 1;
                     data_out <= data;
                     next_state <= dev_addr_wr;
-                when dev_addr_wr => 
-                    scl <= bus_clock;
-                    sda <= i2c_target_address(6-idx);
+                when dev_addr_wr =>
+                    scl_out <= bus_clock;
+                    sda_out <= i2c_target_address(6-idx);
+                    sda_enable <= '1';
                     timer <= 6;
                     next_state <= send_read_write_mode;
                 when send_read_write_mode =>
-                    scl <= bus_clock;
-                    sda <= not wr_flag; -- 0 means we write back to client
+                    scl_out <= bus_clock;
+                    sda_out <= not wr_flag; -- 0 means we write back to client
+                    sda_enable <= '1';
                     timer <= 1;
                     next_state <= ack1;
                 when ack1 =>
-                    scl <= '0';
-                    sda <= 'Z';
+                    scl_out <= '0';
+                    sda_out <= '1';
+                    sda_enable <= '0';
                     timer <= 1;
                     que_for_send_sig <= '1'; -- Data is read
                     next_state <= wr_data;
                 when wr_data =>
-                    scl <= bus_clock;
-                    que_for_send_sig <= '1'; 
-                    sda <= data_out(7-idx);
+                    scl_out <= bus_clock;
+                    que_for_send_sig <= '1';
+                    sda_out <= data_out(7-idx);
+                    sda_enable <= '1';
                     timer <= 7;
                     if (idx < 7) then
                         next_state <= wr_data;
@@ -211,12 +233,12 @@ begin
                         next_state <= ack3;
                     end if;
                 when ack3 =>
-                    -- Todo after write is complete. run the clock 
-                    -- for once cycle waiting for ack 
-                    -- Then hold clock low for one cycle then 
+                    -- Run the clock for one cycle waiting for ack
+                    -- Then hold clock low for one cycle then
                     -- start clock back up
-                    scl <= bus_clock;
-                    sda <= 'Z';
+                    scl_out <= bus_clock;
+                    sda_out <= '1';
+                    sda_enable <= '0';
                     timer <= 0;
                     if (stream_complete = '0') then
                         next_state <= ack4;
@@ -224,19 +246,22 @@ begin
                         next_state <= stop;
                     end if;
                 when ack4 =>
-                    scl <= '0';
+                    scl_out <= '0';
+                    sda_enable <= '1';
                     timer <= 1;
                     que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
                     data_out <= data;
                     next_state <= wr_data;
                 when stop =>
-                    scl <= '1';
-                    sda <= NOT data_clock;
+                    scl_out <= '1';
+                    sda_out <= NOT data_clock;
+                    sda_enable <= '1';
                     timer <= 1;
                     next_state <= idle;
                 when others =>
-                    scl <= '1';
-                    sda <= '1';
+                    scl_out <= '1';
+                    sda_out <= '1';
+                    sda_enable <= '1';
                     timer <= delay;
                     next_state <= idle;  
             end case;

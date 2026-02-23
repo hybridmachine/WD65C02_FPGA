@@ -45,13 +45,20 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     signal T_PIO_LED_OUT : std_logic_vector (7 downto 0); --! 8 bit LED out, mapped to physical LEDs at interface
     signal T_PIO_7SEG_COMMON : std_logic_vector(3 downto 0); --! Common drivers for seven segment displays
     signal T_PIO_7SEG_SEGMENTS : std_logic_vector(7 downto 0); --! Segment drivers for selected seven segment display
-    signal T_PIO_I2C_DATA_STREAMER_SDA : std_logic;
+    signal T_PIO_I2C_DATA_STREAMER_SDA_IN : std_logic;
+    signal T_PIO_I2C_DATA_STREAMER_SDA_OUT : std_logic;
+    signal T_PIO_I2C_DATA_STREAMER_SDA_ENABLE : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA : std_logic;
     signal T_PIO_I2C_DATA_STREAMER_SCL : std_logic;   
     signal T_RESET : std_logic;
     signal T_SWITCH_VECTOR : std_logic_vector(15 downto 0);
     signal T_I2C_ADDRESS : std_logic_vector(7 downto 0);
     signal T_I2C_DATA : std_logic_vector(7 downto 0);
+    signal T_IRQ : std_logic;
+    
+    constant IRQ_UNTRIGGERED : std_logic := '1';
+    constant IRQ_TRIGGERED : std_logic := not IRQ_UNTRIGGERED;
+    signal IRQ_STATE : std_logic := IRQ_UNTRIGGERED;
     
     signal T_I2C_ADDRESS_EXPECTED : std_logic_vector(7 downto 0) := "11000100";
     
@@ -63,7 +70,7 @@ architecture Behavioral of T_I2C_MEMORY_INTERFACE is
     constant MODE_READ : std_logic := not MODE_WRITE;
     constant TEST_DATA : std_logic_vector(31 downto 0) := x"CEFABAFE";
     
-    type i2c_state_type is (idle, starting, addressing, address_ack, write_ack, ack_hold, master_reading, master_writing, stop);
+    type i2c_state_type is (idle, starting, addressing, address_ack, write_ack, ack_hold, master_reading, master_writing, stop,expecting_interrupt);
     signal present_state : i2c_state_type := idle;
     
     procedure WriteToMemory( signal  memory_clock : in std_logic;
@@ -95,7 +102,7 @@ begin
 T_MEMORY_CLOCK <= not T_MEMORY_CLOCK after (CLOCK_PERIOD / 2);
 T_CPU_CLOCK <= not T_CPU_CLOCK after (CPU_CLOCK_PERIOD / 2);
 
-T_PIO_I2C_DATA_STREAMER_SDA <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when (present_state = address_ack or present_state = write_ack) else 'Z';
+T_PIO_I2C_DATA_STREAMER_SDA_IN <= T_PIO_I2C_DATA_STREAMER_CLIENT_TO_MASTER_SDA when (present_state = address_ack or present_state = write_ack) else '1';
 
 dut: entity work.MemoryManager 
     Port map (
@@ -107,9 +114,12 @@ dut: entity work.MemoryManager
         PIO_LED_OUT => T_PIO_LED_OUT,
         PIO_7SEG_COMMON => T_PIO_7SEG_COMMON,
         PIO_7SEG_SEGMENTS => T_PIO_7SEG_SEGMENTS,
-        PIO_I2C_DATA_STREAMER_SDA => T_PIO_I2C_DATA_STREAMER_SDA,
+        PIO_I2C_DATA_STREAMER_SDA_IN => T_PIO_I2C_DATA_STREAMER_SDA_IN,
+        PIO_I2C_DATA_STREAMER_SDA_OUT => T_PIO_I2C_DATA_STREAMER_SDA_OUT,
+        PIO_I2C_DATA_STREAMER_SDA_ENABLE => T_PIO_I2C_DATA_STREAMER_SDA_ENABLE,
         PIO_I2C_DATA_STREAMER_SCL => T_PIO_I2C_DATA_STREAMER_SCL,
         I_SWITCH_VECTOR => T_SWITCH_VECTOR,
+        IRQ => T_IRQ,
         RESET => T_RESET );
 
 
@@ -204,7 +214,18 @@ begin
     wait;  
 end process stimuli_generator;
 
-i2c_signal_test: process(T_PIO_I2C_DATA_STREAMER_SDA,T_PIO_I2C_DATA_STREAMER_SCL)
+watch_irq: process(T_IRQ)
+begin
+    if (falling_edge(T_IRQ)) then
+        IRQ_STATE <= IRQ_TRIGGERED;
+    end if;
+    
+    if (rising_edge(T_IRQ)) then
+        IRQ_STATE <= IRQ_UNTRIGGERED;
+    end if;
+end process;
+
+i2c_signal_test: process(T_PIO_I2C_DATA_STREAMER_SDA_OUT,T_PIO_I2C_DATA_STREAMER_SCL,IRQ_STATE)
 variable timer : natural := 0;
 variable test_data_byte_idx : natural := 0;
 variable test_data_byte_val : std_logic_vector(7 downto 0) := x"00";
@@ -213,7 +234,7 @@ begin
         when idle =>
             -- Wait for I2C Start condition
             -- SCL high, SDA pulled low
-            if (falling_edge(T_PIO_I2C_DATA_STREAMER_SDA)) then
+            if (falling_edge(T_PIO_I2C_DATA_STREAMER_SDA_OUT)) then
                 if (T_PIO_I2C_DATA_STREAMER_SCL = '1') then
                     present_state <= starting;
                 end if;
@@ -226,7 +247,7 @@ begin
         when addressing =>
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
                 if (timer > 0) then
-                    T_I2C_ADDRESS((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
+                    T_I2C_ADDRESS((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA_OUT;
                     timer := timer - 1;                    
                 end if;
             end if;
@@ -244,6 +265,7 @@ begin
          when write_ack =>
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then  
                 -- Verify I2C address
+                present_state <= master_writing; 
                 case test_data_byte_idx is
                     when 0 =>
                         test_data_byte_val := TEST_DATA(7 downto 0);
@@ -253,12 +275,12 @@ begin
                         test_data_byte_val := TEST_DATA(23 downto 16);
                     when 3 =>
                         test_data_byte_val := TEST_DATA(31 downto 24);
+                        present_state <= expecting_interrupt;
                     when others =>
                         test_data_byte_val := x"FF";
                 end case;
                 test_data_byte_idx := test_data_byte_idx + 1;
-                assert(T_I2C_DATA = test_data_byte_val) report "I2C data" severity warning;  
-                present_state <= master_writing; 
+                assert(T_I2C_DATA = test_data_byte_val) report "I2C data" severity warning;    
                 timer := 8;   
             end if;
          when ack_hold =>
@@ -269,20 +291,25 @@ begin
          when master_writing =>
             if (rising_edge(T_PIO_I2C_DATA_STREAMER_SCL)) then
                 if (timer > 0) then
-                    T_I2C_DATA((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA;
+                    T_I2C_DATA((timer-1)) <= T_PIO_I2C_DATA_STREAMER_SDA_OUT;
                     timer := timer - 1;
                     if (timer = 0) then
                         present_state <= write_ack;
                     end if;
                 end if;
             end if;
+         when expecting_interrupt =>
+            present_state <= expecting_interrupt;
          when others=>
             assert(false) report "Unexpected state" severity failure;
     end case;
-    
-    
-    
-    -- Verify byte stream
-    -- Wait for I2C Stop
 end process i2c_signal_test;
+
+irq_status_test : process
+begin
+    wait on present_state until present_state = expecting_interrupt;
+    wait on IRQ_STATE until IRQ_STATE = IRQ_TRIGGERED for 1000 ms;
+    assert (IRQ_STATE = IRQ_TRIGGERED) report "IRQ failed to trigger" severity failure;
+    wait;
+end process irq_status_test;
 end Behavioral;

@@ -1,5 +1,8 @@
 # All ports 3.3volt
 # FPGA 100mhz clock
+set_property CONFIG_VOLTAGE {3.3} [current_design]
+set_property CFGBVS VCCO [current_design]
+
 set_property IOSTANDARD LVCMOS33 [get_ports CLOCK]
 set_property IOSTANDARD LVCMOS33 [get_ports {ADDRESS_IN[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {DATA[*]}]
@@ -19,6 +22,10 @@ set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_COMMON[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {PIO_7SEG_SEGMENTS[*]}]
 
 set_property PULLTYPE PULLUP [get_ports PIO_I2C_DATA_STREAMER_SDA]
+set_property PULLTYPE PULLUP [get_ports PIO_I2C_DATA_STREAMER_SCL]
+set_property PULLTYPE PULLDOWN [get_ports Reset]
+
 set_property PULLTYPE PULLDOWN [get_ports {I_SWITCHES[*]}]
 set_property PULLTYPE PULLDOWN [get_ports {DATA[*]}]
 set_property PULLTYPE PULLDOWN [get_ports {ADDRESS_IN[*]}]
+

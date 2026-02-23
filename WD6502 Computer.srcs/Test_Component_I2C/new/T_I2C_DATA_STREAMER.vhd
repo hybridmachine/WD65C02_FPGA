@@ -44,10 +44,14 @@ architecture Behavioral of T_I2C_DATA_STREAMER is
     signal t_data                :  STD_LOGIC_VECTOR (7 downto 0);
     signal t_i2c_target_address  : STD_LOGIC_VECTOR(6 downto 0);
     signal t_sda                 : STD_LOGIC;
+    signal t_sda_out             : STD_LOGIC;
+    signal t_sda_enable          : STD_LOGIC;
     signal t_master_to_client_sda : std_logic;
     signal t_client_to_master_sda : std_logic;
     signal t_scl                 : STD_LOGIC;
     signal t_ack                 : STD_LOGIC;
+    signal t_irq_ack             : STD_LOGIC := '0';
+    signal t_pio_irq             : STD_LOGIC;
     constant CLOCK_PERIOD : time := 10ns; -- 100 mhz clock
     constant DEFAULT_WAIT_PERIOD : time := 20 * CLOCK_PERIOD;
     
@@ -75,23 +79,31 @@ architecture Behavioral of T_I2C_DATA_STREAMER is
 begin
 
 t_clk <= not t_clk after (CLOCK_PERIOD / 2);
-t_master_to_client_sda <= t_sda when (I2CDataDirection(i2c_present_state) = master_to_client)  else 'Z';
- 
--- When in ack, send low signal back to master otherwise set to high impedence so master can write
-t_client_to_master_sda <= '0' when (I2CDataDirection(i2c_present_state) = client_to_master) else 'Z';
-t_sda <= t_client_to_master_sda when (I2CDataDirection(i2c_present_state) = client_to_master) else 'Z';
+
+-- Model bidirectional SDA bus
+t_sda <= t_sda_out when t_sda_enable = '1' else
+         t_client_to_master_sda when (I2CDataDirection(i2c_present_state) = client_to_master) else
+         'H';
+t_master_to_client_sda <= t_sda;
+
+-- When in ack, send low signal back to master otherwise release bus
+t_client_to_master_sda <= '0' when (I2CDataDirection(i2c_present_state) = client_to_master) else '1';
 
 t_ack <= t_client_to_master_sda;
 
-dut: entity work.PIO_I2C_DATA_STREAMER 
-Port map (  clk => t_clk,
-            status => t_status,              
-            control => t_control,             
-            address => t_address,             
-            data => t_data,                
-            i2c_target_address => t_i2c_target_address,  
-            sda => t_sda,                 
-            scl => t_scl);                 
+dut: entity work.PIO_I2C_DATA_STREAMER
+Port map (  I_CLK => t_clk,
+            O_STATUS => t_status,
+            I_CONTROL => t_control,
+            I_ADDRESS => t_address,
+            I_DATA => t_data,
+            I_I2C_TARGET_ADDRESS => t_i2c_target_address,
+            I_SDA => t_sda,
+            O_SDA => t_sda_out,
+            O_SDA_ENABLE => t_sda_enable,
+            O_SCL => t_scl,
+            I_IRQ_ACK => t_irq_ack,
+            O_PIO_IRQ => t_pio_irq);                 
 
 stimuli_generator: process 
 variable write_address : natural := 0;
