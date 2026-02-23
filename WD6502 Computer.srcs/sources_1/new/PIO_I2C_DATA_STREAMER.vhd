@@ -148,8 +148,14 @@ signal i2c_ack_error : std_logic := '0';
 signal i2c_stream_complete : STD_LOGIC; -- 0 for in progress, 1 for complete
 signal i2c_que_for_send : STD_LOGIC; -- 1 for driver to write, 0 for sending
 signal status_reg : std_logic_vector(7 downto 0);
-
+signal R_SCL : std_logic;
+signal R_O_SDA : std_logic;
+signal R_TRACE_1 : std_logic := '0';
+signal R_TRACE_2 : std_logic := '0';
 begin
+
+O_SCL <= R_SCL;
+O_SDA <= R_O_SDA; 
 
 RAM_DEVICE: RAM port map (
     addra => ram_addra,
@@ -176,9 +182,9 @@ I2C_DEVICE: I2C_INTERFACE port map (
     ack_error => i2c_ack_error,
     i2c_target_address => I_I2C_TARGET_ADDRESS,
     i_sda => I_SDA,
-    o_sda => O_SDA,
+    o_sda => R_O_SDA,
     o_sda_enable => O_SDA_ENABLE,
-    scl => O_SCL
+    scl => R_SCL
 );
 
 ram_ena <= '1';
@@ -212,7 +218,10 @@ begin
         case CURRENT_STREAMER_STATE is
             when RESET_START =>
                 i2c_reset <= '1';
+                R_TRACE_1 <= '0';
+                R_TRACE_2 <= '0';
                 O_PIO_IRQ <= '0';
+                byte_outbound_via_i2c := 0;
                 status_reg <= STATUS_RESETTING;
                 buffer_end_address := 0;
                 buffer_write_address := 0;
@@ -230,6 +239,7 @@ begin
                     NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_START;
                 elsif (control_reg = CONTROL_STREAM_BUFFER) then
                     cycle_delay := 2;
+                    
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
                 else
                     NEXT_STREAMER_STATE <= READY;
@@ -261,6 +271,7 @@ begin
                 i2c_stream_complete <= '0';   
                 NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE;
             when STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE =>
+                R_TRACE_1 <= '1';
                 if (byte_outbound_via_i2c <= (buffer_end_address+1)) then
                     if (cycle_delay <= 0) then                   
                         NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;                        
@@ -276,7 +287,9 @@ begin
                 end if;
             when STREAM_DATA_OVER_I2C_WRITE_TO_I2C =>
                 status_reg <= STATUS_READING_STREAM_BUFFER;  
+                
                 if (i2c_que_for_send = '1') then
+                    R_TRACE_2 <= '1';
                     i2c_data <= ram_doutb;
                     i2c_reset <= '0';
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT;

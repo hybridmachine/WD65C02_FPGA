@@ -68,14 +68,21 @@ signal present_state, next_state: state_type;
 signal sda_in : std_logic;
 signal sda_out : std_logic;
 signal sda_enable : std_logic := '0';
+signal scl_out : std_logic; -- Intermediate signal, allows us to drive scl independantly for path testing.
          
 begin 
     ack_error <= ack(0) OR ack(1) OR ack(2); 
     que_for_send <= que_for_send_sig;
     
     sda_in <= i_sda;
-    o_sda <= sda_out;
     o_sda_enable <= sda_enable;
+    -- o_sda_enable <= '1';
+    -- For path testing
+    -- scl <= que_for_send_sig;
+    -- o_sda <= wr_flag;
+    
+    o_sda <= sda_out;
+    scl <= scl_out;
     
     ------ Auxiliary clock -----------------------------
     -- Frequency = 4 * data_rate
@@ -169,7 +176,7 @@ begin
             case present_state is
                 when idle =>
                     -- Release bus, external pullups hold lines high
-                    scl <= '1';
+                    scl_out <= '1';
                     sda_out <= '1';
                     sda_enable <= '0';
                     timer <= delay;
@@ -184,38 +191,38 @@ begin
                 when start_wr =>
                     sda_out <= '1';
                     sda_enable <= '1';
-                    scl <= '1';
+                    scl_out <= '1';
                     timer <= 1;
                     que_for_send_sig <= '0'; -- About to read the data line
                     next_state <= send_start;
                 when send_start =>
                     sda_out <= '0';
                     sda_enable <= '1';
-                    scl <= '1';
+                    scl_out <= '1';
                     timer <= 1;
                     data_out <= data;
                     next_state <= dev_addr_wr;
                 when dev_addr_wr =>
-                    scl <= bus_clock;
+                    scl_out <= bus_clock;
                     sda_out <= i2c_target_address(6-idx);
                     sda_enable <= '1';
                     timer <= 6;
                     next_state <= send_read_write_mode;
                 when send_read_write_mode =>
-                    scl <= bus_clock;
+                    scl_out <= bus_clock;
                     sda_out <= not wr_flag; -- 0 means we write back to client
                     sda_enable <= '1';
                     timer <= 1;
                     next_state <= ack1;
                 when ack1 =>
-                    scl <= '0';
+                    scl_out <= '0';
                     sda_out <= '1';
                     sda_enable <= '0';
                     timer <= 1;
                     que_for_send_sig <= '1'; -- Data is read
                     next_state <= wr_data;
                 when wr_data =>
-                    scl <= bus_clock;
+                    scl_out <= bus_clock;
                     que_for_send_sig <= '1';
                     sda_out <= data_out(7-idx);
                     sda_enable <= '1';
@@ -229,7 +236,7 @@ begin
                     -- Run the clock for one cycle waiting for ack
                     -- Then hold clock low for one cycle then
                     -- start clock back up
-                    scl <= bus_clock;
+                    scl_out <= bus_clock;
                     sda_out <= '1';
                     sda_enable <= '0';
                     timer <= 0;
@@ -239,20 +246,20 @@ begin
                         next_state <= stop;
                     end if;
                 when ack4 =>
-                    scl <= '0';
+                    scl_out <= '0';
                     sda_enable <= '1';
                     timer <= 1;
                     que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
                     data_out <= data;
                     next_state <= wr_data;
                 when stop =>
-                    scl <= '1';
+                    scl_out <= '1';
                     sda_out <= NOT data_clock;
                     sda_enable <= '1';
                     timer <= 1;
                     next_state <= idle;
                 when others =>
-                    scl <= '1';
+                    scl_out <= '1';
                     sda_out <= '1';
                     sda_enable <= '1';
                     timer <= delay;
