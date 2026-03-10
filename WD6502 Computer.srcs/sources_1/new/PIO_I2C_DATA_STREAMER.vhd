@@ -307,7 +307,7 @@ begin
                 end if;        
                 
             when STREAM_DATA_OVER_I2C_COMPLETE =>
-                i2c_reset <= '1';
+                --i2c_reset <= '1'; -- Let the stop condition process
                 O_PIO_IRQ <= '1'; 
                 NEXT_STREAMER_STATE <= WAIT_IRQ_ACK;
                 status_reg <= STATUS_STREAMING_I2C_COMPLETE;

@@ -63,7 +63,7 @@ signal que_for_send_sig : STD_LOGIC := '1';
 
 shared variable idx: NATURAL RANGE 0 to delay;
 -- State machine signals
-TYPE state_type IS (idle, send_start, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, no_ack, send_read_write_mode, ack1, ack2, ack3, ack4);
+TYPE state_type IS (idle, send_start, start_wr, start_rd, dev_addr_wr, dev_addr_rd, wr_addr, wr_data, rd_data, stop, stop2, no_ack, send_read_write_mode, ack1, ack2, ack3, ack4);
 signal present_state, next_state: state_type;
 signal sda_in : std_logic;
 signal sda_out : std_logic;
@@ -253,10 +253,15 @@ begin
                     data_out <= data;
                     next_state <= wr_data;
                 when stop =>
+                    timer <= 40;
                     scl_out <= '1';
-                    sda_out <= NOT data_clock;
+                    sda_out <= '0';
+                    sda_enable <= '1';         
+                    next_state <= stop2;
+                when stop2 =>
+                    scl_out <= '1';
+                    sda_out <= '1';
                     sda_enable <= '1';
-                    timer <= 1;
                     next_state <= idle;
                 when others =>
                     scl_out <= '1';

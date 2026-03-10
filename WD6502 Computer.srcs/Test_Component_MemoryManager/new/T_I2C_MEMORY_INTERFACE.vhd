@@ -211,7 +211,15 @@ begin
                     T_BUS_WRITE_DATA,
                     T_WRITE_FLAG);
   
-    wait;  
+    wait until IRQ_STATE = IRQ_TRIGGERED;
+    -- Write control register with I2C standby
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_CTRL,
+                    T_BUS_ADDRESS,
+                    CONTROL_STANDBY,
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG); 
+    wait; 
 end process stimuli_generator;
 
 watch_irq: process(T_IRQ)
@@ -300,6 +308,9 @@ begin
             end if;
          when expecting_interrupt =>
             present_state <= expecting_interrupt;
+            if (IRQ_STATE = IRQ_TRIGGERED) then
+                present_state <= idle;
+            end if;
          when others=>
             assert(false) report "Unexpected state" severity failure;
     end case;

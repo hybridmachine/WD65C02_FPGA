@@ -169,8 +169,8 @@ BYTE_BUFFERED:
 
 I2CSTREAMBUFFER:
 	
-	;LDA #$C0
-	;STA LED_IO_ADDR
+	LDA CYCLE_COUNT_LOW_ADDR
+	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter
 
 	JSR LOG_ADDRESS
 	CLI ; Ensure interrupts enabled
@@ -298,7 +298,7 @@ SEND_IRQ_ACK:
 		PLA
 		RTI
 
-I2CMESSAGE:	db	'HELLO WORLD!',0 ; Null terminated string
+I2CMESSAGE:	db	'Hello World, I am I2C!',0 ; Null terminated string
 
 
 ;***************************************************************************
