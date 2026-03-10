@@ -253,7 +253,7 @@ begin
                     data_out <= data;
                     next_state <= wr_data;
                 when stop =>
-                    timer <= 40;
+                    timer <= 0;
                     scl_out <= '1';
                     sda_out <= '0';
                     sda_enable <= '1';         
