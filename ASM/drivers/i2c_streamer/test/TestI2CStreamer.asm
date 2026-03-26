@@ -131,7 +131,7 @@ WAIT_FOR_STREAMER_READY:
 	LDA PIO_I2C_DATA_STRM_STATUS
 	ORA #$80
 	; STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
-	JSR LOG_ADDRESS ; DEBUG
+	; JSR LOG_ADDRESS ; DEBUG
 	
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
@@ -148,11 +148,16 @@ SEND_I2C_DATA
 	
 LOOP_WRITE:
 	LDY #$00
-	LDX DATA_BYTE_INDEX
-	LDA I2CMESSAGE,X
-
-	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
+	;LDX DATA_BYTE_INDEX
+	;LDA I2CMESSAGE,X
+	;BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	
+	; Write the data buffer value to the stream, so we can debug any dropped bytes or mis aligned frames
+	; more easily in the I2C data stream
+	LDA DATA_BYTE_INDEX
+	CMP #$FF
+	BEQ I2CSTREAMBUFFER
+
 	; Write byte to buffer
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
@@ -172,7 +177,10 @@ I2CSTREAMBUFFER:
 	LDA CYCLE_COUNT_LOW_ADDR
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter
 
-	JSR LOG_ADDRESS
+	LDA #$00
+	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
+
+	; JSR LOG_ADDRESS
 	CLI ; Ensure interrupts enabled
 	JSR SUB_I2CSTREAM_STREAM
 
@@ -192,7 +200,7 @@ WAIT_FOR_CYCLE_COUNT_CHANGE:
 	; STA LED_IO_ADDR ; Show count
 
 WAIT_FOR_CYCLE_COUNT_CONTINUE:
-	JSR LOG_ADDRESS
+	; JSR LOG_ADDRESS
 	JSR SUB_I2CSTREAM_GETSTATUS
 	TXA
 	CMP #STATUS_READY
