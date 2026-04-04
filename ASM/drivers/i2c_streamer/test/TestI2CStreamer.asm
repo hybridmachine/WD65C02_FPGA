@@ -148,23 +148,24 @@ SEND_I2C_DATA
 	
 LOOP_WRITE:
 	LDY #$00
-	;LDX DATA_BYTE_INDEX
+	LDX DATA_BYTE_INDEX
 	;LDA I2CMESSAGE,X
 	;BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	
 	; Write the data buffer value to the stream, so we can debug any dropped bytes or mis aligned frames
 	; more easily in the I2C data stream
-	LDA DATA_BYTE_INDEX
-	CMP #$FF
-	BEQ I2CSTREAMBUFFER
-
+	
 	; Write byte to buffer
+	LDA DATA_BYTE_INDEX
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
 	
-
 BYTE_BUFFERED:
-	
+
+	LDA DATA_BYTE_INDEX
+	CMP #$FD
+	BEQ I2CSTREAMBUFFER
+
 	; Increment array index into I2CMESSAGE
 	LDX DATA_BYTE_INDEX
 	INX
@@ -173,10 +174,22 @@ BYTE_BUFFERED:
 	JMP LOOP_WRITE ; 
 
 I2CSTREAMBUFFER:
-	
+	; Write whatever is in A to stack
+	PHA
+	LDA #$BC
+	PHA
+	JSR SUB_SEVENSEG_DISPLAY_VALUE
+	PLA
+	PLA
+	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
+	; We assume that X is no greater than $FD
+	LDY #$00
+	INX
 	LDA CYCLE_COUNT_LOW_ADDR
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter
 
+	LDY #$00
+	INX
 	LDA #$00
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
 
