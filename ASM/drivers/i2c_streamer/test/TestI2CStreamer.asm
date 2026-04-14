@@ -67,6 +67,7 @@ CODE
 	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
 	CYCLE_COUNT_LOW_ADDR:	equ		$05
+	END_BYTE_VAL:			equ		$0A
 
 	; Byte to hold number of cyles to wait. Set this then start wait, timer loop in interrupt handler will decrement this to 0
 	TIMER_WAIT_CYCLES:		equ		$0A
@@ -128,10 +129,6 @@ START:
 	JSR TEST_FAIL
 
 WAIT_FOR_STREAMER_READY:
-	LDA PIO_I2C_DATA_STRM_STATUS
-	ORA #$80
-	; STA LED_IO_ADDR; This should cause the high bit to flicker while we wait for streamer ready
-	; JSR LOG_ADDRESS ; DEBUG
 	
 	; Test for status STATUS_READY (#$00)
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
@@ -163,7 +160,7 @@ LOOP_WRITE:
 BYTE_BUFFERED:
 
 	LDA DATA_BYTE_INDEX
-	CMP #$FD
+	CMP #END_BYTE_VAL
 	BEQ I2CSTREAMBUFFER
 
 	; Increment array index into I2CMESSAGE
@@ -182,7 +179,7 @@ I2CSTREAMBUFFER:
 	PLA
 	PLA
 	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
-	; We assume that X is no greater than $FD
+	; We assume that X is no greater than END_BYTE_VAL
 	LDY #$00
 	INX
 	LDA CYCLE_COUNT_LOW_ADDR
@@ -224,8 +221,21 @@ WAIT_FOR_CYCLE_COUNT_CONTINUE:
 	JMP WAIT_FOR_CYCLE_COUNT_CONTINUE
 
 REINIT_I2CSTREAM:
+	PHA
+	LDA #$20 ; Wait (100 * 32) ms
+	STA TIMER_WAIT_CYCLES
+	JSR WAIT_FOR_TIMER
+	PLA
+
 	LDA #$00 ; Use builtin default I2C address
 	JSR SUB_I2CSTREAM_INITIALIZE
+	
+	PHA
+	LDA #$0A ; Wait (100 * 3) ms
+	STA TIMER_WAIT_CYCLES
+	JSR WAIT_FOR_TIMER
+	PLA
+
 	JMP WAIT_FOR_STREAMER_READY
 
 TEST_FAIL:
@@ -289,8 +299,9 @@ IRQHandler:
 		LDA PIO_IRQ_CONTROLLER_IRQNUM
 		BNE SKIP_TIMER ; If not IRQ 0, skip timer code
 		LDA TIMER_WAIT_CYCLES
-		BEQ SKIP_TIMER ; If already 0, skip decrement
+		BEQ SEND_IRQ_ACK ; If already 0, skip decrement
 		DEC TIMER_WAIT_CYCLES
+		JMP SEND_IRQ_ACK
 SKIP_TIMER:
 		; Not used since timer is IRQ 0, so A would be 0
 		; CMP #IRQ_CHANNEL_I2CSTRM
