@@ -231,13 +231,14 @@ begin
                         next_state <= wr_data;
                     else
                         next_state <= ack3;
+                        sda_enable <= '0';
                     end if;
                 when ack3 =>
                     -- Run the clock for one cycle waiting for ack
                     -- Then hold clock low for one cycle then
                     -- start clock back up
                     scl_out <= bus_clock;
-                    sda_out <= '1';
+                    sda_out <= '0';
                     sda_enable <= '0';
                     timer <= 0;
                     if (stream_complete = '0') then
@@ -247,8 +248,9 @@ begin
                     end if;
                 when ack4 =>
                     scl_out <= '0';
+                    sda_out <= '0';
                     sda_enable <= '1';
-                    timer <= 1;
+                    timer <= 0;
                     que_for_send_sig <= '0'; -- Let the caller know this data is pulled in, when we lift the line on the wr_data transition, they can feed in the next byte
                     data_out <= data;
                     next_state <= wr_data;
@@ -256,13 +258,13 @@ begin
                     timer <= 0;
                     scl_out <= '1';
                     sda_out <= '0';
-                    sda_enable <= '1';         
+                    sda_enable <= '1';        
                     next_state <= stop2;
                 when stop2 =>
                     scl_out <= '1';
                     sda_out <= '1';
                     sda_enable <= '1';
-                    next_state <= idle;
+                    next_state <= stop2;
                 when others =>
                     scl_out <= '1';
                     sda_out <= '1';
