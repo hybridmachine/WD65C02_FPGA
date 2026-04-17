@@ -133,6 +133,13 @@ begin
     process(clk)
         variable data_clock_last_state : std_logic := '0';
     begin
+--        if (falling_edge(clk)) then
+--            if (present_state = ack3) then
+--                sda_out <= '0';
+--                sda_enable <= '1';
+--            end if;
+--        end if;
+
         if (rising_edge(clk)) then
             if (data_clock_last_state /= data_clock) then
                 data_clock_last_state := data_clock;
@@ -231,7 +238,6 @@ begin
                         next_state <= wr_data;
                     else
                         next_state <= ack3;
-                        sda_enable <= '0';
                     end if;
                 when ack3 =>
                     -- Run the clock for one cycle waiting for ack
@@ -239,7 +245,7 @@ begin
                     -- start clock back up
                     scl_out <= bus_clock;
                     sda_out <= '0';
-                    sda_enable <= '0';
+                    sda_enable <= '1';
                     timer <= 0;
                     if (stream_complete = '0') then
                         next_state <= ack4;
