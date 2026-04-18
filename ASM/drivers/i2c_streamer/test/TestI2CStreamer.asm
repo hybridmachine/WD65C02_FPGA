@@ -67,7 +67,7 @@ CODE
 	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
 	CYCLE_COUNT_LOW_ADDR:	equ		$05
-	END_BYTE_VAL:			equ		$0A
+	END_BYTE_VAL:			equ		$FA
 
 	; Byte to hold number of cyles to wait. Set this then start wait, timer loop in interrupt handler will decrement this to 0
 	TIMER_WAIT_CYCLES:		equ		$0A
