@@ -99,7 +99,12 @@ WRITE_LOOP:
 		txa
 		sta (ADDRESS_PTR)
 		cpa (ADDRESS_PTR)
+		bne JMP_ERROR_FAIL
+		lda #$00
+		sta (ADDRESS_PTR)
+		lda (ADDRESS_PTR) ; Should be 0, beq should go to increment. This leaves memory at 0
 		beq INCREMENT_ADDRESS
+JMP_ERROR_FAIL:
 		jmp ERROR_FAIL 	; If value in address != X, write or read failed , jump to fail code
 
 INCREMENT_ADDRESS:	
