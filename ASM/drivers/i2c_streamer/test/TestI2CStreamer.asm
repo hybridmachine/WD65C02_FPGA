@@ -347,7 +347,7 @@ SEND_IRQ_ACK:
 		PLA
 		RTI
 
-I2CMESSAGE:	db	'Hello World, I am I2C!',0 ; Null terminated string
+I2CMESSAGE:	db	'V 1.0 5/17/2026 Hello World, I am I2C!',0 ; Null terminated string
 
 
 ;***************************************************************************
