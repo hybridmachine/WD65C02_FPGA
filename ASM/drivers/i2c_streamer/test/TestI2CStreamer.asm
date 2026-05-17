@@ -67,7 +67,7 @@ CODE
 	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
 	CYCLE_COUNT_LOW_ADDR:	equ		$05
-	END_BYTE_VAL:			equ		$FA
+	END_BYTE_VAL:			equ		$0A
 
 	; Byte to hold number of cyles to wait. Set this then start wait, timer loop in interrupt handler will decrement this to 0
 	TIMER_WAIT_CYCLES:		equ		$0A
@@ -134,7 +134,6 @@ WAIT_FOR_STREAMER_READY:
 	JSR SUB_I2CSTREAM_GETSTATUS ; Returns status in X register
 	TXA ; If X is 0, then this sets the Zero flag
 	BEQ SEND_I2C_DATA ; When Zero send data
-	; STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
 	JMP WAIT_FOR_STREAMER_READY
 
 SEND_I2C_DATA
@@ -171,7 +170,7 @@ BYTE_BUFFERED:
 	JMP LOOP_WRITE ; 
 
 I2CSTREAMBUFFER:
-	; Write whatever is in A to stack
+	; Write last DATA_BYTE_INDEX (in A) to stack
 	PHA
 	LDA #$BC
 	PHA
@@ -183,10 +182,14 @@ I2CSTREAMBUFFER:
 	LDY #$00
 	INX
 	LDA CYCLE_COUNT_LOW_ADDR
-	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter
+	
+	; SUB_I2CSTREAM_WRITEBYTE clobbers the X register
+	PHX
+	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter to the stream before we send it, for debugging
+	PLX
 
 	LDY #$00
-	INX
+	INX ; Account for the terminator we write
 	LDA #$00
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
 
@@ -197,7 +200,7 @@ I2CSTREAMBUFFER:
 WAIT_FOR_CYCLE_COUNT_CHANGE:
 	
 	; Log streamer status to LEDs
-	JSR SUB_I2CSTREAM_GETSTATUS
+	; JSR SUB_I2CSTREAM_GETSTATUS
 	; TXA
 	; STA LED_IO_ADDR ; Show proc status on LEDs
 
@@ -215,11 +218,30 @@ WAIT_FOR_CYCLE_COUNT_CONTINUE:
 	TXA
 	CMP #STATUS_STREAMING_I2C_COMPLETE
 	BEQ REINIT_I2CSTREAM
+
+	PHA
+	LDA #$05 ; Wait (100 * 5) ms
+	STA TIMER_WAIT_CYCLES
+	JSR WAIT_FOR_TIMER
+	PLA
+
+	ORA #$F0
+	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
+	
+	PHA
+	LDA #$14 ; Wait (100 * 20) ms
+	STA TIMER_WAIT_CYCLES
+	JSR WAIT_FOR_TIMER
+	PLA
+
 	JMP WAIT_FOR_CYCLE_COUNT_CONTINUE
 
 REINIT_I2CSTREAM:
 	; We expect the SCL to stop at this point, if it's still running, we need to fix something the VHDL
 	PHA
+	LDA #24 ; Turn inner bits on
+	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
+	
 	LDA #$05 ; Wait (100 * 5) ms
 	STA TIMER_WAIT_CYCLES
 	JSR WAIT_FOR_TIMER
@@ -229,6 +251,8 @@ REINIT_I2CSTREAM:
 	JSR SUB_I2CSTREAM_INITIALIZE
 	
 	PHA
+	LDA #129 ; Turn outer bits on
+	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
 	LDA #$05 ; Wait (100 * 5) ms
 	STA TIMER_WAIT_CYCLES
 	JSR WAIT_FOR_TIMER
@@ -298,17 +322,21 @@ IRQHandler:
 		BNE SKIP_TIMER ; If not IRQ 0, skip timer code
 		LDA TIMER_WAIT_CYCLES
 		BEQ SEND_IRQ_ACK ; If already 0, skip decrement
+		; STA LED_IO_ADDR
 		DEC TIMER_WAIT_CYCLES
 		JMP SEND_IRQ_ACK
 SKIP_TIMER:
-		; Not used since timer is IRQ 0, so A would be 0
-		; CMP #IRQ_CHANNEL_I2CSTRM
-		; BNE SEND_IRQ_ACK
+		; If IRQ is not for IRQ, send ack, skip handler
+		LDA PIO_IRQ_CONTROLLER_IRQNUM
+		CMP #IRQ_CHANNEL_I2CSTRM
+		BNE SEND_IRQ_ACK
+		
 		CLC
 		LDA CYCLE_COUNT_LOW_ADDR
 		ADC #$01
 		STA CYCLE_COUNT_LOW_ADDR
-		STA LED_IO_ADDR
+		ORA #$C0
+		; STA LED_IO_ADDR
 		LDA CYCLE_COUNT_HIGH_ADDR
 		ADC #$00 ; Add in any carry flag
 		STA CYCLE_COUNT_HIGH_ADDR
