@@ -264,17 +264,20 @@ begin
                     timer <= 0;
                     scl_out <= '1';
                     sda_out <= '0';
-                    sda_enable <= '1';        
+                    sda_enable <= '1';   
+                    que_for_send_sig <= '0';     
                     next_state <= stop2;
                 when stop2 =>
                     scl_out <= '1';
                     sda_out <= '1';
                     sda_enable <= '1';
+                    que_for_send_sig <= '0';
                     next_state <= stop2;
                 when others =>
                     scl_out <= '1';
                     sda_out <= '1';
                     sda_enable <= '1';
+                    que_for_send_sig <= '0';
                     timer <= delay;
                     next_state <= idle;  
             end case;

@@ -67,7 +67,7 @@ CODE
 	CYCLE_COUNT_CURRENT:	equ		$03 ; Just track the most recent low value
 	CYCLE_COUNT_HIGH_ADDR:	equ 	$02
 	CYCLE_COUNT_LOW_ADDR:	equ		$05
-	END_BYTE_VAL:			equ		$0A
+	END_BYTE_VAL:			equ		$0B
 
 	; Byte to hold number of cyles to wait. Set this then start wait, timer loop in interrupt handler will decrement this to 0
 	TIMER_WAIT_CYCLES:		equ		$0A
@@ -178,21 +178,28 @@ I2CSTREAMBUFFER:
 	PLA
 	PLA
 	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
+
 	; We assume that X is no greater than END_BYTE_VAL
 	LDY #$00
 	INX
 	LDA CYCLE_COUNT_LOW_ADDR
-	
-	; SUB_I2CSTREAM_WRITEBYTE clobbers the X register
-	PHX
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter to the stream before we send it, for debugging
-	PLX
 
 	LDY #$00
+	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
 	INX ; Account for the terminator we write
-	LDA #$00
+	INX ; Add one more so we are past the write count
+	LDA #$AA
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
 
+	; Let's add another null, help debug the off by one issue at the end.
+	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
+	INX ; Account for the terminator we write
+	INX ; Add one more so we are past the write count
+	INX ; Add one more so we are past the write count
+	LDA #$BB
+	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
+    
 	; JSR LOG_ADDRESS
 	CLI ; Ensure interrupts enabled
 	JSR SUB_I2CSTREAM_STREAM
