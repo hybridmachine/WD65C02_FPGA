@@ -145,22 +145,22 @@ SEND_I2C_DATA
 LOOP_WRITE:
 	LDY #$00
 	LDX DATA_BYTE_INDEX
-	;LDA I2CMESSAGE,X
-	;BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
+	LDA I2CMESSAGE,X
+	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	
 	; Write the data buffer value to the stream, so we can debug any dropped bytes or mis aligned frames
 	; more easily in the I2C data stream
-	
 	; Write byte to buffer
-	LDA DATA_BYTE_INDEX
+	; LDA DATA_BYTE_INDEX
+
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
 	
 BYTE_BUFFERED:
 
-	LDA DATA_BYTE_INDEX
-	CMP #END_BYTE_VAL
-	BEQ I2CSTREAMBUFFER
+	;LDA DATA_BYTE_INDEX
+	;CMP #END_BYTE_VAL
+	;BEQ I2CSTREAMBUFFER
 
 	; Increment array index into I2CMESSAGE
 	LDX DATA_BYTE_INDEX
@@ -225,22 +225,6 @@ WAIT_FOR_CYCLE_COUNT_CONTINUE:
 	TXA
 	CMP #STATUS_STREAMING_I2C_COMPLETE
 	BEQ REINIT_I2CSTREAM
-
-	PHA
-	LDA #$05 ; Wait (100 * 5) ms
-	STA TIMER_WAIT_CYCLES
-	JSR WAIT_FOR_TIMER
-	PLA
-
-	ORA #$F0
-	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
-	
-	PHA
-	LDA #$14 ; Wait (100 * 20) ms
-	STA TIMER_WAIT_CYCLES
-	JSR WAIT_FOR_TIMER
-	PLA
-
 	JMP WAIT_FOR_CYCLE_COUNT_CONTINUE
 
 REINIT_I2CSTREAM:
@@ -249,7 +233,7 @@ REINIT_I2CSTREAM:
 	LDA #24 ; Turn inner bits on
 	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
 	
-	LDA #$05 ; Wait (100 * 5) ms
+	LDA #$02 ; Wait (100 * 5) ms
 	STA TIMER_WAIT_CYCLES
 	JSR WAIT_FOR_TIMER
 	PLA
@@ -260,7 +244,7 @@ REINIT_I2CSTREAM:
 	PHA
 	LDA #129 ; Turn outer bits on
 	STA LED_IO_ADDR ; Show the actual status on the LEDs for debugging
-	LDA #$05 ; Wait (100 * 5) ms
+	LDA #$02 ; Wait (100 * 5) ms
 	STA TIMER_WAIT_CYCLES
 	JSR WAIT_FOR_TIMER
 	PLA
