@@ -177,27 +177,18 @@ I2CSTREAMBUFFER:
 	JSR SUB_SEVENSEG_DISPLAY_VALUE
 	PLA
 	PLA
-	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
 
-	; We assume that X is no greater than END_BYTE_VAL
 	LDY #$00
+	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
 	INX
-	LDA CYCLE_COUNT_LOW_ADDR
+	LDA CYCLE_COUNT_HIGH_ADDR
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter to the stream before we send it, for debugging
 
 	LDY #$00
 	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
 	INX ; Account for the terminator we write
 	INX ; Add one more so we are past the write count
-	LDA #$AA
-	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
-
-	; Let's add another null, help debug the off by one issue at the end.
-	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
-	INX ; Account for the terminator we write
-	INX ; Add one more so we are past the write count
-	INX ; Add one more so we are past the write count
-	LDA #$BB
+	LDA CYCLE_COUNT_LOW_ADDR
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
     
 	; JSR LOG_ADDRESS
