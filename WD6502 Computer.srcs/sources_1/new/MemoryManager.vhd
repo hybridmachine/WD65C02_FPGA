@@ -7,7 +7,8 @@
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
--- Description: 
+-- Description: Hub module that connects RAM, ROM, and all PIO devices. Manage the top level memory addressing
+-- and routes to the appropriate submodule based on address and read/write mode 
 -- 
 -- Dependencies: 
 -- 
@@ -100,6 +101,27 @@ signal R_PIO_IRQ_TIMER_CTL : STD_LOGIC_VECTOR(7 downto 0);
 signal R_UPDATED_SWITCH_VEC : STD_LOGIC_VECTOR(15 downto 0);
 signal R_PREVIOUS_SWITCH_STATE_VEC : STD_LOGIC_VECTOR(15 downto 0);
 signal R_SWITCHES_IRQ_ACK : STD_LOGIC;
+
+signal R_PIO_PSRND_ENABLE : STD_LOGIC;
+signal R_PIO_PSRND_SEED_DV : STD_LOGIC;
+signal R_PIO_PSRND_SEED_DATA : STD_LOGIC_VECTOR(7 downto 0);
+signal R_PIO_PSRND_DATA : STD_LOGIC_VECTOR(7 downto 0);;
+signal R_PIO_PSRND_DONE : STD_LOGIC;
+
+COMPONENT PIO_PSRND is
+  generic (
+    NUM_BITS : integer := 8);
+  port (
+    i_Clk    : in std_logic;
+    i_Enable : in std_logic;
+
+    -- Optional Seed Value
+    i_Seed_DV   : in std_logic;
+    i_Seed_Data : in std_logic_vector(NUM_BITS-1 downto 0);
+    
+    o_PSRND_Data : out std_logic_vector(NUM_BITS-1 downto 0);
+    o_PSRND_Done : out std_logic);
+end COMPONENT;
 
 COMPONENT PIO_INTERRUPT_CONTROLLER is
     PORT (
@@ -217,6 +239,17 @@ COMPONENT PIO_SWITCHES is
 end COMPONENT;
 
 begin
+
+PIO_PSRND_DEVICE : PIO_PSRND port map (
+    i_Clk   => MEMORY_CLOCK; 
+    i_Enable => R_PIO_PSRND_ENABLE;
+
+    i_Seed_DV => R_PIO_PSRND_SEED_DV;  
+    i_Seed_Data => R_PIO_PSRND_SEED_DATA;
+    
+    o_PSRND_Data => R_PIO_PSRND_DATA;
+    o_PSRND_Done => R_PIO_PSRND_DONE;
+);
 
 PIO_SWITCHES_DEVICE : PIO_SWITCHES port map (
     I_CLK => MEMORY_CLOCK,

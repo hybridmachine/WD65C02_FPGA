@@ -140,6 +140,12 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/new/PIO_PSRND.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/new/PIO_BUTTONS_AND_SWITCHES.vhd">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
