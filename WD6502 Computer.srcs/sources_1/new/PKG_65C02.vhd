@@ -115,6 +115,8 @@ package W65C02_DEFINITIONS is
     constant PIO_SWITCHES_UPDATED_VEC_L : ADDRESS_65C02_T := x"0227";
     constant PIO_SWITCHES_UPDATED_VEC_H : ADDRESS_65C02_T := x"0228";
 
+    constant PIO_PSRND_VAL              : ADDRESS_65C02_T := x"0229"; -- Write sets seed, read gets next value
+
     constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
     constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     

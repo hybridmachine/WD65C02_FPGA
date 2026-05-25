@@ -29,6 +29,7 @@
 ;***************************************************************************    
 
     MEM_MAPPED_IO_BASE:			    GEQU $0200 ; 
+    PIO_PSRND_VAL:                  GEQU $0229 ;
     MEM_MAPPED_IO_END:              GEQU $03FF ;
 
     RAM_BASE:                   GEQU $0400; 

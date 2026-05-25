@@ -38,6 +38,7 @@ CODE
 
 	INCLUDE "../../../common/InterruptVectors.inc"
 	INCLUDE "../../../common/InterruptTimerCtl.inc"
+	INCLUDE "../../../common/MemoryMap.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -104,6 +105,10 @@ START:
 
 	; MAIN
 	
+	; Initialize the pseudorandom generator
+	LDA #$0F ; Any val is fine here, I just chose this.
+	STA PIO_PSRND_VAL
+
 	JSR INITIALIZE_TIMER
 	
 	LDA #$00
@@ -170,25 +175,35 @@ BYTE_BUFFERED:
 	JMP LOOP_WRITE ; 
 
 I2CSTREAMBUFFER:
-	; Write last DATA_BYTE_INDEX (in A) to stack
+	; Write random data to seven segment display
+	LDA PIO_PSRND_VAL
 	PHA
-	LDA #$BC
+	LDA PIO_PSRND_VAL ; Put the random balue in the low byte
 	PHA
 	JSR SUB_SEVENSEG_DISPLAY_VALUE
 	PLA
 	PLA
-
-	LDY #$00
 	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
+
+	; We assume that X is no greater than END_BYTE_VAL
+	LDY #$00
 	INX
-	LDA CYCLE_COUNT_HIGH_ADDR
+	LDA CYCLE_COUNT_LOW_ADDR
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Write the interrupt counter to the stream before we send it, for debugging
 
 	LDY #$00
 	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
 	INX ; Account for the terminator we write
 	INX ; Add one more so we are past the write count
-	LDA CYCLE_COUNT_LOW_ADDR
+	LDA #$AA
+	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
+
+	; Let's add another null, help debug the off by one issue at the end.
+	LDX DATA_BYTE_INDEX ; Make sure we incrment on last written offset
+	INX ; Account for the terminator we write
+	INX ; Add one more so we are past the write count
+	INX ; Add one more so we are past the write count
+	LDA #$BB
 	JSR SUB_I2CSTREAM_WRITEBYTE ; Put terminating null on buffer, don't rely on a zero being in the buffer
     
 	; JSR LOG_ADDRESS
@@ -338,7 +353,7 @@ SEND_IRQ_ACK:
 		PLA
 		RTI
 
-I2CMESSAGE:	db	'V 1.0 5/17/2026 Hello World, I am I2C!',0 ; Null terminated string
+I2CMESSAGE:	db	'V 1.0.2 Hello World, I am I2C!',0 ; Null terminated string
 
 
 ;***************************************************************************
