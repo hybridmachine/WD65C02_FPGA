@@ -105,7 +105,7 @@ signal R_SWITCHES_IRQ_ACK : STD_LOGIC;
 signal R_PIO_PSRND_ENABLE : STD_LOGIC;
 signal R_PIO_PSRND_SEED_DV : STD_LOGIC;
 signal R_PIO_PSRND_SEED_DATA : STD_LOGIC_VECTOR(7 downto 0);
-signal R_PIO_PSRND_DATA : STD_LOGIC_VECTOR(7 downto 0);;
+signal R_PIO_PSRND_DATA : STD_LOGIC_VECTOR(7 downto 0);
 signal R_PIO_PSRND_DONE : STD_LOGIC;
 
 COMPONENT PIO_PSRND is
@@ -241,14 +241,14 @@ end COMPONENT;
 begin
 
 PIO_PSRND_DEVICE : PIO_PSRND port map (
-    i_Clk   => MEMORY_CLOCK; 
-    i_Enable => R_PIO_PSRND_ENABLE;
+    i_Clk   => MEMORY_CLOCK, 
+    i_Enable => R_PIO_PSRND_ENABLE,
 
-    i_Seed_DV => R_PIO_PSRND_SEED_DV;  
-    i_Seed_Data => R_PIO_PSRND_SEED_DATA;
+    i_Seed_DV => R_PIO_PSRND_SEED_DV,  
+    i_Seed_Data => R_PIO_PSRND_SEED_DATA,
     
-    o_PSRND_Data => R_PIO_PSRND_DATA;
-    o_PSRND_Done => R_PIO_PSRND_DONE;
+    o_PSRND_Data => R_PIO_PSRND_DATA,
+    o_PSRND_Done => R_PIO_PSRND_DONE
 );
 
 PIO_SWITCHES_DEVICE : PIO_SWITCHES port map (
@@ -356,10 +356,15 @@ ram_enb <= '1';
 DATA_DIRECTION <= READ_FROM_MEMORY when WRITE_FLAG = '0' else WRITE_TO_MEMORY;
 process(MEMORY_CLOCK)
 variable MEMORY_ADDRESS : unsigned(15 downto 0);
+variable PREVIOUS_ADDRESS : unsigned(15 downto 0);
 variable SHIFTED_ADDRESS : unsigned(15 downto 0);
 begin    
     if (rising_edge(MEMORY_CLOCK)) then
         R_PIO_IRQ_RST <= RESET;
+        R_PIO_PSRND_ENABLE <= '0';
+        R_PIO_PSRND_SEED_DV <= '0';
+        
+        PREVIOUS_ADDRESS := MEMORY_ADDRESS;
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
         
         if((MemoryRegion(BUS_ADDRESS) = ROM_REGION) and (DATA_DIRECTION = READ_FROM_MEMORY)) then
@@ -410,6 +415,10 @@ begin
                     PIO_INTERRUPT_CONTROLLER_IRQ_ACK <= x"FF";
                 elsif (BUS_ADDRESS = PIO_IRQ_CONTROLLER_IRQACK) then
                     PIO_INTERRUPT_CONTROLLER_IRQ_ACK <= BUS_WRITE_DATA;
+                elsif (BUS_ADDRESS = PIO_PSRND_VAL) then
+                    R_PIO_PSRND_ENABLE <= '1';
+                    R_PIO_PSRND_SEED_DV <= '1';
+                    R_PIO_PSRND_SEED_DATA <= BUS_WRITE_DATA;
                 end if;
             else
                 -- Read from memory
@@ -434,7 +443,14 @@ begin
                 elsif (BUS_ADDRESS = PIO_SWITCHES_UPDATED_VEC_L) then
                     BUS_READ_DATA <= R_UPDATED_SWITCH_VEC(7 downto 0);               
                 elsif (BUS_ADDRESS = PIO_SWITCHES_UPDATED_VEC_H) then
-                    BUS_READ_DATA <= R_UPDATED_SWITCH_VEC(15 downto 8);                                     
+                    BUS_READ_DATA <= R_UPDATED_SWITCH_VEC(15 downto 8); 
+                elsif (BUS_ADDRESS = PIO_PSRND_VAL) then
+                    if (PREVIOUS_ADDRESS /= unsigned(PIO_PSRND_VAL)) then
+                        R_PIO_PSRND_ENABLE <= '1'; -- Allow the LFSR iterate to the next value
+                        BUS_READ_DATA <= x"00";
+                    else
+                        BUS_READ_DATA <= R_PIO_PSRND_DATA;   
+                    end if;                                                     
                 end if;
             end if;
         else

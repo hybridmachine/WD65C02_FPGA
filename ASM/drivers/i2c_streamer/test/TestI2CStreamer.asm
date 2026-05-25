@@ -38,6 +38,7 @@ CODE
 
 	INCLUDE "../../../common/InterruptVectors.inc"
 	INCLUDE "../../../common/InterruptTimerCtl.inc"
+	INCLUDE "../../../common/MemoryMap.inc"
 
 ;***************************************************************************
 ;                              Global Modules
@@ -104,6 +105,10 @@ START:
 
 	; MAIN
 	
+	; Initialize the pseudorandom generator
+	LDA #$0F ; Any val is fine here, I just chose this.
+	STA PIO_PSRND_VAL
+
 	JSR INITIALIZE_TIMER
 	
 	LDA #$00
@@ -170,9 +175,10 @@ BYTE_BUFFERED:
 	JMP LOOP_WRITE ; 
 
 I2CSTREAMBUFFER:
-	; Write last DATA_BYTE_INDEX (in A) to stack
+	; Write random data to seven segment display
+	LDA PIO_PSRND_VAL
 	PHA
-	LDA #$BC
+	LDA PIO_PSRND_VAL ; Put the random balue in the low byte
 	PHA
 	JSR SUB_SEVENSEG_DISPLAY_VALUE
 	PLA
@@ -347,7 +353,7 @@ SEND_IRQ_ACK:
 		PLA
 		RTI
 
-I2CMESSAGE:	db	'Hello World, I am I2C!',0 ; Null terminated string
+I2CMESSAGE:	db	'V 1.0.2 Hello World, I am I2C!',0 ; Null terminated string
 
 
 ;***************************************************************************

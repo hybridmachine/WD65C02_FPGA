@@ -22,9 +22,9 @@ entity PIO_PSRND is
     
     o_PSRND_Data : out std_logic_vector(NUM_BITS-1 downto 0);
     o_PSRND_Done : out std_logic);
-end entity PSRND;
+end entity PIO_PSRND;
 
-architecture RTL of PSRND is
+architecture RTL of PIO_PSRND is
 
   signal r_PSRND : std_logic_vector(NUM_BITS downto 1) := (others => '0');
   signal w_XNOR : std_logic;
