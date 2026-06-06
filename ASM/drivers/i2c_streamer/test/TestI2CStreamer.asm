@@ -126,6 +126,26 @@ START:
 	LDA #>I2CMESSAGE3
 	STA STR_PTR_ARRAY+7
 
+	LDA #I2CMESSAGE4
+	STA STR_PTR_ARRAY+8
+	LDA #>I2CMESSAGE4
+	STA STR_PTR_ARRAY+9
+
+	LDA #I2CMESSAGE5
+	STA STR_PTR_ARRAY+10
+	LDA #>I2CMESSAGE5
+	STA STR_PTR_ARRAY+11
+
+	LDA #I2CMESSAGE6
+	STA STR_PTR_ARRAY+12
+	LDA #>I2CMESSAGE6
+	STA STR_PTR_ARRAY+13
+
+	LDA #I2CMESSAGE7
+	STA STR_PTR_ARRAY+14
+	LDA #>I2CMESSAGE6
+	STA STR_PTR_ARRAY+15
+
 	; Update str ptr
 	LDA #$01
 	ASL ; Multiply by 2
@@ -214,7 +234,7 @@ I2CSTREAMBUFFER:
 	LDA PIO_PSRND_VAL
 	PHA
 	LDA PIO_PSRND_VAL ; Put the random balue in the low byte
-	AND #$03
+	AND #$07
 	PHA
 	
 	; Update str ptr
@@ -399,10 +419,14 @@ SEND_IRQ_ACK:
 		PLA
 		RTI
 
-I2CMESSAGE0:	db	'V 1.0.2 Hello World, I am I2C!',0 ; Null terminated string
-I2CMESSAGE1: db 'Test message 2',0
-I2CMESSAGE2: db 'A longer message to test alternate string length output',0
-I2CMESSAGE3: db 'shrt msg',0 
+I2CMESSAGE0: 	db	'V 1.0.2 Hello World, I am I2C!',0 ; Null terminated string
+I2CMESSAGE1: 	db 'Test message 2',0
+I2CMESSAGE2: 	db 'A longer message to test alternate string length output',0
+I2CMESSAGE3: 	db 'shrt msg',0 
+I2CMESSAGE4: 	db 'The fifth message out of 8, perhaps a longer message then most, but who's counting?',0
+I2CMESSAGE5: 	db 'Sixth!',0
+I2CMESSAGE6: 	db '7',0
+I2CMESSAGE7: 	db '65C02 Apple II Commodore 64 Forever!',0
 
 ;***************************************************************************
 vectors	SECTION OFFSET $FFFA
