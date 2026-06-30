@@ -44,14 +44,18 @@ CODE
 ;***************************************************************************
 ;                              Global Modules
 ;***************************************************************************
-    GLOBAL PRINTLOG
+    GLOBAL LOGSTR
+    GLOBAL LOGBYTE
     GLOBAL FLUSH
     GLOBAL INITLOG
 
 ;***************************************************************************
 ;                              External Modules
 ;***************************************************************************
-;None
+    XREF SUB_I2CSTREAM_GETSTATUS
+    XREF SUB_I2CSTREAM_WRITEBYTE
+    XREF SUB_I2CSTREAM_STREAM
+    XREF SUB_I2CSTREAM_INITIALIZE
 
 ;***************************************************************************
 ;                              External Variables
@@ -65,7 +69,8 @@ CODE
 ;
 
     DEFAULT_I2C_DBG_ADDRESS:    equ $0D
-
+    LOG_STR_PTR:				equ $40 ; The active pointer address ($40, $41)
+    LOG_BUFFER_IDX:             equ $42 ; The buffer index value ($42, $43)
 
 ;***************************************************************************
 ;                               Library Code
@@ -74,6 +79,11 @@ CODE
     ; Initialize the buffer and setup the address; If 0 is in A, default address is used, otherwise user can 
     ; specify desired address in the A register. Legal values are 0x08 to 0x77
 INITLOG:
+    ; If A is not 0, check address range, otherwise we'll set default
+    BNE CHECK_LOW_RESERVED
+    LDA #DEFAULT_I2C_DBG_ADDRESS
+    JMP SET_LEGAL_ADDRESS ; No need to check if we are using our builtin default
+CHECK_LOW_RESERVED:   
     CMP #I2C_RESERVED_LOW_END_ADDRESS+1
     BCS CHECK_HIGH_RESERVED
     LDA #$FF ; Set A to -1 for error return
@@ -84,14 +94,58 @@ CHECK_HIGH_RESERVED:
     LDA #$FF ; Set A to -1 for error return
     RTS
 SET_LEGAL_ADDRESS:
-    ; TODO write address to init in driver
-    LDA #$00 ; Set A to success
+    ; I2C address will be in A already    
+	JSR SUB_I2CSTREAM_INITIALIZE
+    STZ LOG_BUFFER_IDX;
+    STZ LOG_BUFFER_IDX+1;
+    LDA #$00 ; Return status success
     RTS
 
 
-PRINTLOG:
+; C style string address in X,Y (LOW, HIGH). Null terminated max 80 characters (auto return at 80 chars)
+; Returns bytes written in A
+LOGSTR:
+    TXA
+    STA LOG_STR_PTR
+    TYA
+    STA LOG_STR_PTR+1
+
+LOOP_WRITE:
+	; Load string data
+	LDY LOG_BUFFER_IDX
+	LDA (STR_PTR),Y
+	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
+	
+	; Write the data buffer value to the stream, so we can debug any dropped bytes or mis aligned frames
+	; more easily in the I2C data stream
+	; Write byte to buffer
+	; LDA DATA_BYTE_INDEX
+	
+	; Set stream buffer address to write to
+	LDY LOG_BUFFER_IDX+1
+	LDX LOG_BUFFER_IDX
+	JSR SUB_I2CSTREAM_WRITEBYTE
+	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
+	
+BYTE_BUFFERED:
+
+    CLC
+	LDA DATA_BYTE_INDEX
+	ADC #$01
+    STA DATA_BYTE_INDEX
+    LDA DATA_BYTE_INDEX+1
+    ADC #$00 ; Add in the cary flag if set
+    STA DATA_BYTE_INDEX+1
+
+	JMP LOOP_WRITE ; 
+
     RTS
 
+; Write byte value in A to log buffer
+LOGBYTE:
+    RTS
+
+; Write stream to I2C
 FLUSH:
     RTS
 
