@@ -71,7 +71,7 @@ CODE
     DEFAULT_I2C_DBG_ADDRESS:    equ $0D
     LOG_STR_PTR:				equ $40 ; The active pointer address ($40, $41)
     LOG_BUFFER_IDX:             equ $42 ; The buffer index value ($42, $43)
-
+    MAX_BUF_LEN:                equ $50 ; 80 bytes max
 ;***************************************************************************
 ;                               Library Code
 ;***************************************************************************
@@ -105,6 +105,10 @@ SET_LEGAL_ADDRESS:
 ; C style string address in X,Y (LOW, HIGH). Null terminated max 80 characters (auto return at 80 chars)
 ; Returns bytes written in A
 LOGSTR:
+    ; Reset data and log buffer. We flush our strings at the end of every write
+    STZ LOG_BUFFER_IDX
+    STZ LOG_BUFFER_IDX+1
+
     TXA
     STA LOG_STR_PTR
     TYA
@@ -113,29 +117,30 @@ LOGSTR:
 LOOP_WRITE:
 	; Load string data
 	LDY LOG_BUFFER_IDX
-	LDA (STR_PTR),Y
-	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
-	
-	; Write the data buffer value to the stream, so we can debug any dropped bytes or mis aligned frames
-	; more easily in the I2C data stream
-	; Write byte to buffer
-	; LDA DATA_BYTE_INDEX
+	LDA (LOG_STR_PTR),Y
+	BEQ FLUSH ; If we hit the null, stream the buffer.
 	
 	; Set stream buffer address to write to
 	LDY LOG_BUFFER_IDX+1
 	LDX LOG_BUFFER_IDX
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
-	
+	; TODO Handle error condition
+
 BYTE_BUFFERED:
 
+    LDA LOG_BUFFER_IDX
+    CMP MAX_BUF_LEN-1; Test have we hit the end of the buffer
+    BEQ FLUSH
+
+    ; 16 bit add, not really needed for max buf len < 255 but just in case we expand later
     CLC
-	LDA DATA_BYTE_INDEX
+	LDA LOG_BUFFER_IDX
 	ADC #$01
-    STA DATA_BYTE_INDEX
-    LDA DATA_BYTE_INDEX+1
+    STA LOG_BUFFER_IDX
+    LDA LOG_BUFFER_IDX+1
     ADC #$00 ; Add in the cary flag if set
-    STA DATA_BYTE_INDEX+1
+    STA LOG_BUFFER_IDX+1
 
 	JMP LOOP_WRITE ; 
 
@@ -147,6 +152,8 @@ LOGBYTE:
 
 ; Write stream to I2C
 FLUSH:
+    CLI ; Ensure interrupts enabled
+	JSR SUB_I2CSTREAM_STREAM
     RTS
 
 END ; CODE
