@@ -130,7 +130,8 @@ LOOP_WRITE:
 BYTE_BUFFERED:
 
     LDA LOG_BUFFER_IDX
-    CMP MAX_BUF_LEN-1; Test have we hit the end of the buffer
+    INA ; Avoid the compare to 0 issue with CMP
+    CMP #MAX_BUF_LEN; Test have we hit the end of the buffer
     BEQ FLUSH
 
     ; 16 bit add, not really needed for max buf len < 255 but just in case we expand later

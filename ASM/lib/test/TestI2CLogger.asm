@@ -47,6 +47,7 @@ CODE
 ;                              External Modules
 ;***************************************************************************
 	XREF INITLOG
+	XREF LOGSTR
 
 ;***************************************************************************
 ;                              External Variables
@@ -89,6 +90,18 @@ TEST_LOAD_GOOD_ADDRESS:
 	BEQ TEST_LOG_DATA ; A should have #$00, success
 	BRK
 TEST_LOG_DATA:
+	LDX #LOGMESSAGELONG
+	LDY #>LOGMESSAGELONG
+	JSR LOGSTR
+
+	LDX #LOGMESSAGE
+	LDY #>LOGMESSAGE
+	JSR LOGSTR
+
+	LDX #LOGMESSAGESHORT
+	LDY #>LOGMESSAGESHORT
+	JSR LOGSTR
+
 	BRK ; Just stop for now
 	
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
@@ -111,6 +124,9 @@ IRQHandler:
 	wraps:	dw	0
 	delay:	db	10
 
+	LOGMESSAGELONG: 	db	'A long log string that is over 80 characters long, should flush at 80, this is a test!',0 ; Null terminated overlong string
+	LOGMESSAGE: 	    db	'A 79 character long log message, this should fully print testtest test test 12',0 ; Null terminated full string
+	LOGMESSAGESHORT:	db  'A less than max message',0
 
 ;***************************************************************************
 vectors	SECTION OFFSET $FFFA
