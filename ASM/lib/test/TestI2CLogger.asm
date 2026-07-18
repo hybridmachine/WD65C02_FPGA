@@ -35,7 +35,7 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+	INCLUDE "InterruptVectors.inc"
 
 
 ;***************************************************************************
@@ -58,7 +58,7 @@ CODE
 ;***************************************************************************
 ;                               Local Constants
 ;***************************************************************************
-;
+	READYFLAG:		equ $40;
 
 START:
 	SEI             ; Ignore maskable interrupts
@@ -72,7 +72,7 @@ START:
 ;                               Application Code
 ;***************************************************************************
 ;
-
+	STZ READYFLAG
 	LDA #$BD ; Load an illegal high address, verify we get an error status back A
 	JSR INITLOG
 	CMP #$FF
@@ -90,20 +90,35 @@ TEST_LOAD_GOOD_ADDRESS:
 	BEQ TEST_LOG_DATA ; A should have #$00, success
 	BRK
 TEST_LOG_DATA:
+	JSR INITWAIT
 	LDX #LOGMESSAGELONG
 	LDY #>LOGMESSAGELONG
 	JSR LOGSTR
-
+	JSR WAIT
+	
+	JSR INITWAIT
 	LDX #LOGMESSAGE
 	LDY #>LOGMESSAGE
 	JSR LOGSTR
-
+	JSR WAIT
+	
+	JSR INITWAIT
 	LDX #LOGMESSAGESHORT
 	LDY #>LOGMESSAGESHORT
 	JSR LOGSTR
-
-	BRK ; Just stop for now
+    JSR WAIT
 	
+	BRK ; Just stop for now
+
+INITWAIT:
+	LDA #$01
+	STA READYFLAG
+	RTS
+WAIT:
+	LDA READYFLAG
+	BNE WAIT
+	RTS
+
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
 unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	php
@@ -116,6 +131,23 @@ unexpectedInt:		; $FFE0 - IRQRVD2(134)
 	rti
 
 IRQHandler:
+		PHA
+		; 5) Write ACK to IRQ controller, in interrupt handler
+		lda PIO_IRQ_CONTROLLER_IRQNUM
+		sta PIO_IRQ_CONTROLLER_IRQACK
+
+		CMP #IRQ_CHANNEL_I2CSTRM
+		BNE ALLCLEAR
+		STZ READYFLAG ; Clear the ready flag
+ALLCLEAR:
+		; ORA #$80 ; Set high bit so we know we are coming from IRQHandler
+		; STA LED_IO_ADDR;
+		
+		; Reset ack lines
+		lda #$FF
+		sta PIO_IRQ_CONTROLLER_IRQACK
+		
+
 		pla
 		rti
 
