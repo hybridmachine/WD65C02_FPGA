@@ -48,6 +48,9 @@ CODE
 ;***************************************************************************
 	XREF INITLOG
 	XREF LOGSTR
+	XREF POST_MEMORY_TEST
+	XREF SUB_SEVENSEG_DISPLAY_VALUE
+    XREF SUB_SEVENSEG_DISABLE
 
 ;***************************************************************************
 ;                              External Variables
@@ -59,7 +62,8 @@ CODE
 ;                               Local Constants
 ;***************************************************************************
 	READYFLAG:		equ $40;
-
+	LED_IO_ADDR:	equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+	TRACE:			equ $50
 START:
 	SEI             ; Ignore maskable interrupts
 	CLC             ; Clear carry
@@ -72,51 +76,96 @@ START:
 ;                               Application Code
 ;***************************************************************************
 ;
+	JSR SUB_SEVENSEG_DISABLE
+	; Run power on self test functions
+	JSR POST_MEMORY_TEST
+
+	LDA #$00
+	STA LED_IO_ADDR ; Clear any LEDs
+	
 	STZ READYFLAG
 	LDA #$BD ; Load an illegal high address, verify we get an error status back A
+	STA LED_IO_ADDR ; Clear any LEDs
 	JSR INITLOG
 	CMP #$FF
 	BEQ TEST_BAD_LOWADDRESS
 	BRK
 TEST_BAD_LOWADDRESS:
 	LDA #$07 ; Lowest legal is #$08, this should fail
+	STA LED_IO_ADDR ; Clear any LEDs
 	JSR INITLOG
 	CMP #$FF
 	BEQ TEST_LOAD_GOOD_ADDRESS
 	BRK
 TEST_LOAD_GOOD_ADDRESS:
 	LDA #$0A ; Should give 0 success status in A
+	STA LED_IO_ADDR ; 
 	JSR INITLOG
 	BEQ TEST_LOG_DATA ; A should have #$00, success
 	BRK
 TEST_LOG_DATA:
+	LDA #$01
+	STA TRACE
+	STA LED_IO_ADDR
+
 	JSR INITWAIT
 	LDX #LOGMESSAGELONG
 	LDY #>LOGMESSAGELONG
 	JSR LOGSTR
 	JSR WAIT
 	
+	LDA #$02
+	STA TRACE
+	STA LED_IO_ADDR
+
+	LDA #$0A ; Should give 0 success status in A
+	STA LED_IO_ADDR ; Clear any LEDs
+	JSR INITLOG
+
 	JSR INITWAIT
+	LDA #$92
+	STA TRACE
+	STA LED_IO_ADDR
 	LDX #LOGMESSAGE
 	LDY #>LOGMESSAGE
 	JSR LOGSTR
+	LDA #$A2
+	STA TRACE
+	STA LED_IO_ADDR
 	JSR WAIT
 	
+	LDA #$03
+	STA TRACE
+	STA LED_IO_ADDR
+
+	LDA #$0A ; Should give 0 success status in A
+	STA LED_IO_ADDR ; Clear any LEDs
+	JSR INITLOG
+
 	JSR INITWAIT
 	LDX #LOGMESSAGESHORT
 	LDY #>LOGMESSAGESHORT
 	JSR LOGSTR
     JSR WAIT
 	
-	BRK ; Just stop for now
+	LDA #$0A ; Should give 0 success status in A
+	STA LED_IO_ADDR ; Clear any LEDs
+	JSR INITLOG
+
+	JMP TEST_LOG_DATA ; Just loop for now
 
 INITWAIT:
 	LDA #$01
 	STA READYFLAG
 	RTS
 WAIT:
+	LDA TRACE
+	ORA #$80
+	STA LED_IO_ADDR
 	LDA READYFLAG
 	BNE WAIT
+	LDA #$F0
+	STA LED_IO_ADDR ; Let the user know the interrupt is complete
 	RTS
 
 ;This code is here in case the system gets an NMI.  It clears the intterupt flag and returns.
