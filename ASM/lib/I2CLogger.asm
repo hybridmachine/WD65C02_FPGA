@@ -70,7 +70,8 @@ CODE
 
     DEFAULT_I2C_DBG_ADDRESS:    equ $0D
     LOG_STR_PTR:				equ $40 ; The active pointer address ($40, $41)
-    LOG_BUFFER_IDX:             equ $42 ; The buffer index value ($42, $43)
+    LOG_BUFFER_IDX:             equ #LOG_STR_PTR+2 ; The buffer index value ($42, $43)
+    STACK_ARG_IDX:              equ #LOG_BUFFER_IDX+2 ; One byte index of which stack arg to read
     MAX_BUF_LEN:                equ $50 ; 80 bytes max
 ;***************************************************************************
 ;                               Library Code
@@ -102,13 +103,26 @@ SET_LEGAL_ADDRESS:
     RTS
 
 
-; C style string address in X,Y (LOW, HIGH). Null terminated max 80 characters (auto return at 80 chars)
+; Print format string with16 bit hexadecimal values, one for each %X in the fmt string (case sensitive)
+; Not trying to be a full printf, just simple hex values. Calling convention is
+; Push low byte val, push high byte val, put string address in X,Y (LOW, HIGH).
+; This function will stream the string, replacing %X with the 16 bit hex string (0000 - FFFF)
+; Note %% prints single %
 ; Returns bytes written in A
+; 
+; Example: 
+; LDA #$00
+; PHA 
+; LDA #$FF
+; PHA
+; LDX, LDY (LOW, HIGH) for "Test string, hex value %X"
+; This will stream out (sans quotes) over I2C: "Test string, hex value FF00" with return of 27 for bytes written
 LOGSTR:
     ; Reset data and log buffer. We flush our strings at the end of every write
     STZ LOG_BUFFER_IDX
     STZ LOG_BUFFER_IDX+1
-
+    STZ STACK_ARG_IDX
+    
     TXA
     STA LOG_STR_PTR
     TYA
@@ -119,7 +133,19 @@ LOOP_WRITE:
 	LDY LOG_BUFFER_IDX
 	LDA (LOG_STR_PTR),Y
 	BEQ FLUSH ; If we hit the null, stream the buffer.
-	
+	CMP #"%"
+    BNE WRITESTR
+    INY
+    LDA (LOG_STR_PTR),Y
+	CMP #"X"
+    BNE NOFORMAT
+    ; Read low byte and convert to hex, stream those bytes, then do same for highbyte
+    INY
+    LDA (LOG_STR_PTR),Y
+NOFORMAT:
+    DEY
+    LDA (LOG_STR_PTR),Y ; Just a regular %, so write as usual
+WRITESTR:
 	; Set stream buffer address to write to
 	LDY LOG_BUFFER_IDX+1
 	LDX LOG_BUFFER_IDX
