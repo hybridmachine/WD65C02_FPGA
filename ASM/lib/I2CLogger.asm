@@ -48,6 +48,7 @@ CODE
     GLOBAL LOGBYTE
     GLOBAL FLUSH
     GLOBAL INITLOG
+    GLOBAL NIBBLE_TO_HEX
 
 ;***************************************************************************
 ;                              External Modules
@@ -73,6 +74,7 @@ CODE
     LOG_BUFFER_IDX:             equ #LOG_STR_PTR+2 ; The buffer index value ($42, $43)
     STACK_ARG_IDX:              equ #LOG_BUFFER_IDX+2 ; One byte index of which stack arg to read
     MAX_BUF_LEN:                equ $50 ; 80 bytes max
+    STACK_BASE_ADDR:            equ $0100
 ;***************************************************************************
 ;                               Library Code
 ;***************************************************************************
@@ -140,8 +142,12 @@ LOOP_WRITE:
 	CMP #"X"
     BNE NOFORMAT
     ; Read low byte and convert to hex, stream those bytes, then do same for highbyte
-    INY
-    LDA (LOG_STR_PTR),Y
+    TSX ; Load stack pointer into X
+    INX ; Move pointer to return address Low        
+    INX ; Move pointer over return address High
+    INX ; Move pointer over return address to first free space
+    ; Transfer value in stack to output address
+    LDA STACK_BASE_ADDR,X ; Load low byte
 NOFORMAT:
     DEY
     LDA (LOG_STR_PTR),Y ; Just a regular %, so write as usual
@@ -171,6 +177,23 @@ BYTE_BUFFERED:
 
 	JMP LOOP_WRITE ; 
 
+    RTS
+
+; Nibble To HEX
+; Read the lower 4 bits and convert value to Hex
+; A will contain the ASCII 0-F when done
+NIBBLE_TO_HEX:
+    AND #$0F ; Set value in A to lower 4 bits
+    CMP #$09
+    BCS ATOF ; Branch greater than
+    CLC
+    ADC #"0" ; Add ascii 0 start value
+    RTS
+ATOF:
+    SEC
+    SBC #$0A
+    CLC
+    ADC #"A"
     RTS
 
 ; Write byte value in A to log buffer
