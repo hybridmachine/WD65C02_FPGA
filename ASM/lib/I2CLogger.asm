@@ -42,6 +42,20 @@ CODE
 
 
 ;***************************************************************************
+;                               Macros
+;***************************************************************************
+; Macro definitions for getting the arg1 pointer (for byte high, byte low stack args)
+ARG1_PTR MACRO
+    ; Read low byte and convert to hex, stream those bytes, then do same for highbyte
+    TSX ; Load stack pointer into X
+    INX ; Move pointer to return address Low        
+    INX ; Move pointer over return address High
+    INX ; Move pointer to low byte
+    INX ; Move pointer to high byte
+    ENDM
+
+
+;***************************************************************************
 ;                              Global Modules
 ;***************************************************************************
     GLOBAL LOGSTR
@@ -135,23 +149,70 @@ LOOP_WRITE:
 	; Load string data
 	LDY LOG_BUFFER_IDX
 	LDA (LOG_STR_PTR),Y
-	BEQ FLUSH ; If we hit the null, stream the buffer.
+	BNE NO_FLUSH ; If we hit the null, stream the buffer.
+    JMP FLUSH ; Have to use JMP, BEQ is too far away due to new node
+NO_FLUSH:    
 	CMP #"%"
     BNE WRITESTR
     INY
     LDA (LOG_STR_PTR),Y
 	CMP #"X"
     BNE NOFORMAT
-    ; Read low byte and convert to hex, stream those bytes, then do same for highbyte
-    TSX ; Load stack pointer into X
-    INX ; Move pointer to return address Low        
-    INX ; Move pointer over return address High
-    INX ; Move pointer over return address to first free space
+
+; Stream the 16 bit argument into a hex value in the I2C stream
+ARG1_TO_HEX:
+    ; Stack offset for hight byte in X after this call
+    ARG1_PTR
+    
     ; Transfer value in stack to output address
-    LDA STACK_BASE_ADDR,X ; Load low byte
+    LDA STACK_BASE_ADDR,X ; Load high byte
+    JSR HIGH_NIBBLE_TO_HEX
+    ; Set stream buffer address to write to
+	LDY LOG_BUFFER_IDX+1
+	LDX LOG_BUFFER_IDX
+	JSR SUB_I2CSTREAM_WRITEBYTE
+    JSR INCREMENT_LOG_BUFFER_IDX
+
+    ; Stack offset for hight byte in X after this call
+    ARG1_PTR
+
+    LDA STACK_BASE_ADDR,X ; Load high byte
+    JSR LOW_NIBBLE_TO_HEX
+    ; Set stream buffer address to write to
+	LDY LOG_BUFFER_IDX+1
+	LDX LOG_BUFFER_IDX
+	JSR SUB_I2CSTREAM_WRITEBYTE
+    JSR INCREMENT_LOG_BUFFER_IDX
+
+    ; Stack offset for hight byte in X after this call
+    ARG1_PTR
+    DEX ; Point to arg 2
+    
+    LDA STACK_BASE_ADDR,X ; Load high byte
+    JSR HIGH_NIBBLE_TO_HEX
+    ; Set stream buffer address to write to
+	LDY LOG_BUFFER_IDX+1
+	LDX LOG_BUFFER_IDX
+	JSR SUB_I2CSTREAM_WRITEBYTE
+    JSR INCREMENT_LOG_BUFFER_IDX
+
+    ; Stack offset for hight byte in X after this call
+    ARG1_PTR
+    DEX ; Point to arg 2
+    
+    LDA STACK_BASE_ADDR,X ; Load high byte
+    JSR LOW_NIBBLE_TO_HEX
+    ; Set stream buffer address to write to
+	LDY LOG_BUFFER_IDX+1
+	LDX LOG_BUFFER_IDX
+	JSR SUB_I2CSTREAM_WRITEBYTE
+    ; For last index, don't increment, BYTE_BUFFERED will do that for us
+    JMP BYTE_BUFFERED
+
 NOFORMAT:
     DEY
     LDA (LOG_STR_PTR),Y ; Just a regular %, so write as usual
+
 WRITESTR:
 	; Set stream buffer address to write to
 	LDY LOG_BUFFER_IDX+1
@@ -167,6 +228,13 @@ BYTE_BUFFERED:
     CMP #MAX_BUF_LEN; Test have we hit the end of the buffer
     BEQ FLUSH
 
+    JSR INCREMENT_LOG_BUFFER_IDX
+
+	JMP LOOP_WRITE ; 
+
+    RTS
+
+INCREMENT_LOG_BUFFER_IDX:
     ; 16 bit add, not really needed for max buf len < 255 but just in case we expand later
     CLC
 	LDA LOG_BUFFER_IDX
@@ -175,9 +243,6 @@ BYTE_BUFFERED:
     LDA LOG_BUFFER_IDX+1
     ADC #$00 ; Add in the cary flag if set
     STA LOG_BUFFER_IDX+1
-
-	JMP LOOP_WRITE ; 
-
     RTS
 
 LOW_NIBBLE_TO_HEX:
