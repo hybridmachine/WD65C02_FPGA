@@ -48,7 +48,8 @@ CODE
     GLOBAL LOGBYTE
     GLOBAL FLUSH
     GLOBAL INITLOG
-    GLOBAL NIBBLE_TO_HEX
+    GLOBAL HIGH_NIBBLE_TO_HEX
+    GLOBAL LOW_NIBBLE_TO_HEX
 
 ;***************************************************************************
 ;                              External Modules
@@ -179,11 +180,8 @@ BYTE_BUFFERED:
 
     RTS
 
-; Nibble To HEX
-; Read the lower 4 bits and convert value to Hex
-; A will contain the ASCII 0-F when done
-NIBBLE_TO_HEX:
-    AND #$0F ; Set value in A to lower 4 bits
+LOW_NIBBLE_TO_HEX:
+    AND #$0F
     CMP #$09
     BCS ATOF ; Branch greater than
     CLC
@@ -195,6 +193,20 @@ ATOF:
     CLC
     ADC #"A"
     RTS
+
+; High Nibble To HEX
+; Read the higher 4 bits and convert value to Hex
+; A will contain the ASCII 0-F when done
+HIGH_NIBBLE_TO_HEX:
+    AND #$F0 ; Set value in A to lower 4 bits
+    ; Shift right 4 bits (0 fill on the left)
+    LSR
+	LSR
+	LSR
+	LSR
+    JSR LOW_NIBBLE_TO_HEX
+    RTS
+    
 
 ; Write byte value in A to log buffer
 LOGBYTE:

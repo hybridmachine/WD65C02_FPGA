@@ -51,7 +51,8 @@ CODE
 	XREF POST_MEMORY_TEST
 	XREF SUB_SEVENSEG_DISPLAY_VALUE
     XREF SUB_SEVENSEG_DISABLE
-	XREF NIBBLE_TO_HEX
+	XREF HIGH_NIBBLE_TO_HEX
+	XREF LOW_NIBBLE_TO_HEX
 
 ;***************************************************************************
 ;                              External Variables
@@ -85,24 +86,20 @@ START:
 	STA LED_IO_ADDR ; Clear any LEDs
 	
 	LDA #$B2
-	JSR NIBBLE_TO_HEX
+	JSR LOW_NIBBLE_TO_HEX
 	CMP #"2"
 	BEQ NIBBLE_TO_HEX_OVER9
 	BRK
 NIBBLE_TO_HEX_OVER9:
 	LDA #$BD
-	JSR NIBBLE_TO_HEX
+	JSR LOW_NIBBLE_TO_HEX
 	; Test A, should have "D" as its value
 	CMP #"D"
 	BEQ NIBBLE_SHIFT_SHOW_HIGH_BYTE
 	BRK
 NIBBLE_SHIFT_SHOW_HIGH_BYTE
 	LDA #$BD
-	LSR
-	LSR
-	LSR
-	LSR
-	JSR NIBBLE_TO_HEX
+	JSR HIGH_NIBBLE_TO_HEX
 	; Test A, should have "B" as its value
 	CMP #"B"
 	BEQ NIBBLE_TO_HEX_TESTED
