@@ -66,13 +66,13 @@ package W65C02_DEFINITIONS is
     
     -- ROM ends at FFF9, FFFA - FFFF are managed directly by the memory manager
     constant ROM_END                    : ADDRESS_65C02_T := x"FFFF";
-    constant ROM_BASE                   : ADDRESS_65C02_T := x"FC00";
+    constant ROM_BASE                   : ADDRESS_65C02_T := x"FA00";
     
     constant BOOT_VEC                   : ADDRESS_65C02_T := ROM_BASE; -- Jump to the start of ROM
     constant BOOT_VEC_ADDRESS_LOW       : ADDRESS_65C02_T := x"FFFC";
     constant BOOT_VEC_ADDRESS_HIGH      : ADDRESS_65C02_T := x"FFFD";
 
-    constant RAM_END                    : ADDRESS_65C02_T := x"FBFF";
+    constant RAM_END                    : ADDRESS_65C02_T := x"F9FF";
     constant RAM_BASE                   : ADDRESS_65C02_T := x"0000";
     
     constant MEM_MAPPED_IO_END          : ADDRESS_65C02_T := x"03FF";

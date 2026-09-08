@@ -170,6 +170,26 @@ TEST_LOG_DATA:
 	JSR LOGSTR
     JSR WAIT
 	
+	LDA #$04
+	STA TRACE
+	STA LED_IO_ADDR
+
+	LDA #$0A ; Should give 0 success status in A
+	STA LED_IO_ADDR ; Clear any LEDs
+	JSR INITLOG
+
+	JSR INITWAIT
+	LDX #LOGMESSAGEFMT
+	LDY #>LOGMESSAGEFMT
+	LDA #$FA
+	PHA
+	LDA #$CE
+	PHA
+	JSR LOGSTR
+	PLA
+	PLA
+    JSR WAIT
+	
 	LDA #$0A ; Should give 0 success status in A
 	STA LED_IO_ADDR ; Clear any LEDs
 	JSR INITLOG
@@ -230,6 +250,7 @@ ALLCLEAR:
 	LOGMESSAGELONG: 	db	'A long log string that is over 80 characters long, should flush at 80, this is a test!',0 ; Null terminated overlong string
 	LOGMESSAGE: 	    db	'A 79 character long log message, this should fully print testtest test test 12',0 ; Null terminated full string
 	LOGMESSAGESHORT:	db  'A less than max message',0
+	LOGMESSAGEFMT:		db	'A message with a fmt: %X'
 
 ;***************************************************************************
 vectors	SECTION OFFSET $FFFA

@@ -33,7 +33,7 @@
     MEM_MAPPED_IO_END:              GEQU $03FF ;
 
     RAM_BASE:                   GEQU $0400; 
-    RAM_END:                    GEQU $FBFF;
+    RAM_END:                    GEQU $F9FF;
 
     ROM_END:                    GEQU $FFFF;
-    ROM_BASE:                   GEQU $FC00;
+    ROM_BASE:                   GEQU $FB00;
