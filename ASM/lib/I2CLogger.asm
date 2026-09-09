@@ -87,7 +87,8 @@ ARG1_PTR MACRO
     DEFAULT_I2C_DBG_ADDRESS:    equ $0D
     LOG_STR_PTR:				equ $40 ; The active pointer address ($40, $41)
     LOG_BUFFER_IDX:             equ #LOG_STR_PTR+2 ; The buffer index value ($42, $43)
-    STACK_ARG_IDX:              equ #LOG_BUFFER_IDX+2 ; One byte index of which stack arg to read
+    SOURCE_BUFFER_IDX:          equ #LOG_BUFFER_IDX+2 ; The source buffer index which can differ when fmt usage is in place
+    STACK_ARG_IDX:              equ #SOURCE_BUFFER_IDX+2 ; One byte index of which stack arg to read
     MAX_BUF_LEN:                equ $50 ; 80 bytes max
     STACK_BASE_ADDR:            equ $0100
 ;***************************************************************************
@@ -138,6 +139,8 @@ LOGSTR:
     ; Reset data and log buffer. We flush our strings at the end of every write
     STZ LOG_BUFFER_IDX
     STZ LOG_BUFFER_IDX+1
+    STZ SOURCE_BUFFER_IDX
+    STZ SOURCE_BUFFER_IDX+1
     STZ STACK_ARG_IDX
     
     TXA
@@ -147,7 +150,7 @@ LOGSTR:
 
 LOOP_WRITE:
 	; Load string data
-	LDY LOG_BUFFER_IDX
+	LDY SOURCE_BUFFER_IDX
 	LDA (LOG_STR_PTR),Y
 	BNE NO_FLUSH ; If we hit the null, stream the buffer.
     JMP FLUSH ; Have to use JMP, BEQ is too far away due to new node
@@ -206,7 +209,8 @@ ARG1_TO_HEX:
 	LDY LOG_BUFFER_IDX+1
 	LDX LOG_BUFFER_IDX
 	JSR SUB_I2CSTREAM_WRITEBYTE
-    ; For last index, don't increment, BYTE_BUFFERED will do that for us
+    ; For last index, don't increment, BYTE_BUFFERED will do that for us, but we do need to increment the source buffer of the format string
+    JSR INCREMENT_SOURCE_BUFFER_IDX
     JMP BYTE_BUFFERED
 
 NOFORMAT:
@@ -223,13 +227,13 @@ WRITESTR:
 
 BYTE_BUFFERED:
 
-    LDA LOG_BUFFER_IDX
+    LDA SOURCE_BUFFER_IDX
     INA ; Avoid the compare to 0 issue with CMP
     CMP #MAX_BUF_LEN; Test have we hit the end of the buffer
     BEQ FLUSH
 
     JSR INCREMENT_LOG_BUFFER_IDX
-
+    JSR INCREMENT_SOURCE_BUFFER_IDX
 	JMP LOOP_WRITE ; 
 
     RTS
@@ -243,6 +247,17 @@ INCREMENT_LOG_BUFFER_IDX:
     LDA LOG_BUFFER_IDX+1
     ADC #$00 ; Add in the cary flag if set
     STA LOG_BUFFER_IDX+1
+    RTS
+
+INCREMENT_SOURCE_BUFFER_IDX:
+    ; 16 bit add, not really needed for max buf len < 255 but just in case we expand later
+    CLC
+	LDA SOURCE_BUFFER_IDX
+	ADC #$01
+    STA SOURCE_BUFFER_IDX
+    LDA SOURCE_BUFFER_IDX+1
+    ADC #$00 ; Add in the cary flag if set
+    STA SOURCE_BUFFER_IDX+1
     RTS
 
 LOW_NIBBLE_TO_HEX:
