@@ -35,7 +35,7 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+	INCLUDE "MemoryMap.inc"
 
 
 ;***************************************************************************
@@ -64,9 +64,6 @@ CODE
 	ADDRESS_LOW:			equ ADDRESS_PTR
 	ADDRESS_HIGH:			equ ADDRESS_PTR+1
 	MEM_TO_TEST_START:		equ ADDRESS_HIGH+1
-	MEM_MAPPED_IO_END: 		equ $03FF
-    MEM_MAPPED_IO_BASE: 	equ $0200
-	RAM_END:				equ $FBFF
 	LED_IO_ADDR:	    	equ	$0200
 
 

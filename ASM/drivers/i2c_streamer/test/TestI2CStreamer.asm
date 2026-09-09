@@ -78,6 +78,8 @@ CODE
 	; Memory addresses for I2C interface status
     PIO_I2C_DATA_STRM_STATUS:		equ $0212
 	LED_IO_ADDR:					equ	$0200 ; Matches MEM_MAPPED_IO_BASE, this byte is mapped to the LED pins
+	STR_PTR_ARRAY:					equ $0410 ; The table of pointers
+	STR_PTR:						equ $40 ; The active pointer
 	STATUS_READY:					equ $00
 	STATUS_STREAMING_I2C_COMPLETE: 	equ $05
 	DATA_BYTE_INDEX:				equ $06
@@ -103,8 +105,57 @@ START:
 	; Run power on self test functions
 	JSR POST_MEMORY_TEST
 
-	; MAIN
+	; Initialize array of string pointer array
+	LDA #I2CMESSAGE0
+	STA STR_PTR_ARRAY
+	LDA #>I2CMESSAGE0
+	STA STR_PTR_ARRAY+1
+
+	LDA #I2CMESSAGE1
+	STA STR_PTR_ARRAY+2
+	LDA #>I2CMESSAGE1
+	STA STR_PTR_ARRAY+3
+
+	LDA #I2CMESSAGE2
+	STA STR_PTR_ARRAY+4
+	LDA #>I2CMESSAGE2
+	STA STR_PTR_ARRAY+5
 	
+	LDA #I2CMESSAGE3
+	STA STR_PTR_ARRAY+6
+	LDA #>I2CMESSAGE3
+	STA STR_PTR_ARRAY+7
+
+	LDA #I2CMESSAGE4
+	STA STR_PTR_ARRAY+8
+	LDA #>I2CMESSAGE4
+	STA STR_PTR_ARRAY+9
+
+	LDA #I2CMESSAGE5
+	STA STR_PTR_ARRAY+10
+	LDA #>I2CMESSAGE5
+	STA STR_PTR_ARRAY+11
+
+	LDA #I2CMESSAGE6
+	STA STR_PTR_ARRAY+12
+	LDA #>I2CMESSAGE6
+	STA STR_PTR_ARRAY+13
+
+	LDA #I2CMESSAGE7
+	STA STR_PTR_ARRAY+14
+	LDA #>I2CMESSAGE6
+	STA STR_PTR_ARRAY+15
+
+	; Update str ptr
+	LDA #$01
+	ASL ; Multiply by 2
+	TAY
+	LDA STR_PTR_ARRAY,Y
+	STA STR_PTR
+	INY
+	LDA STR_PTR_ARRAY,Y
+	STA STR_PTR+1
+
 	; Initialize the pseudorandom generator
 	LDA #$0F ; Any val is fine here, I just chose this.
 	STA PIO_PSRND_VAL
@@ -148,16 +199,20 @@ SEND_I2C_DATA
 	LDA #$00
 	
 LOOP_WRITE:
-	LDY #$00
-	LDX DATA_BYTE_INDEX
-	LDA I2CMESSAGE,X
+
+	; Load string data
+	LDY DATA_BYTE_INDEX
+	LDA (STR_PTR),Y
 	BEQ I2CSTREAMBUFFER ; If we hit the null, stream the buffer.
 	
 	; Write the data buffer value to the stream, so we can debug any dropped bytes or mis aligned frames
 	; more easily in the I2C data stream
 	; Write byte to buffer
 	; LDA DATA_BYTE_INDEX
-
+	
+	; Set stream buffer address to write to
+	LDY #$00
+	LDX DATA_BYTE_INDEX
 	JSR SUB_I2CSTREAM_WRITEBYTE
 	BEQ BYTE_BUFFERED ; accumulator should be set to 0 for success
 	
@@ -179,7 +234,18 @@ I2CSTREAMBUFFER:
 	LDA PIO_PSRND_VAL
 	PHA
 	LDA PIO_PSRND_VAL ; Put the random balue in the low byte
+	AND #$07
 	PHA
+	
+	; Update str ptr
+	ASL ; Multiply by 2
+	TAY
+	LDA STR_PTR_ARRAY,Y
+	STA STR_PTR
+	INY
+	LDA STR_PTR_ARRAY,Y
+	STA STR_PTR+1
+
 	JSR SUB_SEVENSEG_DISPLAY_VALUE
 	PLA
 	PLA
@@ -353,8 +419,14 @@ SEND_IRQ_ACK:
 		PLA
 		RTI
 
-I2CMESSAGE:	db	'V 1.0.2 Hello World, I am I2C!',0 ; Null terminated string
-
+I2CMESSAGE0: 	db	'V 1.0.2 Hello World, I am I2C!',0 ; Null terminated string
+I2CMESSAGE1: 	db 'Test message 2',0
+I2CMESSAGE2: 	db 'A longer message to test alternate string length output',0
+I2CMESSAGE3: 	db 'shrt msg',0 
+I2CMESSAGE4: 	db 'The fifth message out of 8, perhaps a longer message then most, but who's counting?',0
+I2CMESSAGE5: 	db 'Sixth!',0
+I2CMESSAGE6: 	db '7',0
+I2CMESSAGE7: 	db '65C02 Apple II Commodore 64 Forever!',0
 
 ;***************************************************************************
 vectors	SECTION OFFSET $FFFA

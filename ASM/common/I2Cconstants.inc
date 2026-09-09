@@ -1,7 +1,7 @@
 ;***************************************************************************
-;  FILE_NAME: MemoryMap.inc
+;  FILE_NAME: I2Cconstants.inc
 ;
-;	Copyright (c) 2025 Brian Tabone
+;	Copyright (c) 2026 Brian Tabone
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,10 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 ;
-;  DESCRIPTION: Map of start,end ranges for PIO, ROM, and RAM. This file shadows PKG_65C02.vhd
-;  Well known locations (page 0, stack, interrupt and pro start vectors) are not mapped here, only
-;  PIO, ROM, and RAM locations
+;  DESCRIPTION: I2C address range and other related constants
 ;
-;
-;***************************************************************************    
+;***************************************************************************   
 
-    MEM_MAPPED_IO_BASE:			    GEQU $0200 ; 
-    PIO_PSRND_VAL:                  GEQU $0229 ;
-    MEM_MAPPED_IO_END:              GEQU $03FF ;
-
-    RAM_BASE:                   GEQU $0400; 
-    RAM_END:                    GEQU $F9FF;
-
-    ROM_END:                    GEQU $FFFF;
-    ROM_BASE:                   GEQU $FB00;
+    ; Control Codes
+    I2C_RESERVED_LOW_END_ADDRESS:            equ $07  ; The last reserved address on the low side
+    I2C_RESERVED_HIGH_END_ADDRESS:           equ $78  ; The last reserved address on the low side
