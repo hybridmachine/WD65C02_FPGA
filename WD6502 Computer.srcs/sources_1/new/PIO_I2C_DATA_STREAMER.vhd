@@ -31,11 +31,15 @@ use work.I2C_DATA_STREAMER.ALL;
 --use UNISIM.VComponents.all;
 
 entity PIO_I2C_DATA_STREAMER is
+    GENERIC (
+    RAM_DEPTH: natural := 2**11 -- 2048 bytes
+    );
     Port (  I_CLK                 : in STD_LOGIC;
             -- No reset, as per Ultra Fast Desig Guide don't use if it can be avoided, users can reset via the control bus
             O_STATUS                : out STD_LOGIC_VECTOR (7 downto 0);
             I_CONTROL               : in STD_LOGIC_VECTOR (7 downto 0);
             I_ADDRESS               : in STD_LOGIC_VECTOR (15 downto 0);
+            I_WRITE_LENGTH          : in STD_LOGIC_VECTOR (15 downto 0); -- Total length of buffer to stream over I2C
             I_DATA                  : in STD_LOGIC_VECTOR (7 downto 0);
             I_I2C_TARGET_ADDRESS    : in STD_LOGIC_VECTOR(6 downto 0);
             I_SDA                   : in STD_LOGIC;
@@ -52,7 +56,7 @@ COMPONENT RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
     DATA_WIDTH: natural := 8;
-    RAM_DEPTH: natural := 2**11 -- 2KB buffer
+    RAM_DEPTH: natural := RAM_DEPTH -- Take RAM depth from generic in parent
     );
     PORT (
 	addra: IN std_logic_vector((ADDRESS_WIDTH - 1) downto 0);
@@ -207,9 +211,9 @@ end process;
 
 process(I_CLK) 
 variable buffer_end_address : natural range 0 to 2047 := 0;
-variable buffer_write_address : natural range 0 to 2047 := 0;
-variable byte_outbound_via_i2c : natural range 0 to 2047 := 0;
-variable byte_just_sent_via_i2c : natural range 0 to 2047 := 0;
+variable address_of_byte_being_written_to_buffer : natural range 0 to 2047 := 0;
+variable address_of_byte_to_write_to_i2c : natural range 0 to 2047 := 0;
+variable address_of_byte_just_written_to_i2c : natural range 0 to 2047 := 0;
 variable cycle_delay : natural range 0 to 255 := 0;
 begin
     if (rising_edge(I_CLK)) then
@@ -217,10 +221,10 @@ begin
             when RESET_START =>
                 i2c_reset <= '1';
                 O_PIO_IRQ <= '0';
-                byte_outbound_via_i2c := 0;
+                address_of_byte_to_write_to_i2c := 0;
                 status_reg <= STATUS_RESETTING;
                 buffer_end_address := 0;
-                buffer_write_address := 0;
+                address_of_byte_being_written_to_buffer := 0;
                 NEXT_STREAMER_STATE <= RESET_INPROGRESS;
             when RESET_INPROGRESS =>
                 status_reg <= STATUS_RESETTING;
@@ -235,7 +239,10 @@ begin
                     NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_START;
                 elsif (control_reg = CONTROL_STREAM_BUFFER) then
                     cycle_delay := 2;
-                    
+                    -- TODO
+                    -- Read in start address and stream length. 
+                    -- Write buffer end based on start address + length-1 (since start byte will be included)
+                    buffer_end_address := to_integer(unsigned(I_ADDRESS)) + to_integer(unsigned(I_WRITE_LENGTH)) - 1;
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
                 else
                     NEXT_STREAMER_STATE <= READY;
@@ -245,10 +252,7 @@ begin
                 ram_wea <= '0'; -- Make sure not in write mode then setup address and data lines
                 ram_addra <= I_ADDRESS;
                 ram_dina <= I_DATA; 
-                buffer_write_address := to_integer(unsigned(I_ADDRESS));
-                if (buffer_write_address >= buffer_end_address) then
-                    buffer_end_address := buffer_write_address+1;
-                end if;
+                address_of_byte_being_written_to_buffer := to_integer(unsigned(I_ADDRESS));
                 NEXT_STREAMER_STATE <= WRITE_DATA_TO_BUFFER_COMMIT;
             when WRITE_DATA_TO_BUFFER_COMMIT =>
                 status_reg <= STATUS_WRITING_RAM;
@@ -267,14 +271,14 @@ begin
                 i2c_stream_complete <= '0';   
                 NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE;
             when STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE =>
-                if (byte_outbound_via_i2c < buffer_end_address) then
+                if (address_of_byte_to_write_to_i2c < buffer_end_address) then
                     if (cycle_delay <= 0) then                   
                         NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_WRITE_TO_I2C;                        
                     else
                         cycle_delay := cycle_delay - 1;
                         NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM_SET_I2C_LOAD_RAM_BYTE;
-                        ram_addrb <= std_logic_vector(to_unsigned(byte_outbound_via_i2c, ram_addrb'length));
-                        byte_just_sent_via_i2c := byte_outbound_via_i2c;
+                        ram_addrb <= std_logic_vector(to_unsigned(address_of_byte_to_write_to_i2c, ram_addrb'length));
+                        address_of_byte_just_written_to_i2c := address_of_byte_to_write_to_i2c;
                     end if;
                 else
                     i2c_stream_complete <= '1';
@@ -294,7 +298,7 @@ begin
             when STREAM_DATA_OVER_I2C_WAITFOR_DATA_INFLIGHT =>  
                 status_reg <= STATUS_STREAMING_I2C;
                 if (i2c_que_for_send = '0') then
-                    byte_outbound_via_i2c := byte_just_sent_via_i2c + 1; -- Increment to next byte
+                    address_of_byte_to_write_to_i2c := address_of_byte_just_written_to_i2c + 1; -- Increment to next byte
                     -- Data is marked in flight, get the buffer ready to send the next byte
                     NEXT_STREAMER_STATE <= STREAM_DATA_OVER_I2C_READ_FROM_RAM;
                 else

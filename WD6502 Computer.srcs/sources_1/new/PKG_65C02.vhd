@@ -115,8 +115,14 @@ package W65C02_DEFINITIONS is
     constant PIO_SWITCHES_UPDATED_VEC_L : ADDRESS_65C02_T := x"0227";
     constant PIO_SWITCHES_UPDATED_VEC_H : ADDRESS_65C02_T := x"0228";
 
+    -- Linear Feedback Shift Register psuedorandom number generator
     constant PIO_PSRND_VAL              : ADDRESS_65C02_T := x"0229"; -- Write sets seed, read gets next value
-
+    
+    -- The length of the buffer to send out the I2C interface 
+    -- This plus address determines what block of the buffer is sent by the streamer
+    constant PIO_I2C_DATA_STRM_DATA_LENGTH_LOW     : ADDRESS_65C02_T := x"0230";
+    constant PIO_I2C_DATA_STRM_DATA_LENGTH_HIGH    : ADDRESS_65C02_T := x"0231";
+    
     constant STACK_END                  : ADDRESS_65C02_T := x"01FF";
     constant STACK_BASE                 : ADDRESS_65C02_T := x"0100";
     
