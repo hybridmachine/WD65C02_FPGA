@@ -203,6 +203,36 @@ begin
                     T_BUS_WRITE_DATA,
                     T_WRITE_FLAG);
     
+    -- Set Starting Address
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW,
+                    T_BUS_ADDRESS,
+                    x"00",
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
+
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH,
+                    T_BUS_ADDRESS,
+                    x"00",
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
+    
+    -- Set Buffer Length
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_DATA_LENGTH_LOW,
+                    T_BUS_ADDRESS,
+                    x"04",
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
+
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_DATA_LENGTH_HIGH,
+                    T_BUS_ADDRESS,
+                    x"00",
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
+                    
     -- Write control register to start streaming
     WriteToMemory(  T_MEMORY_CLOCK,
                     PIO_I2C_DATA_STRM_CTRL,
