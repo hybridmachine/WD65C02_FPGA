@@ -36,7 +36,7 @@ CODE
 ;***************************************************************************
 ;                             Include Files
 ;***************************************************************************
-;None
+    INCLUDE "MemoryMap.inc"
 
 
 ;***************************************************************************
@@ -70,6 +70,24 @@ SEND_CONTROL_BYTE MACRO CONTROL_BYTE
     NOP 
     ENDM
 
+; Device ID is 1-4
+SET_STREAM_PARAMS MACRO I2C_DEVICE_ID
+
+    LDA #I2C_BUFFER_ADDRESSES*I2C_DEVICE_ID
+    STA PIO_I2C_DATA_STRM_I2C_ADDRESS
+    
+    LDA #((I2C_BUFFER_ADDRESSES*I2C_DEVICE_ID)+1)
+    STA PIO_I2C_DATA_STRM_DATA_ADDRESS_LOW
+    LDA #((I2C_BUFFER_ADDRESSES*I2C_DEVICE_ID)+2)
+    STA PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH
+    
+    LDA #((I2C_BUFFER_ADDRESSES*I2C_DEVICE_ID)+3)
+    STA PIO_I2C_DATA_STRM_DATA_LENGTH_LOW
+    LDA #((I2C_BUFFER_ADDRESSES*I2C_DEVICE_ID)+4)
+    STA PIO_I2C_DATA_STRM_DATA_LENGTH_HIGH
+
+    ENDM
+
 ;***************************************************************************
 ;                              External Modules
 ;***************************************************************************
@@ -92,7 +110,9 @@ SEND_CONTROL_BYTE MACRO CONTROL_BYTE
     PIO_I2C_DATA_STRM_DATA_ADDRESS_HIGH:    equ $0215
     PIO_I2C_DATA_STRM_DATA:                 equ $0216
     PIO_I2C_DATA_STRM_I2C_ADDRESS:          equ $0217 ; High 7 bits is address, least significant bit is used internally (any value here is ignored, leave 0)
-    
+    PIO_I2C_DATA_STRM_DATA_LENGTH_LOW:      equ $0230 ;
+    PIO_I2C_DATA_STRM_DATA_LENGTH_HIGH:     equ $0231 ;
+
     ; Control values for I2C interface
     CONTROL_RESET:                          equ $00
     CONTROL_WRITE_BUFFER:                   equ $01
@@ -205,6 +225,7 @@ WAIT_FOR_READY2:
 ; should read status to determine when stream is complete
 ; Overwrites the accumulator, callers should preserve it first if needed.
 SUB_I2CSTREAM_STREAM:
+    SET_STREAM_PARAMS 1
     SEND_CONTROL_BYTE CONTROL_STREAM_BUFFER
     RTS
 

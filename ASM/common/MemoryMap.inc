@@ -28,11 +28,28 @@
 ;
 ;***************************************************************************    
 
-    MEM_MAPPED_IO_BASE:			    GEQU $0200 ; 
-    PIO_PSRND_VAL:                  GEQU $0229 ;
+    MEM_MAPPED_IO_BASE:			            GEQU $0200 ;
+
+    PIO_PSRND_VAL:                          GEQU $0229 ;
+
     MEM_MAPPED_IO_END:              GEQU $03FF ;
 
+    
     RAM_BASE:                   GEQU $0400; 
+    SYSTEM_BASE:                GEQU RAM_BASE
+    ; We'll reserve system ram $0400 to $05FF. This will be ram used by device drivers and system components
+    ; All addresses for system will be global and specified here
+    APP_BASE:                   GEQU RAM_BASE+$0200;
+
+    ; I2C block addresses. Each I2C address is allocated a block (start + len) in the stream buffer
+    I2C_DEVICE_COUNT:           GEQU SYSTEM_BASE
+    I2C_MAX_DEVICES:            GEQU 4
+    I2C_BUFFER_ADDRESSES:       GEQU I2C_DEVICE_COUNT+1
+    ; struct
+    ; uint8                     I2C address
+    ; uint16                    I2C buffer start address
+    ; uint16                    I2C buffer length
+    SYSTEM_FREE:                GEQU I2C_MAX_DEVICES*(1+2+2) ; Size of I2C structures
     RAM_END:                    GEQU $F9FF;
 
     ROM_END:                    GEQU $FFFF;
