@@ -195,6 +195,16 @@ begin
         wait until falling_edge(T_CPU_CLOCK);
     end loop;
 
+    -- Buffer is written, set to standby so when we set
+    -- address, it doesn't overwrite the 0 byte in the stream
+    -- Write control register with I2C standby
+    WriteToMemory(  T_MEMORY_CLOCK,
+                    PIO_I2C_DATA_STRM_CTRL,
+                    T_BUS_ADDRESS,
+                    CONTROL_STANDBY,
+                    T_BUS_WRITE_DATA,
+                    T_WRITE_FLAG);
+                    
     -- Set I2C address.
     WriteToMemory(  T_MEMORY_CLOCK,
                     PIO_I2C_DATA_STRM_I2C_ADDRESS,
